@@ -500,6 +500,10 @@ private:
     void GetSteppedValues(Widget *widget, Action *action,  Zone *zone, int paramNumber, const vector<string> &params, const PropertyList &widgetProperties, double &deltaValue, vector<double> &acceleratedDeltaValues, double &rangeMinimum, double &rangeMaximum, vector<double> &steppedValues, vector<int> &acceleratedTickValues);
     void SetColor(const vector<string> &params, bool &supportsColor, bool &supportsTrackColor, vector<rgba_color> &colorValues);
     void GetColorValues(vector<rgba_color> &colorValues, const vector<string> &colors);
+
+    // ***** NEW: Free form text for FX assignment *****
+    std::string m_freeFormText;
+
 public:
     ActionContext(CSurfIntegrator *const csi, Action *action, Widget *widget, Zone *zone, int paramIndex, const vector<string> &params);
 
@@ -677,6 +681,9 @@ public:
         
         return buf;
     }
+    // ***** NEW: Free Form Text getter and setter *****
+    const char* GetFreeFormText() const { return m_freeFormText.c_str(); }
+    void SetFreeFormText(const char* text) { m_freeFormText = (text ? text : ""); }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

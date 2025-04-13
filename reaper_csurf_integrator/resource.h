@@ -124,6 +124,7 @@
 #define IDC_SurfaceName                 1304
 #define IDC_ApplyFontsAndMarginsToAll   1307
 #define IDC_GroupApplyToAll             1308
+#define IDC_EDIT_FREE_FORM              1309
 
 // Next default values for new objects
 // 

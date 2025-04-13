@@ -408,6 +408,9 @@ static WDL_DLGRET dlgProcEditAdvanced(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
                 ticks += buf;
             }
             SetDlgItemText(hwndDlg, IDC_EDIT_TickValues, ticks.c_str());
+        
+            // NEW: Set the Free Form text field from the ActionContext.
+            SetDlgItemText(hwndDlg, IDC_EDIT_FREE_FORM, context->GetFreeFormText());
         }
             break;
             
@@ -457,6 +460,10 @@ static WDL_DLGRET dlgProcEditAdvanced(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
                         for (int i = 0; i < tokens.size(); ++i)
                             steps.push_back(atof(tokens[i].c_str()));
                         context->SetStepValues(steps);
+
+                        // NEW: Retrieve Free Form Text and store it in the ActionContext.
+                        GetDlgItemText(hwndDlg, IDC_EDIT_FREE_FORM, buf, sizeof(buf));
+                        context->SetFreeFormText(buf);
 
                         s_dlgResult = IDOK;
                         EndDialog(hwndDlg, 0);
@@ -763,6 +770,15 @@ static void SaveZone(SurfaceFXTemplate *t)
                             }
                             
                             fprintf(fxFile, " ]");
+
+                            // ***** NEW: Append free-form text for this assignment *****
+                            {
+                                const char* freeText = context->GetFreeFormText();
+                                if (freeText && freeText[0] != '\0')
+                                {
+                                    fprintf(fxFile, " %s", freeText);
+                                }
+                            }
                         }
                     }
                     

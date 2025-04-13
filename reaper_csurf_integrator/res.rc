@@ -186,26 +186,28 @@ BEGIN
     GROUPBOX        "Broadcasting",IDC_STATIC,7,8,393,144
 END
 
-IDD_DIALOG_EditAdvanced DIALOGEX 0, 0, 537, 149
+IDD_DIALOG_EditAdvanced DIALOGEX 0, 0, 537, 172
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Dialog"
+CAPTION "Edit Advanced FX Param"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    EDITTEXT        IDC_EDIT_Delta,72,35,21,12,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT_RangeMin,386,35,21,12,ES_AUTOHSCROLL | WS_GROUP
-    EDITTEXT        IDC_EDIT_RangeMax,485,34,21,12,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT_DeltaValues,112,57,393,12,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT_TickValues,112,78,393,12,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EditSteps,112,99,393,12,ES_AUTOHSCROLL
-    DEFPUSHBUTTON   "OK",IDOK,399,128,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,456,128,50,14
-    GROUPBOX        "FX Param Values",IDC_GroupFXParamValues,19,14,500,111
-    LTEXT           "Delta value",IDC_DeltaValueLabel,31,37,36,8
-    LTEXT           "Range minimum",IDC_RangeMinimumLabel,329,37,53,8
-    LTEXT           "Range maximum",IDC_RangeMaximumLabel,427,36,54,8
-    LTEXT           "Accelerated delta values",IDC_AcceleratedDeltaValuesLabel,28,59,76,8
-    LTEXT           "Accelerated tick values",IDC_AcceleratedTickValuesLabel,33,80,72,8
-    LTEXT           "Custom steps",IDC_StepsPromptGroup,41,101,43,8
+    GROUPBOX        "FX Param Values", IDC_GroupFXParamValues, 19, 14, 500, 140
+    LTEXT           "Delta value", IDC_DeltaValueLabel, 31, 35, 48, 12
+    EDITTEXT        IDC_EDIT_Delta, 72, 33, 40, 12, ES_AUTOHSCROLL
+    LTEXT           "Range minimum", IDC_RangeMinimumLabel, 329, 35, 53, 12
+    EDITTEXT        IDC_EDIT_RangeMin, 386, 33, 21, 12, ES_AUTOHSCROLL
+    LTEXT           "Range maximum", IDC_RangeMaximumLabel, 427, 35, 54, 12
+    EDITTEXT        IDC_EDIT_RangeMax, 485, 33, 21, 12, ES_AUTOHSCROLL
+    LTEXT           "Accelerated delta values", IDC_AcceleratedDeltaValuesLabel, 28, 59, 76, 8
+    EDITTEXT        IDC_EDIT_DeltaValues, 112, 57, 393, 12, ES_AUTOHSCROLL
+    LTEXT           "Accelerated tick values", IDC_AcceleratedTickValuesLabel, 33, 80, 72, 8
+    EDITTEXT        IDC_EDIT_TickValues, 112, 78, 393, 12, ES_AUTOHSCROLL
+    LTEXT           "Custom steps", IDC_StepsPromptGroup, 41, 101, 43, 8
+    EDITTEXT        IDC_EditSteps, 112, 99, 393, 12, ES_AUTOHSCROLL
+    LTEXT           "Free Form Text:", IDC_STATIC, 31, 120, 80, 12
+    EDITTEXT        IDC_EDIT_FREE_FORM, 112, 118, 393, 12, ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK", IDOK, 399, 155, 50, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 456, 155, 50, 14
 END
 
 IDD_DIALOG_LearnFX DIALOGEX 0, 0, 282, 104
