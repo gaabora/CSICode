@@ -91,6 +91,7 @@ static void LogStackTraceToConsole() {
 //       <LanguageStandard>stdcpp23</LanguageStandard>
 //     </ClCompile>
 //   </ItemDefinitionGroup>
+#ifdef _DEBUG
     auto trace = std::stacktrace::current();
     LogToConsole(256, "===== Stack Trace Start =====\n");
     for (const auto& frame : trace) {
@@ -100,6 +101,7 @@ static void LogStackTraceToConsole() {
         LogToConsole(1024, "%s\n", line.c_str());
     }
     LogToConsole(256, "===== Stack Trace End =====\n");
+#endif
 }
 
 static const char* GetRelativePath(const char* absolutePath)
