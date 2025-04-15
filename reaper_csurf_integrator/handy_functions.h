@@ -92,6 +92,7 @@ static void LogStackTraceToConsole() {
 //     </ClCompile>
 //   </ItemDefinitionGroup>
 #ifdef _DEBUG
+  #if defined(__cpp_lib_stacktrace)
     auto trace = std::stacktrace::current();
     LogToConsole(256, "===== Stack Trace Start =====\n");
     for (const auto& frame : trace) {
@@ -101,6 +102,9 @@ static void LogStackTraceToConsole() {
         LogToConsole(1024, "%s\n", line.c_str());
     }
     LogToConsole(256, "===== Stack Trace End =====\n");
+  #else
+    LogToConsole(256, "LogStackTraceToConsole not supported on this compiler. Refer to reaper_csurf_integrator/handy_functions.h LogStackTraceToConsole() on how to enable it.\n");
+  #endif
 #endif
 }
 
