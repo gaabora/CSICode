@@ -84,7 +84,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_WINDLL;%(PreprocessorDefinitions) _CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
-      <LanguageStandard>stdcpp23</LanguageStandard> <!--change value to stdcpp23 if using std::stacktrace -->
+      <LanguageStandard>stdcpp17</LanguageStandard> <!--change value to stdcpp23 if using std::stacktrace from LogStackTraceToConsole in handy_functions.h,-->
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
