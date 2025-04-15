@@ -154,7 +154,7 @@ struct FXCell
     
     void SetNameWidget(Widget *widget, const char *displayWidgetName, const char *paramName)
     {
-        if (g_debugLevel >= DEBUG_LEVEL_DEBUG) LogToConsole(256, "# SetNameWidget %s %s %s\n", widget->GetName(), displayWidgetName, paramName);
+        if (g_debugLevel >= DEBUG_LEVEL_DEBUG) LogToConsole(256, "[DEBUG] SetNameWidget %s %s %s\n", widget->GetName(), displayWidgetName, paramName);
         for (auto displayWidget : displayWidgets)
         {
             if( ! strcmp (displayWidget->GetName(), displayWidgetName))
@@ -534,8 +534,8 @@ static void LoadTemplates(SurfaceFXTemplate *fxTemplate)
     }
     catch (const std::exception& e)
     {
-        LogToConsole(256, "FAILED to LoadTemplates in %s\n", zoneInfo["FXRowLayout"].filePath.c_str());
-        LogToConsole(256, "Exception: %s\n", e.what());
+        LogToConsole(256, "[ERROR] FAILED to LoadTemplates in %s\n", zoneInfo["FXRowLayout"].filePath.c_str());
+        LogToConsole(2048, "Exception: %s\n", e.what());
     }
 
     try
@@ -600,8 +600,8 @@ static void LoadTemplates(SurfaceFXTemplate *fxTemplate)
     }
     catch (const std::exception& e)
     {
-        LogToConsole(256, "FAILED to LoadTemplates in %s\n", zoneInfo["FXWidgetLayout"].filePath.c_str());
-        LogToConsole(256, "Exception: %s\n", e.what());
+        LogToConsole(256, "[ERROR] FAILED to LoadTemplates in %s\n", zoneInfo["FXWidgetLayout"].filePath.c_str());
+        LogToConsole(2048, "Exception: %s\n", e.what());
     }
 }
 
@@ -630,8 +630,8 @@ static void WriteBoilerPlate(FILE *fxFile, string &fxBoilerplatePath)
     }
     catch (const std::exception& e)
     {
-        LogToConsole(256, "FAILED to WriteBoilerPlate in %s, around line %d\n", fxBoilerplatePath.c_str(), lineNumber);
-        LogToConsole(256, "Exception: %s\n", e.what());
+        LogToConsole(256, "[ERROR] FAILED to WriteBoilerPlate in %s, around line %d\n", fxBoilerplatePath.c_str(), lineNumber);
+        LogToConsole(2048, "Exception: %s\n", e.what());
     }
 }
 
@@ -839,8 +839,8 @@ static void SaveZone(SurfaceFXTemplate *t)
     }
     catch (const std::exception& e)
     {
-        LogToConsole(256, "FAILED to SaveZone %s\n", path);
-        LogToConsole(256, "Exception: %s\n", e.what());
+        LogToConsole(256, "[ERROR] FAILED to SaveZone %s\n", path);
+        LogToConsole(2048, "Exception: %s\n", e.what());
     }
 }
 
