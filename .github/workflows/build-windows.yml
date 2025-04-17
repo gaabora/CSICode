@@ -1,0 +1,21 @@
+name: Build on Windows
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up MSBuild
+      uses: microsoft/setup-msbuild@v1
+
+    - name: Build with MSBuild
+      run: msbuild Windows/reaper_csurf_integrator/reaper_csurf_integrator/reaper_csurf_integrator.vcxproj /p:Configuration=Release /p:Platform=x64
