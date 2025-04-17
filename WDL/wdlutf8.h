@@ -33,7 +33,7 @@ misrepresented as being the original software.
   #ifdef _WIN32
     #define WDL_WCHAR WCHAR
   #else
-    #include <cwchar>
+    #include <stddef.h> // wchar_t
     // this is often 4 bytes on macOS/linux! beware dragons!
     #define WDL_WCHAR wchar_t
   #endif
