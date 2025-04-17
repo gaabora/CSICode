@@ -6,6 +6,7 @@ on:
       - main
       - cmake-test
   pull_request:
+    branches: [ main ]
 
 jobs:
   build:
@@ -15,10 +16,11 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Install dependencies
-      run: sudo apt-get update && sudo apt-get install -y build-essential
+    - name: Install CMake (if not already available)
+      run: sudo apt-get update && sudo apt-get install -y cmake
 
-    - name: Build with make
-      run: |
-        cd Linux
-        make
+    - name: Configure with CMake preset
+      run: cmake --preset=linux64
+
+    - name: Build project
+      run: cmake --build --preset=linux64Release
