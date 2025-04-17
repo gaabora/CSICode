@@ -31,7 +31,7 @@ jobs:
     - name: Package Linux Release ZIP
       run: |
         mkdir -p Package/UserPlugins
-        cp build/libreaper_csurf_integrator.so Package/UserPlugins/
+        cp ./cmake-build-linux/libreaper_csurf_integrator.so Package/UserPlugins/
         cp -r Scripts Package/
         cp -r CSI Package/
         cd Package
