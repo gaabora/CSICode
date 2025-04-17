@@ -21,7 +21,7 @@ jobs:
       uses: jwlawson/actions-setup-cmake@v1
 
     - name: Configure with CMake preset
-      run: cmake --preset=macos-x86_64
+      run: cmake --preset=macos-x86_64 -DCMAKE_CXX_STANDARD=17
 
     - name: Build project
       run: cmake --build --preset=macos-x86_64Release

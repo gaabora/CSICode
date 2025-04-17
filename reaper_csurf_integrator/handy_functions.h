@@ -14,6 +14,7 @@
   #endif
 #endif
 #include <iostream>
+#include <vector>
 
 static double int14ToNormalized(unsigned char msb, unsigned char lsb)
 {
