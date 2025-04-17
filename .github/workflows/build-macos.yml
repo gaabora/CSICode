@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - cmake-test
   pull_request:
 
 jobs:
