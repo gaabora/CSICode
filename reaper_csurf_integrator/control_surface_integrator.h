@@ -26,6 +26,7 @@
 #include <fstream>
 #include <sstream>
 #include <iomanip>
+#include <algorithm> // std::find
 #include <math.h>
 #include <algorithm>
 

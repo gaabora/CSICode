@@ -20,3 +20,20 @@ jobs:
 
     - name: Build with MSBuild
       run: msbuild Windows/reaper_csurf_integrator/reaper_csurf_integrator/reaper_csurf_integrator.vcxproj /p:Configuration=Release /p:Platform=x64
+
+    - name: Package Release ZIP
+      run: |
+        mkdir -p Package/UserPlugins
+        cp build/Release/reaper_csurf_integrator.dll Package/UserPlugins/
+        cp -r Scripts Package/
+        cp -r CSI Package/
+        cd Package
+        7z a ../CSICode_WindowsRelease.zip *
+      shell: bash
+
+    - name: Upload Build Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: CSI_Windows
+        path: CSI_Windows.zip
+        

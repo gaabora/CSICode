@@ -4,7 +4,7 @@ name: CMake on multiple platforms
 
 on:
   push:
-    branches: [ "main", "cmake-test" ]
+    branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
 
@@ -75,7 +75,7 @@ jobs:
         cp -r Scripts Package/
         cp -r CSI Package/
         cd Package
-        7z a ../CSI_Windows.zip *
+        7z a ../CSICode_WindowsRelease.zip *
       shell: bash
 
     - name: Upload Build Artifact
