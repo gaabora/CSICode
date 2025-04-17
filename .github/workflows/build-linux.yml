@@ -25,6 +25,9 @@ jobs:
     - name: Build project
       run: cmake --build --preset=linux64Release
 
+    - name: Debug Build Output
+      run: find . -name '*.so'
+        
     - name: Package Linux Release ZIP
       run: |
         mkdir -p Package/UserPlugins
