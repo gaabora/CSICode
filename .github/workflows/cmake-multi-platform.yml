@@ -1,177 +1,145 @@
-name: C++ CI
-
 on:
   push:
-    tags: [ '*' ]
-    branches: [ "main" ]
-env:
-  APPVEYOR: true
-  APPVEYOR_BUILD_NUMBER: ${{ github.run_number }}
-  APPVEYOR_REPO_COMMIT: ${{ github.sha }}
-  VS_PATH: "%ProgramFiles%\\Microsoft Visual Studio\\2022\\Enterprise\\VC\\Auxiliary\\Build"
-  MACOSX_DEPLOYMENT_TARGET: 11.0
+    tags: [ 'v*' ]
 
 jobs:
-  build:
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      matrix:
-        include:
-          - os: macos-latest
-            arch: arm64;x86_64
-          - os: ubuntu-latest
-            arch: x86_64
-          - os: ubuntu-latest
-            arch: aarch64
-          - os: ubuntu-latest
-            arch: i686
-          - os: ubuntu-latest
-            arch: armv7l
-          - os: windows-latest
-            arch: x64
-            win_build_type: RelWithDebInfo
-          - os: windows-latest
-            arch: x86
-            win_build_type: Release
+  build-macos:
+    runs-on: macos-13
 
     steps:
-    - uses: actions/checkout@2
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Create Build Environment
-      # Some setup steps may vary depending on the operating system
-      shell: bash
-      run: |
-        if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
-          ARCH=${{ matrix.arch }}
-          sudo sed -i '/arch=/! s/^deb/deb [arch=amd64,i386]/' /etc/apt/sources.list
+      - name: Set up CMake
+        uses: jwlawson/actions-setup-cmake@v2
 
-          install-deps() {
-            local arch="$1"; shift
-            local native=("$@" php-cli qemu-user-binfmt )
-            local target=()
+      - name: Configure CMake
+        run: >
+          cmake -B ${{ github.workspace }}/build
+          -DCMAKE_CXX_STANDARD=17
+          -DCMAKE_BUILD_TYPE=Release
+          -S ${{ github.workspace }}
 
-            sudo dpkg --add-architecture $arch
-            sudo apt-get update -qq
-            sudo apt-get install -qq aptitude > /dev/null
-            sudo aptitude install -yR ${native[@]} ${target[@]/%/:$arch} > /dev/null
-          }
-      
-          # sudo update-alternatives --set gcc /usr/bin/gcc-7
+      - name: Build
+        run: cmake --build ${{ github.workspace }}/build --config Release
 
-          case $ARCH in
-          x86_64)
-            install-deps amd64
-            ;;
-          i686)
-            install-deps i386 g++-multilib
-            export TOOLCHAIN=$(pwd)/cmake/linux-cross.cmake \
-                   TOOLCHAIN_PREFIX=i386-linux-gnu
-            ;;
-          armv7l)
-            install-deps armhf g++-arm-linux-gnueabihf
-            export TOOLCHAIN=$(pwd)/cmake/linux-cross.cmake \
-                   TOOLCHAIN_PREFIX=arm-linux-gnueabihf
-            ;;
-          aarch64)
-            install-deps arm64 g++-aarch64-linux-gnu
-            export TOOLCHAIN=$(pwd)/cmake/linux-cross.cmake \
-                   TOOLCHAIN_PREFIX=aarch64-linux-gnu
-            ;;
-          esac
-        elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-          choco install ninja
-        elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
-            :
-        fi
+      - name: Debug Build Output
+        run: find . -name '*.dylib'
 
-    - name: Windows build
-      if: runner.os == 'Windows'
-      working-directory: ${{ github.workspace }}
-      shell: cmd
-      run: |
-        if "${{matrix.arch}}" == "x64" call "%VS_PATH%\vcvars64.bat"
-        if "${{matrix.arch}}" == "x86" call "%VS_PATH%\vcvars32.bat"
-        cmake -B ${{ github.workspace }} ^
-          -G "Ninja" ^
-          -DCMAKE_BUILD_TYPE=${{ matrix.win_build_type }} ^
-          -S ${{ github.workspace }} ^
-          -DVCPKG_TARGET_TRIPLET=${{matrix.arch}}-windows-static ^
-          -DCMAKE_TOOLCHAIN_FILE=%VCPKG_INSTALLATION_ROOT%\scripts\buildsystems\vcpkg.cmake 
-          
-        cmake --build ${{ github.workspace }} --config ${{ matrix.win_build_type }}
+      - name: Package Release ZIP
+        run: |
+          mkdir -p Package/UserPlugins
+          cp ./build/reaper_csurf_integrator.dylib Package/UserPlugins/
+          cp -r Scripts Package/
+          cp -r CSI Package/
+          cd Package
+          zip -r ../CSI_${{ github.ref_name }}_mac.zip *
+        shell: bash
 
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: CSI_${{ github.ref_name }}_mac
+          path: CSI_${{ github.ref_name }}_mac.zip
 
-    - name: Unix-like build
-      if: runner.os != 'Windows'
-      run: |
-        cmake -B ${{ github.workspace }} \
-          -DCMAKE_BUILD_TYPE=Release \
-          -S ${{ github.workspace }} \
-          -DCMAKE_OSX_ARCHITECTURES="${{ matrix.arch }}" \
-          -DVCPKG_TARGET_TRIPLET=arch-env -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=$TOOLCHAIN \
-          -DCMAKE_OSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET \
-          -DCMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake
-        cmake --build ${{ github.workspace }} --config Release
+      - name: Upload GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            CSI_${{ github.ref_name }}_mac.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: CTest
-      if: runner.os != 'Windows'
-      working-directory: ${{ github.workspace }}
-      run: ctest --build-config Release
+  build-windows:
+    runs-on: windows-2022
 
-    - name: CPack
-      working-directory: ${{ github.workspace }}
-      shell: bash
-      run: |
-        if [[ "${{ matrix.os }}" == "windows-latest" && 
-              "${{ matrix.arch }}" == "x64" ]]; then
-          cpack
-        elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
-          sudo cpack
-        fi
-
-    - name: Upload artifact
-      uses: actions/upload-artifact@v2
-      with:
-        name: my-artifact
-        path: |
-          ./reaper_*.dll
-          ./reaper_*.pdb
-          ./reaper_*.dylib
-          ./reaper_*.so
-          ./*.exe
-          ./*.pkg
-
-  release:
-    needs: build
-    runs-on: ubuntu-latest
     steps:
-    - name: Download artifact
-      uses: actions/download-artifact@v2
-      with:
-        name: my-artifact
-        path: ./artifacts
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
-      with:
-        tag_name: ${{ github.ref_name }}
-        release_name: ${{ github.ref_name }}
-        draft: true
-        prerelease: false
+      - name: Configure CMake
+        run: >
+          cmake -B ${{ github.workspace }}/build
+          -DCMAKE_CXX_COMPILER=cl
+          -DCMAKE_C_COMPILER=cl
+          -DCMAKE_BUILD_TYPE=Release
+          -S ${{ github.workspace }}
 
-    - name: Upload Release Assets
-      run: |
-        for file in ./artifacts/*; do
-          if [ -f "$file" ]; then
-            echo "Uploading $file"
-            curl \
-              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              -H "Content-Type: $(file -b --mime-type $file)" \
-              --data-binary @"$file" \
-              "${{ steps.create_release.outputs.upload_url }}=$(basename $file)"
-          fi
-        done
+      - name: Build
+        run: cmake --build ${{ github.workspace }}/build --config Release
+
+      - name: Debug Build Output
+        run: dir /s *.dll
+        shell: cmd
+
+      - name: Package Release ZIP
+        run: |
+          mkdir Package\UserPlugins
+          copy .\build\Release\reaper_csurf_integrator.dll Package\UserPlugins\
+          xcopy Scripts Package\Scripts\ /E /I
+          xcopy CSI Package\CSI\ /E /I
+          cd Package
+          7z a ..\CSI_${{ github.ref_name }}_win.zip *
+        shell: cmd
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: CSI_${{ github.ref_name }}_win
+          path: CSI_${{ github.ref_name }}_win.zip
+
+      - name: Upload GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            CSI_${{ github.ref_name }}_win.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-linux:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up CMake
+        run: sudo apt-get update && sudo apt-get install -y cmake
+
+      - name: Configure CMake
+        run: >
+          cmake -B ${{ github.workspace }}/build
+          -DCMAKE_CXX_STANDARD=17
+          -DCMAKE_BUILD_TYPE=Release
+          -S ${{ github.workspace }}
+
+      - name: Build
+        run: cmake --build ${{ github.workspace }}/build --config Release
+
+      - name: Debug Build Output
+        run: find . -name '*.so'
+
+      - name: Package Release ZIP
+        run: |
+          mkdir -p Package/UserPlugins
+          cp ./build/reaper_csurf_integrator.so Package/UserPlugins/
+          cp -r Scripts Package/
+          cp -r CSI Package/
+          cd Package
+          zip -r ../CSI_${{ github.ref_name }}_linux.zip *
+        shell: bash
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: CSI_${{ github.ref_name }}_linux
+          path: CSI_${{ github.ref_name }}_linux.zip
+
+      - name: Upload GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            CSI_${{ github.ref_name }}_linux.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

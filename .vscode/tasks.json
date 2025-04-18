@@ -2,6 +2,28 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "type": "cmake",
+      "label": "Build plugin using CMake",
+      "command": "build",
+      "targets": [
+        "ALL_BUILD"
+      ],
+      "group": "build",
+      "problemMatcher": [],
+      "detail": ""
+    },
+    {
+      "type": "cmake",
+      "label": "Clean+rebuild plugin using CMake",
+      "command": "cleanRebuild",
+      "targets": [
+        "ALL_BUILD"
+      ],
+      "group": "build",
+      "problemMatcher": [],
+      "detail": ""
+    },
+    {
       "label": "Parse this log file",
       "type": "shell",
       "command": "type",
