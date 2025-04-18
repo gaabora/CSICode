@@ -11,22 +11,18 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
+    steps:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Install build tools
-      run: sudo apt-get update && sudo apt-get install -y ninja-build p7zip-full
+    - name: Install CMake (if not already available)
+      run: sudo apt-get update && sudo apt-get install -y cmake
 
     - name: Configure CMake
-      run: >
-          -DCMAKE_CXX_COMPILER=clang++
-          -DCMAKE_C_COMPILER=clang
-          -DCMAKE_BUILD_TYPE=Release
-          -G Ninja
-          -S ${{ github.workspace }}
+      run: cmake --preset=linux64
 
     - name: Build
-      run: cmake --build ${{ github.workspace }}/build --config Release
+      run: cmake --build ${{ github.workspace }}/build --preset=linux64Release
 
     - name: Debug Build Output
       run: find . -name '*.so'
@@ -34,7 +30,7 @@ jobs:
     - name: Package Release ZIP
       run: |
         mkdir -p Package/UserPlugins
-        cp ./build/ControlSurfaceIntegrator.so Package/UserPlugins/
+        cp ./build/reaper_csurf_integrator.so Package/UserPlugins/
         cp -r Scripts Package/
         cp -r CSI Package/
         cd Package

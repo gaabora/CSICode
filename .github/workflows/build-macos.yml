@@ -33,7 +33,7 @@ jobs:
       - name: Package Release ZIP
         run: |
           mkdir -p Package/UserPlugins
-          cp ./build/ControlSurfaceIntegrator.dylib Package/UserPlugins/
+          cp ./build/reaper_csurf_integrator.dylib Package/UserPlugins/
           cp -r Scripts Package/
           cp -r CSI Package/
           cd Package

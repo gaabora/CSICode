@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(ControlSurfaceIntegrator VERSION 7.1.0 LANGUAGES C CXX)
+project(reaper_csurf_integrator VERSION 7.1.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

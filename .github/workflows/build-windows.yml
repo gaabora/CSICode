@@ -32,7 +32,7 @@ jobs:
       - name: Package Release ZIP
         run: |
           mkdir Package\UserPlugins
-          copy .\build\Release\ControlSurfaceIntegrator.dll Package\UserPlugins\
+          copy .\build\Release\reaper_csurf_integrator.dll Package\UserPlugins\
           xcopy Scripts Package\Scripts\ /E /I
           xcopy CSI Package\CSI\ /E /I
           cd Package
