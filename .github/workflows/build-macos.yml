@@ -2,7 +2,7 @@ name: Build on macOS
 
 on:
   push:
-    branches: [ main, cmake-test ]
+    branches: [ main ]
   pull_request:
     branches: [ main ]
 
