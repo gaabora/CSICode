@@ -14,7 +14,6 @@
 #endif
 
 #ifdef _WIN32
-#define _CRT_NONSTDC_NO_DEPRECATE // for Visual Studio versions that want _strdup instead of strdup
 #if _MSC_VER <= 1400
 #define _CRT_SECURE_NO_DEPRECATE
 #endif
@@ -228,7 +227,7 @@ class PropertyList
         }
         else
         {
-          char *v = strdup(val);
+          char *v = _strdup(val);
           memcpy(rec, &v, sizeof(v));
           rec[RECLEN-1] = 1;
         }
@@ -2653,7 +2652,8 @@ public:
     virtual void RequestUpdate() override
     {
         const DWORD now = GetTickCount();
-        if ((now - lastRun_) < (1000/max((surfaceIO_->surfaceRefreshRate_),1))) return;
+        const DWORD threshold = (DWORD) (1000 / max(surfaceIO_->surfaceRefreshRate_, 1));
+        if ((now - lastRun_) < threshold) return;
         lastRun_=now;
 
         surfaceIO_->Run();
@@ -2989,7 +2989,7 @@ protected:
             if (trackOffset_ <  0)
                 trackOffset_ =  0;
             
-            int top = GetNumTracks() - trackNavigators_.size();
+            int top = GetNumTracks() - (int) trackNavigators_.size();
             
             if (trackOffset_ >  top)
                 trackOffset_ = top;
@@ -3193,7 +3193,7 @@ public:
         if (currentTrackVCAFolderMode_ != 0)
             return;
 
-        int numTracks = tracks_.size();
+        int numTracks = (int) tracks_.size();
         
         if (numTracks <= trackNavigators_.size())
             return;
@@ -3203,7 +3203,7 @@ public:
         if (trackOffset_ <  0)
             trackOffset_ =  0;
         
-        int top = numTracks - trackNavigators_.size();
+        int top = numTracks - (int) trackNavigators_.size();
         
         if (trackOffset_ >  top)
             trackOffset_ = top;
@@ -3232,9 +3232,9 @@ public:
         int top = 0;
         
         if (vcaLeadTrack_ == NULL)
-            top = vcaTopLeadTracks_.size() - 1;
+            top = (int) vcaTopLeadTracks_.size() - 1;
         else
-            top = vcaSpillTracks_.size() - 1;
+            top = (int) vcaSpillTracks_.size() - 1;
 
         if (vcaTrackOffset_ >  top)
             vcaTrackOffset_ = top;
@@ -3253,9 +3253,9 @@ public:
         int top = 0;
         
         if (folderParentTrack_ == NULL)
-            top = folderTopParentTracks_.size() - 1;
+            top = (int) folderTopParentTracks_.size() - 1;
         else
-            top = folderSpillTracks_.size() - 1;
+            top = (int) folderSpillTracks_.size() - 1;
         
         if (folderTrackOffset_ > top)
             folderTrackOffset_ = top;
@@ -3271,7 +3271,7 @@ public:
         if (selectedTracksOffset_ < 0)
             selectedTracksOffset_ = 0;
         
-        int top = selectedTracks_.size() - 1;
+        int top = (int) selectedTracks_.size() - 1;
         
         if (selectedTracksOffset_ > top)
             selectedTracksOffset_ = top;
@@ -4032,14 +4032,6 @@ public:
       ret = get_config_var("projmetrov2", &size);
       if (size==8) return (double *)ret;
       return NULL;
-    }
-    
-    int GetBaseTickCount(int stepCount)
-    {
-        if (NUM_ELEM(s_tickCounts_) < stepCount)
-            return s_tickCounts_[stepCount];
-        else
-            return s_tickCounts_[NUM_ELEM(s_tickCounts_) - 1];
     }
     
     void Speak(const char *phrase)
