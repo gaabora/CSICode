@@ -1,4 +1,4 @@
-name: Build CSI on Windows and Linux
+name: Build CSI on Windows
 
 on:
   push:
@@ -49,49 +49,3 @@ jobs:
         with:
           name: CSI_Windows
           path: CSI_Windows.zip
-
-  build-linux:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set reusable strings
-        id: strings
-        shell: bash
-        run: |
-          echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
-
-      - name: Install build tools
-        run: sudo apt-get update && sudo apt-get install -y ninja-build p7zip-full
-
-      - name: Configure CMake (clang)
-        run: >
-          cmake -B ${{ steps.strings.outputs.build-output-dir }}
-          -DCMAKE_CXX_COMPILER=clang++
-          -DCMAKE_C_COMPILER=clang
-          -DCMAKE_BUILD_TYPE=Release
-          -G Ninja
-          -S ${{ github.workspace }}
-
-      - name: Build
-        run: cmake --build ${{ steps.strings.outputs.build-output-dir }}
-
-      - name: Debug Build Output
-        run: find . -name '*.so'
-
-      - name: Package Release ZIP
-        run: |
-          mkdir -p Package/UserPlugins
-          cp ./build/ControlSurfaceIntegrator.so Package/UserPlugins/
-          cp -r Scripts Package/
-          cp -r CSI Package/
-          cd Package
-          7z a ../CSI_Linux.zip *
-
-      - name: Upload Build Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: CSI_Linux
-          path: CSI_Linux.zip
