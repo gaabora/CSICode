@@ -5,17 +5,14 @@ set(SRC_PATH ${CMAKE_CURRENT_SOURCE_DIR}/reaper_csurf_integrator)
 set(WDL_PATH ${CMAKE_CURRENT_SOURCE_DIR}/WDL)
 set(RES_PATH ${CMAKE_CURRENT_SOURCE_DIR}/reaper_csurf_integrator)
 
+FetchContent_Declare(WDL
+    GIT_REPOSITORY https://github.com/justinfrankel/WDL
+    SOURCE_DIR     "${CMAKE_CURRENT_SOURCE_DIR}"
+    GIT_TAG        "origin/main"
+)
+
 find_package(WDL REQUIRED)
 
-if(NOT WIN32)
-  find_package(SWELL REQUIRED)
-endif()
-
-target_link_libraries(reaper-sdk INTERFACE WDL::WDL)
-
-if(SWELL_FOUND)
-  target_link_libraries(reaper-sdk INTERFACE SWELL::swell)
-endif()
 
 if (UNIX)
     find_package(Perl REQUIRED)
