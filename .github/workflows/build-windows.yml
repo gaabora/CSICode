@@ -26,7 +26,8 @@ jobs:
         run: cmake --build ${{ github.workspace }}/build --config Release
 
       - name: Debug Build Output
-        run: find . -name '*.dll'
+        run: dir /s *.dll
+        shell: cmd
 
       - name: Package Release ZIP
         run: |

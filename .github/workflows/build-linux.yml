@@ -11,37 +11,38 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      - name: Install build tools
-        run: sudo apt-get update && sudo apt-get install -y ninja-build p7zip-full
+    - name: Install build tools
+      run: sudo apt-get update && sudo apt-get install -y ninja-build p7zip-full
 
-      - name: Configure CMake (clang)
-        run: >
+    - name: Configure CMake
+      run: >
           -DCMAKE_CXX_COMPILER=clang++
           -DCMAKE_C_COMPILER=clang
           -DCMAKE_BUILD_TYPE=Release
           -G Ninja
           -S ${{ github.workspace }}
 
-      - name: Build
-        run: cmake --build ${{ github.workspace }}/build --config Release
+    - name: Build
+      run: cmake --build ${{ github.workspace }}/build --config Release
 
-      - name: Debug Build Output
-        run: find . -name '*.so'
+    - name: Debug Build Output
+      run: find . -name '*.so'
 
-      - name: Package Release ZIP
-        run: |
-          mkdir -p Package/UserPlugins
-          cp ./build/Release/ControlSurfaceIntegrator.so Package/UserPlugins/
-          cp -r Scripts Package/
-          cp -r CSI Package/
-          cd Package
-          7z a ../CSI_Linux.zip *
+    - name: Package Release ZIP
+      run: |
+        mkdir -p Package/UserPlugins
+        cp ./build/ControlSurfaceIntegrator.so Package/UserPlugins/
+        cp -r Scripts Package/
+        cp -r CSI Package/
+        cd Package
+        zip -r ../CSI_Linux.zip *
+      shell: bash
 
-      - name: Upload Build Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: CSI_Linux
-          path: CSI_Linux.zip
+    - name: Upload Build Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: CSI_Linux
+        path: CSI_Linux.zip

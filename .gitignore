@@ -43,6 +43,10 @@ Windows/reaper_csurf_integrator/reaper_csurf_integrator/reaper_csurf_integrator.
 reaper_csurf_integrator/res.rc_mac_dlg
 reaper_csurf_integrator/res.rc_mac_menu
 reaper_csurf_integrator/res.aps
+cmake-build-win64/
 build/
 .DS_Store
 WDL/
+lib/
+.vs/
+
