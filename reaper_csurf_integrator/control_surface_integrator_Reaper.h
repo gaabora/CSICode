@@ -7,8 +7,6 @@
 #ifndef control_surface_integrator_Reaper_h
 #define control_surface_integrator_Reaper_h
 
-#define WDL_NO_DEFINE_MINMAX
-
 #include "reaper_plugin_functions.h"
 
 using namespace std;
