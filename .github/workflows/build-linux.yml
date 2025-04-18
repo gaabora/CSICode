@@ -2,31 +2,23 @@ name: Build on Linux
 
 on:
   push:
-    branches:
-      - main
-      - cmake-test
+    branches: [ main, cmake-test ]
   pull_request:
     branches: [ main ]
 
+jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Set reusable strings
-        id: strings
-        shell: bash
-        run: |
-          echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
       - name: Install build tools
         run: sudo apt-get update && sudo apt-get install -y ninja-build p7zip-full
 
       - name: Configure CMake (clang)
         run: >
-          cmake -B ${{ steps.strings.outputs.build-output-dir }}
           -DCMAKE_CXX_COMPILER=clang++
           -DCMAKE_C_COMPILER=clang
           -DCMAKE_BUILD_TYPE=Release
@@ -34,7 +26,7 @@ on:
           -S ${{ github.workspace }}
 
       - name: Build
-        run: cmake --build ${{ steps.strings.outputs.build-output-dir }}
+        run: cmake --build ${{ github.workspace }}/build --config Release
 
       - name: Debug Build Output
         run: find . -name '*.so'
@@ -42,7 +34,7 @@ on:
       - name: Package Release ZIP
         run: |
           mkdir -p Package/UserPlugins
-          cp ./build/ControlSurfaceIntegrator.so Package/UserPlugins/
+          cp ./build/Release/ControlSurfaceIntegrator.so Package/UserPlugins/
           cp -r Scripts Package/
           cp -r CSI Package/
           cd Package
