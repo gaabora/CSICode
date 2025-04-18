@@ -29,14 +29,13 @@ jobs:
     - name: Build project
       run: cmake --build --preset=macos-x86_64Release
 
-  
     - name: Debug Build Output
       run: find . -name '*.dylib'
         
     - name: Package MacOS Release ZIP
       run: |
         mkdir -p Package/UserPlugins
-        cp build/libreaper_csurf_integrator.dylib Package/UserPlugins/
+        cp ./cmake-build-macos/ControlSurfaceIntegrator.dylib Package/UserPlugins/
         cp -r Scripts Package/
         cp -r CSI Package/
         cd Package
