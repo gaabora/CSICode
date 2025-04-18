@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(CSI VERSION 7.1.0 LANGUAGES C CXX)
+project(ControlSurfaceIntegrator VERSION 7.1.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -84,7 +84,7 @@ endif()
 # endif()
 
 add_library(${PROJECT_NAME} SHARED)
-add_subdirectory(src)
+add_subdirectory(reaper_csurf_integrator) #TODO: change to src 
 target_link_libraries(${PROJECT_NAME} PRIVATE reaper-sdk)
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 23)
