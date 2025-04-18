@@ -5,7 +5,19 @@ set(SRC_PATH ${CMAKE_CURRENT_SOURCE_DIR}/reaper_csurf_integrator)
 set(WDL_PATH ${CMAKE_CURRENT_SOURCE_DIR}/WDL)
 set(RES_PATH ${CMAKE_CURRENT_SOURCE_DIR}/reaper_csurf_integrator)
 
-if (UNIX OR APPLE)
+find_package(WDL REQUIRED)
+
+if(NOT WIN32)
+  find_package(SWELL REQUIRED)
+endif()
+
+target_link_libraries(reaper-sdk INTERFACE WDL::WDL)
+
+if(SWELL_FOUND)
+  target_link_libraries(reaper-sdk INTERFACE SWELL::swell)
+endif()
+
+if (UNIX)
     find_package(Perl REQUIRED)
     execute_process(COMMAND ${PERL_EXECUTABLE} ${WDL_PATH}/swell/swell_resgen.pl --quiet ${RES_PATH}/res.rc)
 endif ()

@@ -21,10 +21,14 @@ jobs:
     - name: Build with MSBuild
       run: msbuild Windows/reaper_csurf_integrator/reaper_csurf_integrator/reaper_csurf_integrator.vcxproj /p:Configuration=Release /p:Platform=x64
 
+    - name: Debug Build Output
+      run: find . -name '*.dll'
+      shell: bash
+
     - name: Package Release ZIP
       run: |
         mkdir -p Package/UserPlugins
-        cp build/Release/reaper_csurf_integrator.dll Package/UserPlugins/
+        cp ./x64/Release/reaper_csurf_integrator.dll Package/UserPlugins/
         cp -r Scripts Package/
         cp -r CSI Package/
         cd Package
