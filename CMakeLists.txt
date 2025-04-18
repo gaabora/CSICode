@@ -83,39 +83,58 @@ endif()
 #   )
 # endif()
 
+
+set(SRC_PATH ${CMAKE_CURRENT_SOURCE_DIR}/reaper_csurf_integrator)
+set(WDL_PATH ${CMAKE_CURRENT_SOURCE_DIR}/lib/WDL/WDL)
+set(RES_PATH ${CMAKE_CURRENT_SOURCE_DIR}/reaper_csurf_integrator)
+
 if(NOT WIN32)
-    # Run the PHP script to generate resources for macOS
+    # Run the swell resource generation script
     execute_process(
-        COMMAND php ${PROJECT_SOURCE_DIR}/lib/WDL/WDL/swell/mac_resgen.php res.rc
-        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+        COMMAND perl ${WDL_PATH}/swell/swell_resgen.pl --quiet ${SRC_PATH}/res.rc
+        WORKING_DIRECTORY ${SRC_PATH}
         RESULT_VARIABLE result
         OUTPUT_VARIABLE output
         ERROR_VARIABLE error_output
     )
-
-    # If the resource generation failed, print an error message
-    if(result)
-        message(FATAL_ERROR "Resource generation failed: ${error_output}")
-    endif()
-
-    # Include the generated resource files for macOS
-    include_directories(${PROJECT_SOURCE_DIR})  # Assuming res.rc_mac_dlg is in the same directory as CMakeLists.txt
-    set(MAC_RESOURCE_FILES res.rc_mac_dlg)  # Add the generated resource file here
-
-else()
-    # For non-macOS platforms, include the existing resources
-    set(MAC_RESOURCE_FILES "")  # No need for mac-specific resources on other platforms
 endif()
 
-# Then include the resource files in your target
-target_sources(your_target
-    PRIVATE
-    ${MAC_RESOURCE_FILES}
-    # Add any other source files here
+
+
+
+if (UNIX)
+    find_package(Perl REQUIRED)
+    execute_process(COMMAND ${PERL_EXECUTABLE} ${WDL_PATH}/swell/swell_resgen.pl --quiet ${RES_PATH}/res.rc)
+endif ()
+
+set(TARGET reaper_csurf_integrator)
+set(CMAKE_CXX_STANDARD 17)
+
+add_library(${PROJECT_NAME} SHARED
+    # ${SRC_PATH}/control_surface_action_contexts.h
+    # ${SRC_PATH}/control_surface_integrator.cpp
+    # ${SRC_PATH}/control_surface_integrator.h
+    # ${SRC_PATH}/control_surface_integrator_Reaper.h
+    # ${SRC_PATH}/control_surface_integrator_ui.cpp
+    # ${SRC_PATH}/control_surface_manager_actions.h
+    # ${SRC_PATH}/control_surface_midi_widgets.h
+    # ${SRC_PATH}/control_surface_OSC_widgets.h
+    # ${SRC_PATH}/control_surface_Reaper_actions.h
+    # ${SRC_PATH}/handy_functions.h
+    # ${SRC_PATH}/main.cpp
+    # ${SRC_PATH}/oscpkt.hh
+    # ${SRC_PATH}/reaper_plugin.h
+    # ${SRC_PATH}/reaper_plugin_functions.h
+    # ${SRC_PATH}/resource.h
+    # ${SRC_PATH}/udp.hh
+    ${WDL_PATH}/win32_utf8.c
 )
 
+install(TARGETS ${PROJECT_NAME}
+    RUNTIME
+    DESTINATION $ENV{REAPER_PATH}/UserPlugins
+)
 
-add_library(${PROJECT_NAME} SHARED)
 add_subdirectory(reaper_csurf_integrator) #TODO: change to src 
 target_link_libraries(${PROJECT_NAME} PRIVATE reaper-sdk)
 
@@ -156,7 +175,7 @@ endif()
 STRING(TOLOWER "${ARCH_NAME}" ARCH_NAME)
 set_target_properties(${PROJECT_NAME} PROPERTIES
   PREFIX "" # disable the "lib" prefix
-  OUTPUT_NAME "reaper_${PROJECT_NAME}-${ARCH_NAME}"
+  OUTPUT_NAME "${PROJECT_NAME}"
 )
 
 set(REAPER_USER_PLUGINS "UserPlugins")
