@@ -83,6 +83,38 @@ endif()
 #   )
 # endif()
 
+if(NOT WIN32)
+    # Run the PHP script to generate resources for macOS
+    execute_process(
+        COMMAND php ${PROJECT_SOURCE_DIR}/lib/WDL/WDL/swell/mac_resgen.php res.rc
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+        RESULT_VARIABLE result
+        OUTPUT_VARIABLE output
+        ERROR_VARIABLE error_output
+    )
+
+    # If the resource generation failed, print an error message
+    if(result)
+        message(FATAL_ERROR "Resource generation failed: ${error_output}")
+    endif()
+
+    # Include the generated resource files for macOS
+    include_directories(${PROJECT_SOURCE_DIR})  # Assuming res.rc_mac_dlg is in the same directory as CMakeLists.txt
+    set(MAC_RESOURCE_FILES res.rc_mac_dlg)  # Add the generated resource file here
+
+else()
+    # For non-macOS platforms, include the existing resources
+    set(MAC_RESOURCE_FILES "")  # No need for mac-specific resources on other platforms
+endif()
+
+# Then include the resource files in your target
+target_sources(your_target
+    PRIVATE
+    ${MAC_RESOURCE_FILES}
+    # Add any other source files here
+)
+
+
 add_library(${PROJECT_NAME} SHARED)
 add_subdirectory(reaper_csurf_integrator) #TODO: change to src 
 target_link_libraries(${PROJECT_NAME} PRIVATE reaper-sdk)
