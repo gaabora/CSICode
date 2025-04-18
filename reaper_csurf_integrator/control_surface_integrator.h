@@ -36,9 +36,9 @@
 #include <filesystem>
 #include <map>
 
-#include "../WDL/win32_utf8.h"
-#include "../WDL/ptrlist.h"
-#include "../WDL/queue.h"
+#include "../lib/WDL/WDL/win32_utf8.h"
+#include "../lib/WDL/WDL/ptrlist.h"
+#include "../lib/WDL/WDL/queue.h"
 
 #include "control_surface_integrator_Reaper.h"
 
@@ -46,9 +46,9 @@
 
 #ifdef INCLUDE_LOCALIZE_IMPORT_H
 #define LOCALIZE_IMPORT_PREFIX "csi_"
-#include "../WDL/localize/localize-import.h"
+#include "../lib/WDL/WDL/localize/localize-import.h"
 #endif
-#include "../WDL/localize/localize.h"
+#include "../lib/WDL/WDL/localize/localize.h"
 
 #ifdef _WIN32
 #include "commctrl.h"
