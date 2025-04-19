@@ -176,6 +176,7 @@ STRING(TOLOWER "${ARCH_NAME}" ARCH_NAME)
 set_target_properties(${PROJECT_NAME} PROPERTIES
   PREFIX "" # disable the "lib" prefix
   OUTPUT_NAME "${PROJECT_NAME}"
+  RUNTIME_OUTPUT_DIRECTORY "${REAPER_RESOURCE_PATH}/UserPlugins"
 )
 
 set(REAPER_USER_PLUGINS "UserPlugins")
