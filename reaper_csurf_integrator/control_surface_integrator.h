@@ -516,6 +516,7 @@ private:
     void GetColorValues(vector<rgba_color> &colorValues, const vector<string> &colors);
     void LogAction(double value);
 public:
+    static int constexpr HOLD_DELAY_INHERIT_VALUE = -1;
     static double constexpr BUTTON_RELEASE_MESSAGE_VALUE = 0.0;
     ActionContext(CSurfIntegrator *const csi, Action *action, Widget *widget, Zone *zone, int paramIndex, const vector<string> &params);
 
@@ -1027,9 +1028,7 @@ private:
     vector<unique_ptr<ActionContext>> emptyContexts_;
     
     map<const string, CSIZoneInfo> zoneInfo_;
-        
-    int holdDelayDefaultMs_ = 1000;
-        
+
     shared_ptr<Zone> learnFocusedFXZone_ = NULL;
 
     unique_ptr<Zone> homeZone_;
@@ -1299,8 +1298,6 @@ public:
     }
     
     void Initialize();
-    
-    void SetHoldDelayDefault(int value) { holdDelayDefaultMs_ = value; }
     
     Navigator *GetNavigatorForTrack(MediaTrack* track);
     Navigator *GetMasterTrackNavigator();
@@ -1855,6 +1852,7 @@ private:
     struct ModifierState
     {
         bool isEngaged;
+        bool isLocked;
         DWORD pressedTime;
     };
     
@@ -2123,6 +2121,8 @@ protected:
     int const numChannels_;
     int const channelOffset_;
     
+    int holdTimeMs_ = 1000;
+
     vector<Widget *> widgets_; // owns list
     map<const string, unique_ptr<Widget>> widgetsByName_;
     map<const string, unique_ptr<CSIMessageGenerator>> CSIMessageGeneratorsByMessage_;
@@ -2269,9 +2269,18 @@ public:
     bool GetListensToModifiers() { return listensToModifiers_; }
     void SetListensToModifiers() { listensToModifiers_ = true; }
 
-    void SetLatchTime(int latchTime) { latchTime_ = latchTime; }
-    int GetLatchTime() { return latchTime_; }
+    void SetLatchTime(int latchTime) { 
+        
+		LogToConsole(256, "[DEBUG] SetLatchTime %d\n", latchTime);
+        latchTime_ = latchTime; }
+    int GetLatchTime() { 
+        
+		LogToConsole(256, "[DEBUG] GetLatchTime %d\n", latchTime_);
+        return latchTime_; }
     
+    void SetHoldTime(int value) { holdTimeMs_ = value; }
+    int GetHoldTime() { return holdTimeMs_; }
+
     void UpdateCurrentActionContextModifiers()
     {
         if (! usesLocalModifiers_)
