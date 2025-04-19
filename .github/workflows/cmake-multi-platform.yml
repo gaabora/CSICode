@@ -23,9 +23,6 @@ jobs:
       - name: Build
         run: cmake --build ${{ github.workspace }}/build --config Release
 
-      - name: Debug Build Output
-        run: find . -name '*.dylib'
-
       - name: Package Release ZIP
         run: |
           mkdir -p Package/UserPlugins
@@ -67,10 +64,6 @@ jobs:
 
       - name: Build
         run: cmake --build ${{ github.workspace }}/build --config Release
-
-      - name: Debug Build Output
-        run: dir /s *.dll
-        shell: cmd
 
       - name: Package Release ZIP
         run: |
@@ -115,9 +108,6 @@ jobs:
 
       - name: Build
         run: cmake --build ${{ github.workspace }}/build --config Release
-
-      - name: Debug Build Output
-        run: find . -name '*.so'
 
       - name: Package Release ZIP
         run: |

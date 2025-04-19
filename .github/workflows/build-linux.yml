@@ -27,9 +27,6 @@ jobs:
       - name: Build
         run: cmake --build ${{ github.workspace }}/build --config Release
 
-      - name: Debug Build Output
-        run: find . -name '*.so'
-
       - name: Package Release ZIP
         run: |
           mkdir -p Package/UserPlugins
