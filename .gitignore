@@ -43,5 +43,3 @@ build/
 WDL/
 lib/
 .vs/
-
-*.lua

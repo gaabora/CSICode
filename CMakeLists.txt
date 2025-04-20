@@ -132,7 +132,7 @@ add_library(${PROJECT_NAME} SHARED
 
 install(TARGETS ${PROJECT_NAME}
     RUNTIME
-    DESTINATION $ENV{REAPER_PATH}/UserPlugins
+    DESTINATION $ENV{REAPER_RESOURCE_PATH}/UserPlugins
 )
 
 add_subdirectory(reaper_csurf_integrator) #TODO: change to src 

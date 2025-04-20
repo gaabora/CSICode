@@ -10,8 +10,6 @@ This fork has some improvements and automated build for Windows, MacOS and Linux
 https://github.com/FunkybotsEvilTwin/CSICode
 https://github.com/FunkybotsEvilTwin/CSIWiki
 
-## How to build
-asically by pressing ctrl+shift+B and choosing 'Build plugin using CMake' in vscode after everything is set up (tested on Windows only).
 
 originally from https://github.com/ak5k/reaper-sdk-vscode
 # [Visual Studio Code](https://code.visualstudio.com/) + [CMake](https://cmake.org/) based cross-platform template for developing a [REAPER](https://www.reaper.fm/) [Plug-in Extension](https://www.reaper.fm/sdk/plugin/plugin.php)
@@ -30,39 +28,32 @@ Mainstream Linux distributions usually include compiler and many of other necess
 ### All platforms
 * Install [Visual Studio Code](https://code.visualstudio.com/) (VSCode).
 * Install [Git](https://git-scm.com/downloads), if not already installed. 
-* On Windows, open **Developer PowerShell (or Command Prompt) for VS**. On MacOS and Linux, use regular Terminal. Change directory to user preferred location for source repositories, or make one.
-* Get [reaper-sdk-vscode](https://github.com/ak5k/reaper-sdk-vscode) files, preferably with `git clone --recursive https://github.com/ak5k/reaper-sdk-vscode.git`, or by [creating a new repository from this template](https://docs.github.com/en/free-pro-team@latest/github/creating-cloning-and-archiving-repositories/creating-a-repository-from-a-template) and cloning it to local host. Currently templates don't include submodules, in this case [WDL](https://www.cockos.com/wdl/) library.
-* Change directory to root of this repository.
-* Install [VSCode C/C++ Extension Pack](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools-extension-pack) with `code --verbose --install-extension ms-vscode.cpptools-extension-pack`. This might take a while.
-* If command `code` isn't found on Mac, see [this](https://code.visualstudio.com/docs/setup/mac#_launching-from-the-command-line) and try again.
-* Open new VSCode workspace by issuing command `code .` (in root directory of this repository).
+* Open the project directory in VSCode
+* Install recommended extensions thru extensions panel or recommendations popup or command line or any way you like:
+  * [VSCode C/C++ Extension Pack](https://marketplace.visualstudio.com/items/?itemName=ms-vscode.cpptools-extension-pack) `code --verbose --install-extension ms-vscode.cpptools-extension-pack ms-vscode.cmake-tools`.
+  * [CMake Tools](https://marketplace.visualstudio.com/items/?itemName=ms-vscode.cmake-tools) with `code --verbose --install-extension ms-vscode.cmake-tools ms-vscode.cmake-tools`. This might take a while.
+  * If command `code` isn't found on Mac, see [this](https://code.visualstudio.com/docs/setup/mac#_launching-from-the-command-line) and try again.
 * VSCode finishes installing the C/C++ Extensions pack. This is indicated in Status Bar.
 * Wait, until all dependencies have been downloaded and installed. This might take a while. 
 * Then quit VSCode and restart.
 * If VSCode notifies about Reload, then Reload.
-* If VSCode notifies to configure project 'plugin' with CMake Tools, choose Yes to configure. CMake Tools can also be set to allow always configure new C/C++ projects.
-* Select appropriate build kit for platform and architecture. Visual Studio for Windows, Clang for MacOS and GCC for Linux (e.g. Visual Studio Community Release 2019 - amd64 for modern Windows PC).
+* If VSCode notifies to `configure project with CMake Tools`, choose `Yes` to configure. CMake Tools can also be set to allow always configure new C/C++ projects.
+* Select appropriate build kit for platform and architecture. Visual Studio for Windows, Clang for MacOS and GCC for Linux (e.g. `Visual Studio Community Release 20XX - amd64` for modern Windows PC).
 * VSCode should also notify about setting up IntelliSense for current workspace. Allow this.
 * If this did not happen, these can be set up by issuing VSCode Command Palette Commands (Ctrl/Cmd + Shift + P) `CMake: Configure` and `CMake: Select a Kit`, or from VSCode Status Bar. 
-## Template files
-### `CMakeLists.txt`
-* From VSCode workspace Explorer (Ctrl/Cmd + Shift + E) open up `CMakeLists.txt` file.
-* Configuration for plugin and building/compiling.
-### `src/main.cpp`
-* "The" REAPER plugin.
-### `src/my_plugin.cpp`
-* "The" actual source.
-## First steps
+
+## First steps on Windows debugging
+* Set environment cariables:
+  * `REAPER_PATH` - path to folder with reaper.exe without trailing \ (like C:\Apps\ReaperPortable\App\REAPER)
+  * `REAPER_RESOURCE_PATH` - path to folder with your reaper.ini and UserPlugins without trailing \ (like C:\Apps\Data\ReaperPortableConfig) - there will be installed build .dll and debug files (.ilk and .pdb)
 * By default, VSCode builds a debug version of the plugin it by running `CMake: Build` or keyboard shortcut `F7`.
 * Install plugin with VSCode command `CMake: Install`.
-* Start REAPER, and new plugin and it's Action ("ak5k: my plugin" by default) should show up in the Actions List.
-* Running the Action should result in 'hello, world' Console Message.
-* [VSCode docs](https://code.visualstudio.com/docs/languages/cpp#_tutorials) and [Microsoft C++ docs](https://docs.microsoft.com/en-us/cpp/cpp/) are a helpful resource. And, of course, [ReaScript, JSFX, REAPER Plug-in Extensions, Developer Forum](https://forum.cockos.com/forumdisplay.php?f=3).
+* Start debug in REAPER by `F5`.
 * Choosing between debug and release builds can be done with `CMake: Select Variant`.
-* Debugging is launched with `F5`. First time, VSCode opens up default Launch Task configuration for debugging. Choose correct Environment and select Default Configuration. In `launch.json` file, edit the `"program":` value to match REAPER executable/binary installation path, e.g. `"program": "C:/Program Files/REAPER (x64)/reaper.exe"`.
-* [VSCode debugger](https://code.visualstudio.com/docs/cpp/cpp-debug) allows step-by-step code execution, watching variables, etc.
-* On Windows, VSCode needs to be started from Developer PowerShell (or Command Prompt) for VS.
-![image](https://i.imgur.com/N4LuyFV.gif)
+
+## Other docs
+* [VSCode docs](https://code.visualstudio.com/docs/languages/cpp#_tutorials) and [Microsoft C++ docs](https://docs.microsoft.com/en-us/cpp/cpp/) are a helpful resource. And, of course, [ReaScript, JSFX, REAPER Plug-in Extensions, Developer Forum](https://forum.cockos.com/forumdisplay.php?f=3).
+
 
 
 
