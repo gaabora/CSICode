@@ -1025,6 +1025,7 @@ void CSurfIntegrator::InitActionsDictionary()
     actions_.insert(make_pair("ToggleUseLocalFXSlot", make_unique<ToggleUseLocalFXSlot>()));
     actions_.insert(make_pair("SetLatchTime", make_unique<SetLatchTime>()));
     actions_.insert(make_pair("SetHoldTime", make_unique<SetHoldTime>()));
+    actions_.insert(make_pair("SetOSDTime", make_unique<SetOSDTime>()));
     actions_.insert(make_pair("ToggleEnableFocusedFXMapping", make_unique<ToggleEnableFocusedFXMapping>()));
     actions_.insert(make_pair("DisableFocusedFXMapping", make_unique<DisableFocusedFXMapping>()));
     actions_.insert(make_pair("ToggleEnableLastTouchedFXParamMapping", make_unique<ToggleEnableLastTouchedFXParamMapping>()));
@@ -1635,6 +1636,11 @@ ActionContext::ActionContext(CSurfIntegrator *const csi, Action *action, Widget 
 
     if (acceleratedTickValues_.size() < 1)
         acceleratedTickValues_.push_back(0);
+
+    const char* osdValue = widgetProperties_.get_prop(PropertyType_OSD);
+    osdData_ = osd_data((osdValue) ? osdValue : "?");
+    if (osdData_.message == "No") osdData_.message = "";
+    if (osdData_.message == "?") osdData_.message = string((commandId_ > 0) ? DAW::GetCommandName(commandId_) : actionName);
 }
 
 Page *ActionContext::GetPage()
@@ -1681,6 +1687,10 @@ void ActionContext::UpdateColorValue(double value)
         currentColorIndex_ = value == 0 ? 0 : 1;
         if (colorValues_.size() > currentColorIndex_)
             widget_->UpdateColorValue(colorValues_[currentColorIndex_]);
+    }
+    if (osdData_.awaitsFeedback) {
+        ProcessOSD(value);
+        osdData_.awaitsFeedback = false;
     }
 }
 
@@ -1850,10 +1860,47 @@ void ActionContext::DoRelativeAction(int accelerationIndex, double delta)
         DoRangeBoundAction(action_->GetCurrentNormalizedValue(this) +  (deltaValue_ != 0.0 ? (delta > 0 ? deltaValue_ : -deltaValue_) : delta));
 }
 
+void ActionContext::ProcessOSD(double value)
+{
+    if (osdData_.message.empty()) return;
+
+    int colorIdx = (int) value;
+    if (osdData_.bgColors.empty()) {
+        if (supportsColor_ && !colorValues_.empty()) {
+
+            if (colorValues_.size() == 1) colorIdx = 0;
+            if ((int) colorValues_.size() - 1 < colorIdx) colorIdx = (int) colorValues_.size() - 1;
+
+            char hexColor[7];
+            snprintf(hexColor, sizeof(hexColor), "#%02X%02X%02X", colorValues_[colorIdx].r, colorValues_[colorIdx].g, colorValues_[colorIdx].b);
+
+            osdData_.bgColor = hexColor;
+        } else if (GetWidget()->GetIsTwoState()) {
+            osdData_.bgColor = (value != ActionContext::BUTTON_RELEASE_MESSAGE_VALUE) ? "1" : "0";
+        }
+    } else {
+        if (osdData_.bgColors.size() == 1) colorIdx = 0;
+        if ((int) osdData_.bgColors.size() - 1 < colorIdx) colorIdx = (int) osdData_.bgColors.size() - 1;
+        osdData_.bgColor = osdData_.bgColors[colorIdx];
+    }
+    if (osdData_.timeoutMs == 0) osdData_.timeoutMs = GetSurface()->GetOSDTime();
+
+    if (provideFeedback_ && !osdData_.awaitsFeedback) {
+        osdData_.awaitsFeedback = true;
+        return;
+    } else {
+        if (DAW::ShowOSD(osdData_)) {
+            if (g_debugLevel >= DEBUG_LEVEL_DEBUG) LogToConsole(256, "[DEBUG] OSD: %s %d\n", osdData_.toString().c_str(), value);
+        }
+    }
+}
+
 void ActionContext::DoRangeBoundAction(double value)
 {
     if (value != ActionContext::BUTTON_RELEASE_MESSAGE_VALUE)
         this->LogAction(value);
+
+    this->ProcessOSD(value);
 
     if (value > rangeMaximum_)
         value = rangeMaximum_;
@@ -2325,7 +2372,7 @@ void Zone::UpdateCurrentActionContextModifier(Widget *widget)
 
 ActionContext *Zone::AddActionContext(Widget *widget, int modifier, Zone *zone, const char *actionName, vector<string> &params)
 {
-    actionContextDictionary_[widget][modifier].push_back(make_unique<ActionContext>(csi_, csi_->GetAction(actionName), widget, zone, 0, params));
+    actionContextDictionary_[widget][modifier].push_back(make_unique<ActionContext>(csi_, csi_->GetAction(actionName), widget, zone, 0, params)); // TODO success logging?
     
     return actionContextDictionary_[widget][modifier].back().get();
 }

@@ -2818,6 +2818,7 @@ public:
     // Commenting out the code so that LED is not forced off on load.
     virtual void ForceClear() override
     {
+        if (g_debugLevel >= DEBUG_LEVEL_NOTICE) LogToConsole(2048, "[NOTICE] # ForceClear do not force LED off\n");
         // rgba_color color;
         // ForceColorValue(color);
     }
@@ -2841,6 +2842,7 @@ public:
             // Commenting this out prevents turning off the LED.
             if (colorInt == 0)
             {
+                if (g_debugLevel >= DEBUG_LEVEL_NOTICE) LogToConsole(2048, "[NOTICE] ForceColorValue ignores color=0, do not force LED off\n");
                 // SendMidiMessage(midiFeedbackMessage1_.midi_message[0] + 1, midiFeedbackMessage1_.midi_message[1], 17); // turn off led
             }
             else

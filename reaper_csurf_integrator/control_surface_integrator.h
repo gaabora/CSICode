@@ -138,6 +138,7 @@ enum PropertyType {
   D(Feedback) \
   D(HoldDelay) \
   D(HoldRepeatInterval) \
+  D(OSD) \
   D(Version) \
   D(SurfaceType) \
   D(SurfaceName) \
@@ -509,6 +510,8 @@ private:
     bool provideFeedback_= true;
 
     string m_freeFormText;
+
+    osd_data osdData_;
     
     PropertyList widgetProperties_;
         
@@ -517,6 +520,7 @@ private:
     void SetColor(const vector<string> &params, bool &supportsColor, bool &supportsTrackColor, vector<rgba_color> &colorValues);
     void GetColorValues(vector<rgba_color> &colorValues, const vector<string> &colors);
     void LogAction(double value);
+    void ProcessOSD(double value);
 public:
     static int constexpr HOLD_DELAY_INHERIT_VALUE = -1;
     static double constexpr BUTTON_RELEASE_MESSAGE_VALUE = 0.0;
@@ -2127,6 +2131,7 @@ protected:
     int const channelOffset_;
     
     int holdTimeMs_ = 1000;
+    int osdTimeMs_ = 3000;
 
     vector<Widget *> widgets_; // owns list
     map<const string, unique_ptr<Widget>> widgetsByName_;
@@ -2279,6 +2284,9 @@ public:
 
     void SetHoldTime(int value) { holdTimeMs_ = value; }
     int GetHoldTime() { return holdTimeMs_; }
+
+    void SetOSDTime(int value) { osdTimeMs_ = value; }
+    int GetOSDTime() { return osdTimeMs_; }
 
     void UpdateCurrentActionContextModifiers()
     {
