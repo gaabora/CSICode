@@ -23,6 +23,51 @@ extern HWND g_hwnd;
 const int MEDBUF = 512;
 const int SMLBUF = 256;
 
+static vector<string> ExplodeString(const char separator, const string value)
+{
+    vector<string> result;
+    size_t start = 0;
+    size_t end = value.find(';');
+    while (end != string::npos) {
+        result.push_back(value.substr(start, end - start));
+        start = end + 1;
+        end = value.find(';', start);
+    }
+    result.push_back(value.substr(start));
+    return result;
+}
+
+struct osd_data
+{
+    string origValue;
+    string message;
+    int timeoutMs = 0;
+    vector<string> bgColors;
+
+    string lastValue;
+    bool awaitsFeedback;
+    string bgColor;
+
+    osd_data() = default; 
+
+    osd_data(string osdValue) {
+        origValue = osdValue;
+
+        if (osdValue.front() == '\"') osdValue.erase(0, 1);
+        if (osdValue.back()  == '\"') osdValue.pop_back();
+
+        vector<string> osdParams = ExplodeString(';', osdValue);
+
+        message = osdParams[0];
+        if (osdParams.size() >= 2 && !osdParams[1].empty()) bgColors = ExplodeString(' ', osdParams[2]);
+        if (osdParams.size() >= 3 && !osdParams[2].empty()) timeoutMs = atoi(osdParams[1].c_str());
+    }
+
+    const string toString() const {
+        return  message + ";" + bgColor + ";" + to_string(timeoutMs);
+    }
+};
+
 struct rgba_color
 {
     int r;
@@ -191,6 +236,28 @@ public:
             return actionName;
         else
             return "NOT FOUND!";
+    }
+    
+    static bool ShowOSD(const osd_data osdData)
+    {
+        static string lastValue;
+        static DWORD lastUpdateTs = 0;
+        DWORD now = GetTickCount();
+
+        if (lastValue == osdData.lastValue) {
+            if (osdData.timeoutMs == -1) return false;
+            if (osdData.timeoutMs >= 0 && (now - lastUpdateTs) < (DWORD)osdData.timeoutMs) return false;
+        }
+
+        lastValue = osdData.toString();
+        lastUpdateTs = now;
+        ::SetExtState("CSI_TMP", "OSD", lastValue.c_str(), false);
+        return true;
+    }
+
+    static void SetExtState(const char* section, const char* key, const char* value, bool persist)
+    {
+        ::SetExtState(section, key, value, persist);
     }
 };
 
