@@ -1889,9 +1889,7 @@ void ActionContext::ProcessOSD(double value)
         osdData_.awaitsFeedback = true;
         return;
     } else {
-        if (DAW::ShowOSD(osdData_)) {
-            if (g_debugLevel >= DEBUG_LEVEL_DEBUG) LogToConsole(256, "[DEBUG] OSD: %s %d\n", osdData_.toString().c_str(), value);
-        }
+        GetCSI()->EnqueueOSD(osdData_);
     }
 }
 
