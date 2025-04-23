@@ -3994,7 +3994,9 @@ private:
     
     int projectMetronomePrimaryVolumeOffs_; // for double -- if invalid, use fallbacks
     int projectMetronomeSecondaryVolumeOffs_; // for double -- if invalid, use fallbacks
-        
+    
+    osd_data queuedOSD_;
+
     void InitActionsDictionary();
 
     double GetPrivateProfileDouble(const char *key)
@@ -4250,6 +4252,8 @@ public:
         
     //int repeats = 0;
     
+    void EnqueueOSD(osd_data osdData_) { queuedOSD_ = osdData_; }
+
     void Run() override
     {
         //int start = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
@@ -4263,6 +4267,11 @@ public:
         }
         
         if (shouldRun_ && pages_.size() > currentPageIndex_ && pages_[currentPageIndex_]) {
+            if (!queuedOSD_.isEmpty() && !queuedOSD_.awaitsFeedback) {
+                if (g_debugLevel >= DEBUG_LEVEL_DEBUG) LogToConsole(256, "[DEBUG] OSD: %s\n", queuedOSD_.toString().c_str());
+                DAW::ShowOSD(queuedOSD_);
+                queuedOSD_ = osd_data();
+            }
             try {
                 pages_[currentPageIndex_]->Run();
             } catch (const ReloadPluginException& e) {

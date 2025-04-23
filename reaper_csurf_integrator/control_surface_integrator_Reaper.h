@@ -59,7 +59,10 @@ struct osd_data
     }
 
     const string toString() const {
-        return  message + ";" + bgColor + ";" + to_string(timeoutMs);
+        return message + ";" + bgColor + ";" + to_string(timeoutMs);
+    }
+    const bool isEmpty() const {
+        return message.empty();
     }
 };
 
@@ -233,21 +236,20 @@ public:
             return "NOT FOUND!";
     }
     
-    static bool ShowOSD(const osd_data osdData)
+    static void ShowOSD(const osd_data osdData)
     {
         static string lastValue;
         static DWORD lastUpdateTs = 0;
         DWORD now = GetTickCount();
 
         if (lastValue == osdData.lastValue) {
-            if (osdData.timeoutMs == -1) return false;
-            if (osdData.timeoutMs >= 0 && (now - lastUpdateTs) < (DWORD)osdData.timeoutMs) return false;
+            if (osdData.timeoutMs == -1) return;
+            if (osdData.timeoutMs >= 0 && (now - lastUpdateTs) < (DWORD)osdData.timeoutMs) return;
         }
 
         lastValue = osdData.toString();
         lastUpdateTs = now;
         ::SetExtState("CSI_TMP", "OSD", lastValue.c_str(), false);
-        return true;
     }
 
     static void SetExtState(const char* section, const char* key, const char* value, bool persist)
