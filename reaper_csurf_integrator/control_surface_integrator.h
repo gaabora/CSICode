@@ -507,6 +507,9 @@ private:
     
     bool isValueInverted_ = false;
     bool isFeedbackInverted_ = false;
+    
+    bool isDoublePress_ = false;
+    int doublePressStartTs_ = 0;
 
     int  holdDelayMs_ = 0;
     int  holdRepeatIntervalMs_ = 0;
@@ -572,6 +575,7 @@ public:
     
     void SetIsValueInverted() { isValueInverted_ = true; }
     void SetIsFeedbackInverted() { isFeedbackInverted_ = true; }
+    void SetDoublePress() { isDoublePress_ = true; }
     void SetHoldDelay(int value) { holdDelayMs_ = value; }
     int GetHoldDelay() { return holdDelayMs_; }
     
@@ -1089,7 +1093,7 @@ private:
 
     void GoFXSlot(MediaTrack *track, Navigator *navigator, int fxSlot);
     void GoSelectedTrackFX();
-    void GetWidgetNameAndModifiers(const string &line, string &baseWidgetName, int &modifier, bool &isValueInverted, bool &isFeedbackInverted, bool &hasHoldModifier, bool &isDecrease, bool &isIncrease);
+    void GetWidgetNameAndModifiers(const string &line, string &baseWidgetName, int &modifier, bool &isValueInverted, bool &isFeedbackInverted, bool &hasHoldModifier, bool &hasDoublePressModifier, bool &isDecrease, bool &isIncrease);
     void GetNavigatorsForZone(const char *zoneName, const char *navigatorName, vector<Navigator *> &navigators);
     void LoadZones(vector<unique_ptr<Zone>> &zones, vector<string> &zoneList);
          
@@ -2118,7 +2122,8 @@ private:
     bool listensToModifiers_ = false;
         
     int latchTime_ = 100;
-        
+    int doublePressTime_ = 400;
+    
     vector<FeedbackProcessor *> trackColorFeedbackProcessors_; // does not own pointers
     
     vector<ChannelTouch> channelTouches_;
@@ -2296,9 +2301,12 @@ public:
 
     void SetLatchTime(int latchTime) { latchTime_ = latchTime; }
     int GetLatchTime() { return latchTime_; }
-
+    
     void SetHoldTime(int value) { holdTimeMs_ = value; }
     int GetHoldTime() { return holdTimeMs_; }
+    
+    void SetDoublePressTime(int doublePressTime) { doublePressTime_ = doublePressTime; }
+    int GetDoublePressTime() { return doublePressTime_; }
 
     void SetOSDTime(int value) { osdTimeMs_ = value; }
     int GetOSDTime() { return osdTimeMs_; }
