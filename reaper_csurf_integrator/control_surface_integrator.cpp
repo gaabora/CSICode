@@ -1152,10 +1152,7 @@ void CSurfIntegrator::Init()
     
     if ( ! filesystem::exists(CSIFolderPath))
     {
-        char tmp[MEDBUF];
-        snprintf(tmp, sizeof(tmp), __LOCALIZE_VERFMT("Please check your installation, cannot find %s", "csi_mbox"), CSIFolderPath.c_str());
-        MessageBox(g_hwnd, tmp, __LOCALIZE("Missing CSI Folder","csi_mbox"), MB_OK);
-
+        LogToConsole(MEDBUF, __LOCALIZE_VERFMT("[ERROR] Missing CSI Folder. Please check your installation, cannot find %s\n", "csi_mbox"), CSIFolderPath.c_str());
         return;
     }
     
@@ -1163,10 +1160,7 @@ void CSurfIntegrator::Init()
     
     if ( ! filesystem::exists(iniFilePath))
     {
-        char tmp[MEDBUF];
-        snprintf(tmp, sizeof(tmp), __LOCALIZE_VERFMT("Please check your installation, cannot find %s", "csi_mbox"), iniFilePath.c_str());
-        MessageBox(g_hwnd, tmp, __LOCALIZE("Missing CSI.ini","csi_mbox"), MB_OK);
-
+        LogToConsole(MEDBUF, __LOCALIZE_VERFMT("[ERROR] Missing CSI.ini. Please check your installation, cannot find %s\n", "csi_mbox"), iniFilePath.c_str());
         return;
     }
 
@@ -1193,9 +1187,7 @@ void CSurfIntegrator::Init()
                 {
                     if (strcmp(versionProp, s_MajorVersionToken))
                     {
-                        char tmp[MEDBUF];
-                        snprintf(tmp, sizeof(tmp), __LOCALIZE_VERFMT("Version mismatch -- Your CSI.ini file is not %s.","csi_mbox"), s_MajorVersionToken);
-                        MessageBox(g_hwnd, tmp, __LOCALIZE("CSI.ini version mismatch","csi_mbox"), MB_OK);
+                        LogToConsole(MEDBUF, __LOCALIZE_VERFMT("[ERROR] CSI.ini version mismatch. -- Your CSI.ini file is not %s.\n", "csi_mbox"), s_MajorVersionToken);
 
                         iniFile.close();
                         return;
@@ -1208,9 +1200,7 @@ void CSurfIntegrator::Init()
                 }
                 else
                 {
-                    char tmp[MEDBUF];
-                    snprintf(tmp, sizeof(tmp), __LOCALIZE_VERFMT("Cannot read version %s.","csi_mbox"), "");
-                    MessageBox(g_hwnd, tmp, __LOCALIZE("CSI.ini no version","csi_mbox"), MB_OK);
+                    LogToConsole(MEDBUF, __LOCALIZE_VERFMT("[ERROR] CSI.ini has no version.\n", "csi_mbox"));
 
                     iniFile.close();
                     return;
@@ -1356,9 +1346,7 @@ void CSurfIntegrator::Init()
                                      
                                 if ( ! filesystem::exists(baseDir))
                                 {
-                                    char tmp[MEDBUF];
-                                    snprintf(tmp, sizeof(tmp), __LOCALIZE_VERFMT("Please check your installation, cannot find %s", "csi_mbox"), baseDir.c_str());
-                                    MessageBox(g_hwnd, tmp, __LOCALIZE("Missing Surfaces Folder","csi_mbox"), MB_OK);
+                                    LogToConsole(MEDBUF, __LOCALIZE_VERFMT("[ERROR] Missing Surfaces Folder %s\n", "csi_mbox"), baseDir.c_str());
 
                                     return;
                                 }
@@ -1367,11 +1355,7 @@ void CSurfIntegrator::Init()
                                 
                                 if ( ! filesystem::exists(surfaceFile))
                                 {
-                                    char tmp[MEDBUF];
-                                    snprintf(tmp, sizeof(tmp), __LOCALIZE_VERFMT("Please check your installation, cannot find %s", "csi_mbox"), surfaceFile.c_str());
-                                    MessageBox(g_hwnd, tmp, __LOCALIZE("Missing Surface File","csi_mbox"), MB_OK);
-
-                                    return;
+                                    LogToConsole(MEDBUF, __LOCALIZE_VERFMT("[ERROR] Missing Surfaces File %s\n", "csi_mbox"), surfaceFile.c_str());
                                 }
                                 
                                 string zoneFolder = baseDir + surfaceFolderProp + "/Zones";
@@ -1380,11 +1364,7 @@ void CSurfIntegrator::Init()
                                 
                                 if ( ! filesystem::exists(zoneFolder))
                                 {
-                                    char tmp[MEDBUF];
-                                    snprintf(tmp, sizeof(tmp), __LOCALIZE_VERFMT("Please check your installation, cannot find %s", "csi_mbox"), zoneFolder.c_str());
-                                    MessageBox(g_hwnd, tmp, __LOCALIZE("Missing Zone Folder","csi_mbox"), MB_OK);
-
-                                    return;
+                                    LogToConsole(MEDBUF, __LOCALIZE_VERFMT("[ERROR] Missing Zone Folder %s\n", "csi_mbox"), zoneFolder.c_str());
                                 }
                                 
                                 string fxZoneFolder = baseDir + surfaceFolderProp + "/FXZones";
@@ -1401,11 +1381,7 @@ void CSurfIntegrator::Init()
                                     {
                                         LogToConsole(256, "[ERROR] FAILED to Init. Unable to create folder %s\n", fxZoneFolder.c_str());
                                         LogToConsole(2048, "Exception: %s\n", e.what());
-      
-                                        char tmp[MEDBUF];
-                                        snprintf(tmp, sizeof(tmp), __LOCALIZE_VERFMT("Please check your installation, cannot find %s", "csi_mbox"), fxZoneFolder.c_str());
-                                        MessageBox(g_hwnd, tmp, __LOCALIZE("Missing FX Zone Folder","csi_mbox"), MB_OK);
-                                        
+
                                         return;
                                     }
 
@@ -2584,9 +2560,8 @@ void ZoneManager::Initialize()
 
     if (zoneInfo_.find("Home") == zoneInfo_.end())
     {
-        char tmp[MEDBUF];
-        snprintf(tmp, sizeof(tmp), __LOCALIZE_VERFMT("%s needs a Home Zone to operate, please recheck your installation", "csi_mbox"), surface_->GetName());
-        MessageBox(g_hwnd, tmp, __LOCALIZE("CSI Missing Home Zone", "csi_mbox"), MB_OK);
+        LogToConsole(MEDBUF, __LOCALIZE_VERFMT("[ERROR] Missing Home Zone for %s\n", "csi_mbox"), surface_->GetName());
+
         return;
     }
             
@@ -3037,9 +3012,7 @@ void ZoneManager::PreProcessZones()
 {
     if (zoneFolder_[0] == 0)
     {
-        char tmp[2048];
-        snprintf(tmp, sizeof(tmp), __LOCALIZE_VERFMT("Please check your CSI.ini, cannot find Zone folder for %s in:\r\n\r\n%s/CSI/Zones/","csi_mbox"), GetSurface()->GetName(), GetResourcePath());
-        MessageBox(g_hwnd, tmp, __LOCALIZE("Zone folder definiton for surface is empty","csi_mbox"), MB_OK);
+        LogToConsole(MEDBUF, __LOCALIZE_VERFMT("[ERROR] Please check your CSI.ini, cannot find Zone folder for %s in: %s/CSI/Zones/","csi_mbox"), GetSurface()->GetName(), GetResourcePath());
 
         return;
     }
@@ -3050,9 +3023,7 @@ void ZoneManager::PreProcessZones()
        
     if (zoneFilesToProcess.size() == 0)
     {
-        char tmp[2048];
-        snprintf(tmp, sizeof(tmp), __LOCALIZE_VERFMT("Please check your installation, cannot find Zone files for %s in:\r\n\r\n%s","csi_mbox"), GetSurface()->GetName(), zoneFolder_.c_str());
-        MessageBox(g_hwnd, tmp, __LOCALIZE("Zone folder is missing or empty","csi_mbox"), MB_OK);
+        LogToConsole(MEDBUF, __LOCALIZE_VERFMT("[ERROR] Cannot find Zone files for %s in: %s","csi_mbox"), GetSurface()->GetName(), zoneFolder_.c_str());
 
         return;
     }
