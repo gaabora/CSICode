@@ -3724,9 +3724,8 @@ WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                     {
                         if (strcmp(versionProp, s_MajorVersionToken))
                         {
-                            char tmp[MEDBUF];
-                            snprintf(tmp, sizeof(tmp), __LOCALIZE_VERFMT("Version mismatch -- Your CSI.ini file is not %s.","csi_mbox"), s_MajorVersionToken);
-                            MessageBox(g_hwnd, tmp, __LOCALIZE("CSI.ini version mismatch","csi_mbox"), MB_OK);
+                            LogToConsole(MEDBUF, __LOCALIZE_VERFMT("[ERROR] CSI.ini version mismatch. -- Your CSI.ini file is not %s.\n", "csi_mbox"), s_MajorVersionToken);
+
                             iniFile.close();
                             break;
                         }
