@@ -1734,17 +1734,18 @@ void ActionContext::LogAction(double value)
         if (isFeedbackInverted_) oss << " InvertFB";
         if (holdDelayMs_ > 0) oss << " HoldDelay=" << holdDelayMs_;
         if (holdRepeatIntervalMs_ > 0) oss << " HoldRepeatInterval=" << holdRepeatIntervalMs_;
+        if (runCount_ > 1) oss << " RunCount=" << runCount_;
 
-        LogToConsole(512, "[INFO] @%s/%s: [%s] %s(%s) # %s; val:%0.2f ctx:%s%s\n"
+        LogToConsole(512, "[INFO] @%s/%s: [%s] %s(%s)%s # %s; val:%0.2f ctx:%s\n"
             ,this->GetSurface()->GetName()
             ,this->GetZone()->GetName()
             ,this->GetWidget()->GetName()
             ,this->GetAction()->GetName()
             ,this->GetStringParam()
+            ,oss.str().c_str()
             ,(this->GetCommandId() > 0) ? DAW::GetCommandName(this->GetCommandId()) : ""
             ,value
             ,this->GetName()
-            ,oss.str().c_str()
         );
     }
 }
@@ -2365,8 +2366,15 @@ void Zone::UpdateCurrentActionContextModifier(Widget *widget)
 
 ActionContext *Zone::AddActionContext(Widget *widget, int modifier, Zone *zone, const char *actionName, vector<string> &params)
 {
-    actionContextDictionary_[widget][modifier].push_back(make_unique<ActionContext>(csi_, csi_->GetAction(actionName), widget, zone, 0, params)); // TODO success logging?
-    
+    const auto& action = csi_->GetAction(actionName);
+    if (strcmp(action->GetName(), actionName) && !strcmp(action->GetName(), "NoAction")) LogToConsole(256, "[ERROR] Unsupported action: '%s'. Zone: {%s}, Widget: [%s]\n"
+        ,actionName
+        ,zone->GetName()
+        ,widget->GetName()
+    );
+
+    actionContextDictionary_[widget][modifier].push_back(make_unique<ActionContext>(csi_, action, widget, zone, 0, params));
+
     return actionContextDictionary_[widget][modifier].back().get();
 }
 

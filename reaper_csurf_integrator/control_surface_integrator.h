@@ -4114,11 +4114,7 @@ public:
         if (actions_.find(actionName) != actions_.end())
             return actions_[actionName].get();
         else
-        {
-            LogToConsole(256, "[ERROR] FAILED to GetAction '%s'\n", actionName);
-
             return actions_["NoAction"].get();
-        }
     }
     
     void OnTrackSelection(MediaTrack *track) override
