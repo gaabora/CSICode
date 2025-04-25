@@ -1,5 +1,50 @@
 cmake_minimum_required(VERSION 3.5)
-project(reaper_csurf_integrator VERSION 7.1.0 LANGUAGES C CXX)
+
+# Enable policy for INTERPROCEDURAL_OPTIMIZATION if supported
+if(POLICY CMP0069)
+  cmake_policy(SET CMP0069 NEW)
+endif()
+
+# ------------------------------------------------------------------------------
+# Project Definition and Versioning
+# ------------------------------------------------------------------------------
+
+project(ControlSurfaceIntegrator VERSION 7.1.0 LANGUAGES C CXX)
+
+# Attempt to extract latest Git tag as project version
+find_package(Git)
+if(GIT_FOUND)
+  execute_process(
+    COMMAND ${GIT_EXECUTABLE} describe --tags --abbrev=0
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    OUTPUT_VARIABLE GIT_LATEST_TAG
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
+  if(NOT "${GIT_LATEST_TAG}" STREQUAL "")
+    string(REGEX REPLACE "[^0-9.]" "" GIT_LATEST_TAG ${GIT_LATEST_TAG})
+    if(NOT "${GIT_LATEST_TAG}" STREQUAL "")
+      project(${PROJECT_NAME} VERSION ${GIT_LATEST_TAG} LANGUAGES C CXX)
+    endif()
+  endif()
+endif()
+message("Project version: ${PROJECT_VERSION}")
+
+# ------------------------------------------------------------------------------
+# Build Number and Commit Info (e.g., for CI)
+# ------------------------------------------------------------------------------
+
+if(DEFINED ENV{APPVEYOR})
+  set(CMAKE_PROJECT_VERSION_TWEAK $ENV{APPVEYOR_BUILD_NUMBER})
+  set(CMAKE_PROJECT_VERSION_COMMIT $ENV{APPVEYOR_REPO_COMMIT})
+else()
+  set(CMAKE_PROJECT_VERSION_TWEAK -1)
+  set(CMAKE_PROJECT_VERSION_COMMIT a)
+endif()
+set(CMAKE_PROJECT_VERSION_COMMIT "\"${CMAKE_PROJECT_VERSION_COMMIT}\"")
+
+# ------------------------------------------------------------------------------
+# General Build Settings
+# ------------------------------------------------------------------------------
 
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -7,149 +52,235 @@ set(CMAKE_CXX_VISIBILITY_PRESET "hidden")
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-# path for external 3rd party library dependencies
+# ------------------------------------------------------------------------------
+# External Dependencies: FetchContent
+# ------------------------------------------------------------------------------
+
 include(FetchContent)
 set(PROJECT_LIB_DIR ${PROJECT_SOURCE_DIR}/lib)
 
-FetchContent_Declare(WDL
-    GIT_REPOSITORY https://github.com/justinfrankel/WDL
-    GIT_TAG        "origin/main" # or specify a tag or branch here
-    SOURCE_DIR     "${PROJECT_LIB_DIR}/WDL"
-    )
-
 FetchContent_Declare(reaper-sdk
-    GIT_REPOSITORY https://github.com/justinfrankel/reaper-sdk
-    GIT_TAG        "origin/main" # or specify a tag or branch here
-    SOURCE_DIR     "${PROJECT_LIB_DIR}/reaper-sdk"
-    )
-
-FetchContent_MakeAvailable(WDL reaper-sdk)
-
-# symlink WDL to reaper-sdk
-execute_process(
-    COMMAND ${CMAKE_COMMAND} -E create_symlink
-            # source
-            "${PROJECT_LIB_DIR}/WDL/WDL"
-            # target
-            "${PROJECT_LIB_DIR}/reaper-sdk/WDL"
+  GIT_REPOSITORY https://github.com/justinfrankel/reaper-sdk
+  GIT_TAG        origin/main
+  SOURCE_DIR     "${PROJECT_LIB_DIR}/reaper-sdk"
 )
 
+FetchContent_Declare(WDL
+  GIT_REPOSITORY https://github.com/justinfrankel/WDL
+  GIT_TAG        origin/main
+  SOURCE_DIR     "${PROJECT_LIB_DIR}/WDL"
+)
+
+FetchContent_Declare(GSL
+  GIT_REPOSITORY "https://github.com/microsoft/GSL"
+  GIT_TAG        origin/main
+  SOURCE_DIR     "${PROJECT_LIB_DIR}/GSL"
+)
+
+FetchContent_MakeAvailable(reaper-sdk GSL WDL)
+
+# ------------------------------------------------------------------------------
+# Symlink WDL into reaper-sdk
+# ------------------------------------------------------------------------------
+
+execute_process(
+  COMMAND ${CMAKE_COMMAND} -E create_symlink
+          "${PROJECT_LIB_DIR}/WDL/WDL"
+          "${PROJECT_LIB_DIR}/reaper-sdk/WDL"
+)
+
+# ------------------------------------------------------------------------------
+# VCPKG Integration
+# ------------------------------------------------------------------------------
+
 if(DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
-  set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
-    CACHE STRING "")
+  set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "")
 endif()
 
 if(DEFINED ENV{VCPKG_DEFAULT_TRIPLET} AND NOT DEFINED VCPKG_TARGET_TRIPLET)
   set(VCPKG_TARGET_TRIPLET "$ENV{VCPKG_DEFAULT_TRIPLET}" CACHE STRING "")
 endif()
 
-FILE(GLOB header_paths
-    ${PROJECT_LIB_DIR}/*/include
-    ${PROJECT_LIB_DIR}/*/sdk
-    )
+# ------------------------------------------------------------------------------
+# Header Paths and Compiler Flags
+# ------------------------------------------------------------------------------
 
-add_library(reaper-sdk IMPORTED INTERFACE)
-target_include_directories(reaper-sdk INTERFACE ${header_paths})
+set(header_paths ${PROJECT_LIB_DIR}/reaper-sdk/sdk
+  # add possible include directories for reaper plugin
+)
+file(GLOB_RECURSE headers CONFIGURE_DEPENDS ${PROJECT_LIB_DIR}/*.h*)
+
+foreach(header ${headers})
+  if(WIN32)
+    set_source_files_properties(${header} PROPERTIES COMPILE_FLAGS "/W0")
+  else()
+    set_source_files_properties(${header} PROPERTIES COMPILE_FLAGS "-w")
+  endif()
+endforeach()
+
+# ------------------------------------------------------------------------------
+# Setup Interface Library for reaper-sdk
+# ------------------------------------------------------------------------------
+
+add_library(reaper-sdk INTERFACE)
+target_include_directories(reaper-sdk INTERFACE ${header_paths} ${CMAKE_BINARY_DIR})
+target_link_libraries(reaper-sdk INTERFACE GSL)
+
+# ------------------------------------------------------------------------------
+# Find and Link WDL + SWELL
+# ------------------------------------------------------------------------------
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-
 find_package(WDL REQUIRED)
-
 if(NOT WIN32)
   find_package(SWELL REQUIRED)
 endif()
 
 target_link_libraries(reaper-sdk INTERFACE WDL::WDL)
-
 if(SWELL_FOUND)
   target_link_libraries(reaper-sdk INTERFACE SWELL::swell)
-
-  # Transpile the Win32 resource file
-  # find_package(PHP REQUIRED)
-  # add_custom_command(
-  #   OUTPUT  resource.rc_mac_dlg resource.rc_mac_menu
-  #   COMMAND ${CMAKE_COMMAND} -E copy
-  #     ${CMAKE_CURRENT_SOURCE_DIR}/resource.rc ${CMAKE_CURRENT_BINARY_DIR}
-  #   COMMAND ${PHP_EXECUTABLE} ${SWELL_RESGEN} --quiet resource.rc
-  #   DEPENDS ${SWELL_RESGEN}
-  #   MAIN_DEPENDENCY resource.rc
-  # )
 endif()
 
-# if(WIN32)
-#   add_link_options(
-#     # Use relative path to the PDB file to avoid exposing the full path
-#     /PDBALTPATH:%_PDB%
-#   )
-# endif()
+# ------------------------------------------------------------------------------
+# Interprocedural Optimization (LTO)
+# ------------------------------------------------------------------------------
 
+set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_MINSIZEREL     ON)
+set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE        ON)
+set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELWITHDEBINFO ON)
+
+if(VCPKG_TOOLCHAIN)
+  set(CMAKE_MAP_IMPORTED_CONFIG_MINSIZEREL Release)
+  set(CMAKE_MAP_IMPORTED_CONFIG_RELWITHDEBINFO Release)
+endif()
+
+# ------------------------------------------------------------------------------
+# Source Files for Main Library
+# ------------------------------------------------------------------------------
 
 set(SRC_PATH ${CMAKE_CURRENT_SOURCE_DIR}/reaper_csurf_integrator)
-set(WDL_PATH ${CMAKE_CURRENT_SOURCE_DIR}/lib/WDL/WDL)
-set(RES_PATH ${CMAKE_CURRENT_SOURCE_DIR}/reaper_csurf_integrator)
+set(WDL_PATH ${PROJECT_LIB_DIR}/WDL/WDL)
+
+# ------------------------------------------------------------------------------
+# SWELL Resource File Generation (non-Windows platforms only)
+# ------------------------------------------------------------------------------
 
 if(NOT WIN32)
-    # Run the swell resource generation script
-    execute_process(
-        COMMAND perl ${WDL_PATH}/swell/swell_resgen.pl --quiet ${SRC_PATH}/res.rc
-        WORKING_DIRECTORY ${SRC_PATH}
-        RESULT_VARIABLE result
-        OUTPUT_VARIABLE output
-        ERROR_VARIABLE error_output
-    )
+  # Ensure Perl is available
+  find_package(Perl REQUIRED)
+
+  # Generate SWELL resources from .rc file using Perl script
+  execute_process(
+    COMMAND ${PERL_EXECUTABLE} ${WDL_PATH}/swell/swell_resgen.pl --quiet ${SRC_PATH}/res.rc
+    WORKING_DIRECTORY ${SRC_PATH}
+    RESULT_VARIABLE result
+    OUTPUT_VARIABLE output
+    ERROR_VARIABLE error_output
+  )
+
+  # Optional: report result if debugging
+  if(NOT result EQUAL 0)
+    message(WARNING "SWELL resource generation failed with error: ${error_output}")
+  endif()
 endif()
-
-
-
-
-if (UNIX)
-    find_package(Perl REQUIRED)
-    execute_process(COMMAND ${PERL_EXECUTABLE} ${WDL_PATH}/swell/swell_resgen.pl --quiet ${RES_PATH}/res.rc)
-endif ()
-
-set(TARGET reaper_csurf_integrator)
-set(CMAKE_CXX_STANDARD 17)
 
 add_library(${PROJECT_NAME} SHARED
-    # ${SRC_PATH}/control_surface_action_contexts.h
-    # ${SRC_PATH}/control_surface_integrator.cpp
-    # ${SRC_PATH}/control_surface_integrator.h
-    # ${SRC_PATH}/control_surface_integrator_Reaper.h
-    # ${SRC_PATH}/control_surface_integrator_ui.cpp
-    # ${SRC_PATH}/control_surface_manager_actions.h
-    # ${SRC_PATH}/control_surface_midi_widgets.h
-    # ${SRC_PATH}/control_surface_OSC_widgets.h
-    # ${SRC_PATH}/control_surface_Reaper_actions.h
-    # ${SRC_PATH}/handy_functions.h
-    # ${SRC_PATH}/main.cpp
-    # ${SRC_PATH}/oscpkt.hh
-    # ${SRC_PATH}/reaper_plugin.h
-    # ${SRC_PATH}/reaper_plugin_functions.h
-    # ${SRC_PATH}/resource.h
-    # ${SRC_PATH}/udp.hh
-    ${WDL_PATH}/win32_utf8.c
+  ${WDL_PATH}/win32_utf8.c
 )
 
-install(TARGETS ${PROJECT_NAME}
-    RUNTIME
-    DESTINATION $ENV{REAPER_RESOURCE_PATH}/UserPlugins
-)
-
-add_subdirectory(reaper_csurf_integrator) #TODO: change to src 
+add_subdirectory(reaper_csurf_integrator) #TODO: move and change to src 
 target_link_libraries(${PROJECT_NAME} PRIVATE reaper-sdk)
 
-set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 23)
+# ------------------------------------------------------------------------------
+# Configure Generated Header
+# ------------------------------------------------------------------------------
+
+configure_file("${PROJECT_SOURCE_DIR}/config.h.in" "${PROJECT_BINARY_DIR}/config.h")
+
+# ------------------------------------------------------------------------------
+# Platform-Specific Compiler Flags and Linker Options
+# ------------------------------------------------------------------------------
 
 if(WIN32)
-  add_compile_definitions(NOMINMAX _CRT_SECURE_NO_WARNINGS _CRT_NONSTDC_NO_DEPRECATE)
-  target_compile_options(
-    ${PROJECT_NAME}
-      PRIVATE
-      /W3 /WX)
+  foreach(arg
+    CMAKE_C_FLAGS_DEBUG CMAKE_CXX_FLAGS_DEBUG
+    CMAKE_C_FLAGS_RELEASE CMAKE_CXX_FLAGS_RELEASE
+    CMAKE_C_FLAGS_RELWITHDEBINFO CMAKE_CXX_FLAGS_RELWITHDEBINFO
+    CMAKE_C_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_MINSIZEREL
+  )
+    # Embed debug information in the object files
+    string(REGEX REPLACE "/Z[iI]" "/Z7" ${arg} "${${arg}}")
+  endforeach()
+
+  add_compile_options(
+    # Exception handling model
+    /EHsc
+
+    # Enhance optimized debugging
+    $<$<NOT:$<CONFIG:Debug>>:/Zo>
+
+    # Eliminate duplicate strings
+    $<$<NOT:$<CONFIG:Debug>>:/GF>
+
+    # Enable function-level linking
+    $<$<NOT:$<CONFIG:Debug>>:/Gy>
+
+    # Remove unreferenced COMDAT
+    $<$<NOT:$<CONFIG:Debug>>:/Zc:inline>
+  )
+
+  if(NOT CMAKE_PROJECT_VERSION_TWEAK EQUAL "1")
+    add_link_options(
+      # Remove unreferenced code
+      $<$<NOT:$<CONFIG:Debug>>:/OPT:REF>
+
+      # Remove duplicate sections
+      $<$<NOT:$<CONFIG:Debug>>:/OPT:ICF>
+
+      # Use relative path to the PDB file to avoid exposing the full path
+      /PDBALTPATH:%_PDB%
+    )
+  endif()
+else()
+  set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_OPTIONS -fno-unsigned-char -fstack-protector-strong -fdiagnostics-color)
 endif()
-if(UNIX AND NOT APPLE)
-  target_compile_options(${PROJECT_NAME} PRIVATE -fno-unsigned-char -include stddef.h)
+
+set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 17)
+
+# Platform-specific compile warnings
+if(WIN32)
+  target_compile_options(${PROJECT_NAME} PRIVATE /W3 /wd4996)
+  target_compile_definitions(${PROJECT_NAME} PRIVATE NOMINMAX _CRT_SECURE_NO_WARNINGS _CRT_NONSTDC_NO_DEPRECATE)
+else()
+  target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic)
+  if(UNIX AND NOT APPLE)
+    target_compile_options(${PROJECT_NAME} PRIVATE -include stddef.h)
+  endif()
 endif()
+
+# ------------------------------------------------------------------------------
+# Determine REAPER_USER_PLUGINS path
+# ------------------------------------------------------------------------------
+
+if(DEFINED ENV{REAPER_RESOURCE_PATH})
+  file(TO_CMAKE_PATH "$ENV{REAPER_RESOURCE_PATH}" REAPER_RESOURCE_PATH)
+  if(EXISTS "${REAPER_RESOURCE_PATH}")
+    set(REAPER_USER_PLUGINS "${REAPER_RESOURCE_PATH}/UserPlugins")
+    message(STATUS "Using REAPER_USER_PLUGINS from REAPER_RESOURCE_PATH: ${REAPER_USER_PLUGINS}")
+  else()
+    message(WARNING "REAPER_RESOURCE_PATH is set but path does not exist: ${REAPER_RESOURCE_PATH}")
+  endif()
+endif()
+
+# Default fallback
+if(NOT DEFINED REAPER_USER_PLUGINS)
+  set(REAPER_USER_PLUGINS "UserPlugins")
+  message(STATUS "Using default REAPER_USER_PLUGINS path: ${REAPER_USER_PLUGINS}")
+endif()
+
+# ------------------------------------------------------------------------------
+# Installer Defaults and CPack Configuration
+# ------------------------------------------------------------------------------
 
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   if(WIN32)
@@ -160,10 +291,10 @@ if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set(USER_CONFIG_DIR "~/.config")
   endif()
 
-  set(CMAKE_INSTALL_PREFIX "${USER_CONFIG_DIR}/REAPER" CACHE PATH
-    "REAPER resource path where to install ReaPack" FORCE)
+  set(CMAKE_INSTALL_PREFIX "${USER_CONFIG_DIR}/REAPER" CACHE PATH "REAPER resource path where to install ReaPack" FORCE)
 endif()
 
+# Determine architecture string for output name
 if(CMAKE_OSX_ARCHITECTURES)
   list(JOIN CMAKE_OSX_ARCHITECTURES "-" ARCH_NAME)
 elseif(MSVC_CXX_ARCHITECTURE_ID)
@@ -172,15 +303,67 @@ else()
   set(ARCH_NAME ${CMAKE_SYSTEM_PROCESSOR})
 endif()
 
-STRING(TOLOWER "${ARCH_NAME}" ARCH_NAME)
+string(TOLOWER "${ARCH_NAME}" ARCH_NAME)
+
+# Set output name (no "lib" prefix) and architecture
 set_target_properties(${PROJECT_NAME} PROPERTIES
-  PREFIX "" # disable the "lib" prefix
-  OUTPUT_NAME "${PROJECT_NAME}"
+  PREFIX ""
+  OUTPUT_NAME "reaper_csurf_integrator"
+  # OUTPUT_NAME "reaper_${PROJECT_NAME}-${ARCH_NAME}"
 )
 
-set(REAPER_USER_PLUGINS "UserPlugins")
+# Install shared library
 install(TARGETS ${PROJECT_NAME}
   COMPONENT ${PROJECT_NAME}
   RUNTIME DESTINATION "${REAPER_USER_PLUGINS}" # Windows .dll
   LIBRARY DESTINATION "${REAPER_USER_PLUGINS}" # Linux .so/macOS .dylib
 )
+
+# Install PDB files on Windows
+if(WIN32)
+  install(
+    FILES $<TARGET_PDB_FILE:${PROJECT_NAME}>
+    COMPONENT ${PROJECT_NAME}
+    DESTINATION "${REAPER_USER_PLUGINS}"
+  )
+endif()
+
+# Configure CPack
+if(APPLE)
+  set(CPACK_PACKAGING_INSTALL_PREFIX "/Library/Application Support/REAPER")
+  set(CPACK_COMPONENTS_ALL ${PROJECT_NAME})
+  set(CPACK_GENERATOR productbuild)
+elseif(WIN32)
+  set(CPACK_GENERATOR NSIS)
+else()
+  set(CPACK_GENERATOR TXZ)
+endif()
+
+# Detect bitness
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+  set(CPUBITS "64")
+else()
+  set(CPUBITS "32")
+endif()
+
+# Custom CPack naming
+if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+  set(CPACK_PACKAGE_FILE_NAME "${PROJECT_NAME}-${PROJECT_VERSION}-macOS")
+endif()
+
+# Add README and LICENSE to installer if they exist
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
+  execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink "${CMAKE_CURRENT_SOURCE_DIR}/README.md" "${CMAKE_CURRENT_BINARY_DIR}/link_readme.txt")
+  set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_BINARY_DIR}/link_readme.txt")
+endif()
+
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
+  execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE" "${CMAKE_CURRENT_BINARY_DIR}/link_license.txt")
+  set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_BINARY_DIR}/link_license.txt")
+endif()
+
+set(CPACK_COMPONENT_${PROJECT_NAME}_REQUIRED ON)
+set(CPACK_NSIS_PACKAGE_NAME "${PROJECT_NAME}")
+set(CPACK_NSIS_CPUBITS ${CPUBITS})
+
+include(CPack)

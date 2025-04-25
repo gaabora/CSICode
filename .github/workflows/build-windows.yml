@@ -2,12 +2,12 @@ name: Build on Windows
 
 on:
   push:
-    branches: [ main ]
+    branches: [ '*' ]
   pull_request:
     branches: [ main ]
 
 jobs:
-  build:
+  build-windows:
     runs-on: windows-2022
 
     steps:
@@ -29,18 +29,16 @@ jobs:
         run: dir /s *.dll
         shell: cmd
 
-      - name: Package Release ZIP
+      - name: Prepare Package folder
         run: |
           mkdir Package\UserPlugins
           copy .\build\Release\reaper_csurf_integrator.dll Package\UserPlugins\
           xcopy Scripts Package\Scripts\ /E /I
           xcopy CSI Package\CSI\ /E /I
-          cd Package
-          7z a ..\CSI_Windows.zip *
         shell: cmd
 
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: CSI_Windows
-          path: CSI_Windows.zip
+          name: CSI_${{ github.ref_name }}_win
+          path: Package

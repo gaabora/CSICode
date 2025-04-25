@@ -11,6 +11,9 @@
 #define REAPERAPI_WANT_TrackFX_SetParamNormalized
 #include "reaper_plugin_functions.h"
 
+#include <string>
+#include <vector>
+
 using namespace std;
 
 extern HWND g_hwnd;
@@ -18,7 +21,7 @@ extern HWND g_hwnd;
 const int MEDBUF = 512;
 const int SMLBUF = 256;
 
-static vector<string> ExplodeString(const char separator, const string value)
+static vector<string> ExplodeString(const char separator, const string& value)
 {
     vector<string> result;
     size_t start = 0;
@@ -54,8 +57,8 @@ struct osd_data
         vector<string> osdParams = ExplodeString(';', osdValue);
 
         message = osdParams[0];
-        if (osdParams.size() >= 2 && !osdParams[1].empty()) bgColors = ExplodeString(' ', osdParams[2]);
-        if (osdParams.size() >= 3 && !osdParams[2].empty()) timeoutMs = atoi(osdParams[1].c_str());
+        if (osdParams.size() >= 2 && !osdParams[1].empty()) bgColors = ExplodeString(' ', osdParams[1]);
+        if (osdParams.size() >= 3 && !osdParams[2].empty()) timeoutMs = atoi(osdParams[2].c_str());
     }
 
     const string toString() const {
