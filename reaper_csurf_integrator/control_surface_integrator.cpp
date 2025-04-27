@@ -32,32 +32,22 @@ bool g_surfaceOutDisplay;
 
 bool g_fxParamsWrite;
 
-void GetPropertiesFromTokens(int start, int finish, const vector<string> &tokens, PropertyList &properties)
+void GetPropertiesFromTokens(int start, int finish, const vector<string>& tokens, PropertyList& properties)
 {
-    for (int i = start; i < finish; ++i)
-    {
-        const char *tok = tokens[i].c_str();
-        const char *eq = strstr(tok,"=");
-        if (eq != NULL && strstr(eq+1, "=") == NULL /* legacy behavior, don't allow = in value */)
-        {
-            char tmp[128];
-            int pnlen = (int) (eq-tok) + 1; // +1 is for the null character to be added to tmp
-            if (WDL_NOT_NORMALLY(pnlen > sizeof(tmp))) // if this asserts on a valid property name, increase tmp size
-                pnlen = sizeof(tmp);
-            lstrcpyn_safe(tmp, tok, pnlen);
+    for (int i = start; i < finish; ++i) {
+        std::string_view token = tokens[i];
+        auto eqPos = token.find('=');
 
-            PropertyType prop = PropertyList::prop_from_string(tmp);
-            if (prop != PropertyType_Unknown)
-            {
-                properties.set_prop(prop, eq+1);
-            }
-            else
-            {
-                properties.set_prop(prop, tok); // unknown properties are preserved as Unknown, key=value pair
+        if (eqPos != std::string_view::npos && token.find('=', eqPos + 1) == std::string_view::npos) {
+            std::string key = std::string(token.substr(0, eqPos));
+            std::string value = std::string(token.substr(eqPos + 1));
 
-                if (g_debugLevel >= DEBUG_LEVEL_WARNING) LogToConsole(256, "[WARNING] CSI does not support property named %s\n", tok);
-                
-               // WDL_ASSERT(false);
+            PropertyType prop = PropertyList::prop_from_string(key.c_str());
+            if (prop != PropertyType_Unknown) {
+                properties.set_prop(prop, value.c_str());
+            } else {
+                properties.set_prop(prop, token.data()); // unknown properties are preserved as Unknown, key=value pair
+                if (g_debugLevel >= DEBUG_LEVEL_WARNING) LogToConsole(256, "[WARNING] CSI does not support property named %s\n", key.c_str());
             }
         }
     }
@@ -230,11 +220,30 @@ void ReplaceAllWith(string &output, const char *charsToReplace, const char *repl
     }
 }
 
-void GetTokens(vector<string> &tokens, const string &line)
-{
-    istringstream iss(line);
+void GetTokens(vector<string> &tokens, const string &line) {
+    bool insideQuote = false;
     string token;
-    while (iss >> quoted(token))
+    
+    for (size_t i = 0; i < line.size(); ++i) {
+        char c = line[i];
+        
+        if (c == '"') {
+            insideQuote = !insideQuote;
+            if (!insideQuote) {
+                tokens.push_back(token);
+                token.clear();
+            }
+        } else if (isspace(c) && !insideQuote) {
+            if (!token.empty()) {
+                tokens.push_back(token);
+                token.clear();
+            }
+        } else {
+            token += c;
+        }
+    }
+    
+    if (!token.empty())
         tokens.push_back(token);
 }
 
@@ -1026,6 +1035,7 @@ void CSurfIntegrator::InitActionsDictionary()
     actions_.insert(make_pair("SetLatchTime", make_unique<SetLatchTime>()));
     actions_.insert(make_pair("SetHoldTime", make_unique<SetHoldTime>()));
     actions_.insert(make_pair("SetDoublePressTime", make_unique<SetDoublePressTime>()));
+    actions_.insert(make_pair("SetOsdEnabled", make_unique<SetOsdEnabled>()));
     actions_.insert(make_pair("SetOSDTime", make_unique<SetOSDTime>()));
     actions_.insert(make_pair("ToggleEnableFocusedFXMapping", make_unique<ToggleEnableFocusedFXMapping>()));
     actions_.insert(make_pair("DisableFocusedFXMapping", make_unique<DisableFocusedFXMapping>()));
@@ -1619,10 +1629,31 @@ ActionContext::ActionContext(CSurfIntegrator *const csi, Action *action, Widget 
     if (acceleratedTickValues_.size() < 1)
         acceleratedTickValues_.push_back(0);
 
+    ProcessActionTitle();
+
     const char* osdValue = widgetProperties_.get_prop(PropertyType_OSD);
-    osdData_ = osd_data((osdValue) ? osdValue : "?");
-    if (osdData_.message == "No") osdData_.message = "";
-    if (osdData_.message == "?") osdData_.message = string((commandId_ > 0) ? DAW::GetCommandName(commandId_) : actionName);
+    osdData_ = osd_data(osdValue ? osdValue : "?");
+    if (osdData_.message == "No")
+        osdData_.message.clear();
+    else if (osdData_.message == "?")
+        osdData_.message = actionTitle_;
+}
+
+void ActionContext::ProcessActionTitle()
+{
+    if (commandId_ > 0) {
+        actionTitle_ = DAW::GetCommandName(commandId_);
+        return;
+    }
+    const char* actionName = this->GetAction()->GetName();
+    const char* stringParam = this->GetStringParam();
+    
+    if (strcmp(actionName, "TrackAutoMode") == 0)
+        actionTitle_ = string("Automation: ") + TrackNavigationManager::GetAutoModeDisplayNameNoOverride(atoi(stringParam));
+    else if (strcmp(stringParam, "{") == 0)
+        actionTitle_ = actionName; //TODO: fix parser?
+    else
+        actionTitle_ = string(actionName) + " " + stringParam;
 }
 
 Page *ActionContext::GetPage()
@@ -1670,10 +1701,7 @@ void ActionContext::UpdateColorValue(double value)
         if (colorValues_.size() > currentColorIndex_)
             widget_->UpdateColorValue(colorValues_[currentColorIndex_]);
     }
-    if (osdData_.awaitsFeedback) {
-        ProcessOSD(value);
-        osdData_.awaitsFeedback = false;
-    }
+    if (osdData_.IsAwaitFeedback()) ProcessOSD(value, true);
 }
 
 void ActionContext::UpdateWidgetValue(double value)
@@ -1718,54 +1746,56 @@ void ActionContext::ForceWidgetValue(const char* value)
 
 void ActionContext::LogAction(double value)
 {
-    if (g_debugLevel >= DEBUG_LEVEL_INFO)
-    {
-        std::ostringstream oss;
-        if (supportsColor_) {
-            oss << " { ";
-            for (size_t i = 0; i < colorValues_.size(); ++i) {
-                oss << " " << colorValues_[i].r << " " << colorValues_[i].g << " " << colorValues_[i].b;
-                if (i != colorValues_.size() - 1) oss << ", ";
-            }
-            oss << " }[" << currentColorIndex_ << "]";
-        }
-        if (!provideFeedback_) oss << " FeedBack=No";
-        if (isValueInverted_) oss << " Invert";
-        if (isFeedbackInverted_) oss << " InvertFB";
-        if (holdDelayMs_ > 0) oss << " HoldDelay=" << holdDelayMs_;
-        if (holdRepeatIntervalMs_ > 0) oss << " HoldRepeatInterval=" << holdRepeatIntervalMs_;
-        if (runCount_ > 1) oss << " RunCount=" << runCount_;
+    if (g_debugLevel < DEBUG_LEVEL_INFO) return;
+    if (value == ActionContext::BUTTON_RELEASE_MESSAGE_VALUE) return;
+    if (value < 0 && GetRangeMinimum() >= 0) return;
+    if (value > 0 && GetRangeMinimum() < 0) return;
 
-        LogToConsole(512, "[INFO] @%s/%s: [%s] %s(%s)%s # %s; val:%0.2f ctx:%s\n"
-            ,this->GetSurface()->GetName()
-            ,this->GetZone()->GetName()
-            ,this->GetWidget()->GetName()
-            ,this->GetAction()->GetName()
-            ,this->GetStringParam()
-            ,oss.str().c_str()
-            ,(this->GetCommandId() > 0) ? DAW::GetCommandName(this->GetCommandId()) : ""
-            ,value
-            ,this->GetName()
-        );
+    std::ostringstream oss;
+    if (supportsColor_) {
+        oss << " { ";
+        for (size_t i = 0; i < colorValues_.size(); ++i) {
+            oss << " " << colorValues_[i].r << " " << colorValues_[i].g << " " << colorValues_[i].b;
+            if (i != colorValues_.size() - 1) oss << ", ";
+        }
+        oss << " }[" << currentColorIndex_ << "]";
     }
+    if (!provideFeedback_) oss << " FeedBack=No";
+    if (isValueInverted_) oss << " Invert";
+    if (isFeedbackInverted_) oss << " InvertFB";
+    if (holdDelayMs_ > 0) oss << " HoldDelay=" << holdDelayMs_;
+    if (holdRepeatIntervalMs_ > 0) oss << " HoldRepeatInterval=" << holdRepeatIntervalMs_;
+    if (runCount_ > 1) oss << " RunCount=" << runCount_;
+
+    LogToConsole(512, "[INFO] @%s/%s: [%s] %s(%s)%s # %s; val:%0.2f ctx:%s\n"
+        ,this->GetSurface()->GetName()
+        ,this->GetZone()->GetName()
+        ,this->GetWidget()->GetName()
+        ,this->GetAction()->GetName()
+        ,this->GetStringParam()
+        ,oss.str().c_str()
+        ,(this->GetCommandId() > 0) ? DAW::GetCommandName(this->GetCommandId()) : ""
+        ,value
+        ,this->GetName()
+    );
 }
 
 // runs once button pressed/released
 void ActionContext::DoAction(double value)
 {
-    if (isDoublePress_) {
-        if (value == ActionContext::BUTTON_RELEASE_MESSAGE_VALUE) return;
-        int nowTs = (int) GetTickCount();
+    DWORD nowTs = GetTickCount();
+    int holdDelayMs = holdDelayMs_ == HOLD_DELAY_INHERIT_VALUE ? this->GetSurface()->GetHoldTime() : holdDelayMs_;
+    deferredValue_ = value;
+
+    if ((isDoublePress_ || GetWidget()->HasDoublePressActions()) && value != ActionContext::BUTTON_RELEASE_MESSAGE_VALUE) {
         if (doublePressStartTs_ == 0 || nowTs > doublePressStartTs_ + GetSurface()->GetDoublePressTime()) {
             doublePressStartTs_ = nowTs;
-            return;
+            if (isDoublePress_) return; // throttle normal press
         } else {
             doublePressStartTs_ = 0;
+            if (!isDoublePress_ && holdDelayMs == 0) return; // block normal press inside double-press window
         }
-    }
-
-    deferredValue_ = (value == ActionContext::BUTTON_RELEASE_MESSAGE_VALUE) ? 0.0 : value;
-    int holdDelayMs = holdDelayMs_ == HOLD_DELAY_INHERIT_VALUE ? this->GetSurface()->GetHoldTime() : holdDelayMs_;
+    } 
 
     if (holdRepeatIntervalMs_ > 0) {
         if (value == ActionContext::BUTTON_RELEASE_MESSAGE_VALUE) {
@@ -1773,7 +1803,7 @@ void ActionContext::DoAction(double value)
         } else {
             if (holdDelayMs == 0) {
                 holdRepeatActive_ = true;
-                lastHoldRepeatTs_ = GetTickCount();
+                lastHoldRepeatTs_ = nowTs;
             }
         }
     }
@@ -1782,7 +1812,7 @@ void ActionContext::DoAction(double value)
             holdActive_ = false;
         } else {
             holdActive_ = true;
-            lastHoldStartTs_ = GetTickCount();
+            lastHoldStartTs_ = nowTs;
         }
     } else {
         PerformAction(value);
@@ -1855,9 +1885,13 @@ void ActionContext::DoRelativeAction(int accelerationIndex, double delta)
         DoRangeBoundAction(action_->GetCurrentNormalizedValue(this) +  (deltaValue_ != 0.0 ? (delta > 0 ? deltaValue_ : -deltaValue_) : delta));
 }
 
-void ActionContext::ProcessOSD(double value)
+void ActionContext::ProcessOSD(double value, bool fromFeedback)
 {
+    if (!GetSurface()->IsOsdEnabled()) return;
     if (osdData_.message.empty()) return;
+    if (!fromFeedback && IgnoresButtonRelease() && value == ActionContext::BUTTON_RELEASE_MESSAGE_VALUE) return;
+    if (value < 0 && GetRangeMinimum() >= 0) return;
+    if (value > 0 && GetRangeMinimum() < 0) return;
 
     int colorIdx = (int) value;
     if (osdData_.bgColors.empty()) {
@@ -1866,7 +1900,7 @@ void ActionContext::ProcessOSD(double value)
             if (colorValues_.size() == 1) colorIdx = 0;
             if ((int) colorValues_.size() - 1 < colorIdx) colorIdx = (int) colorValues_.size() - 1;
 
-            char hexColor[7];
+            char hexColor[8];
             snprintf(hexColor, sizeof(hexColor), "#%02X%02X%02X", colorValues_[colorIdx].r, colorValues_[colorIdx].g, colorValues_[colorIdx].b);
 
             osdData_.bgColor = hexColor;
@@ -1880,20 +1914,73 @@ void ActionContext::ProcessOSD(double value)
     }
     if (osdData_.timeoutMs == 0) osdData_.timeoutMs = GetSurface()->GetOSDTime();
 
-    if (provideFeedback_ && !osdData_.awaitsFeedback) {
-        osdData_.awaitsFeedback = true;
-        return;
+    if (provideFeedback_) {
+        if (!osdData_.IsAwaitFeedback() && !fromFeedback) {
+            osdData_.SetAwaitFeedback(true);
+            return;
+        } else if (fromFeedback) {
+            osdData_.SetAwaitFeedback(false);
+        }
     } else {
-        GetCSI()->EnqueueOSD(osdData_);
+        osdData_.SetAwaitFeedback(false);
     }
+    GetCSI()->EnqueueOSD(osdData_);
+}
+
+bool ActionContext::IgnoresButtonRelease()
+{
+    const char* name = this->GetAction()->GetName();
+    if (!name) return true;
+    if ( 0 == strcmp(name, "Bank")
+      || 0 == strcmp(name, "SetShift")
+      || 0 == strcmp(name, "SetOption")
+      || 0 == strcmp(name, "SetControl")
+      || 0 == strcmp(name, "SetAlt")
+      || 0 == strcmp(name, "SetFlip")
+      || 0 == strcmp(name, "SetGlobal")
+      || 0 == strcmp(name, "SetMarker")
+      || 0 == strcmp(name, "SetNudge")
+      || 0 == strcmp(name, "SetZoom")
+      || 0 == strcmp(name, "SetScrub")
+      || 0 == strcmp(name, "FXParam")
+      || 0 == strcmp(name, "JSFXParam")
+      || 0 == strcmp(name, "TCPFXParam")
+      || 0 == strcmp(name, "LastTouchedFXParam")
+      || 0 == strcmp(name, "TrackVolume")
+      || 0 == strcmp(name, "SoftTakeover7BitTrackVolume")
+      || 0 == strcmp(name, "SoftTakeover14BitTrackVolume")
+      || 0 == strcmp(name, "TrackVolumeDB")
+      || 0 == strcmp(name, "TrackPan")
+      || 0 == strcmp(name, "TrackPanPercent")
+      || 0 == strcmp(name, "TrackPanWidth")
+      || 0 == strcmp(name, "TrackPanWidthPercent")
+      || 0 == strcmp(name, "TrackPanL")
+      || 0 == strcmp(name, "TrackPanLPercent")
+      || 0 == strcmp(name, "TrackPanR")
+      || 0 == strcmp(name, "TrackPanRPercent")
+      || 0 == strcmp(name, "TrackPanAutoLeft")
+      || 0 == strcmp(name, "TrackPanAutoRight")
+      || 0 == strcmp(name, "TrackSendVolume")
+      || 0 == strcmp(name, "TrackSendVolumeDB")
+      || 0 == strcmp(name, "TrackSendPan")
+      || 0 == strcmp(name, "TrackSendPanPercent")
+      || 0 == strcmp(name, "TrackReceiveVolume")
+      || 0 == strcmp(name, "TrackReceiveVolumeDB")
+      || 0 == strcmp(name, "TrackReceivePan")
+      || 0 == strcmp(name, "TrackReceivePanPercent")
+      || 0 == strcmp(name, "MoveCursor")
+      || 0 == strcmp(name, "TrackVolumeWithMeterAverageLR")
+      || 0 == strcmp(name, "TrackVolumeWithMeterMaxPeakLR")
+    ) {
+        return false;
+    }
+    return true;
 }
 
 void ActionContext::DoRangeBoundAction(double value)
 {
-    if (value != ActionContext::BUTTON_RELEASE_MESSAGE_VALUE)
-        this->LogAction(value);
-
-    this->ProcessOSD(value);
+    this->LogAction(value);
+    this->ProcessOSD(value, false);
 
     if (value > rangeMaximum_)
         value = rangeMaximum_;
@@ -2144,7 +2231,7 @@ void Zone::AddWidget(Widget *widget)
 void Zone::Activate()
 {
     UpdateCurrentActionContextModifiers();
-    
+    //TODO: fix WidgetN forme HomeZone stops working if subzone has Shift+WidgetN but no WidgetN / subsone requires redefining WidgetN if there are WidgetN+ModifierX
     for (auto &widget : widgets_)
     {
         if (!strcmp(widget->GetName(), "OnZoneActivation"))
@@ -2635,7 +2722,7 @@ void ZoneManager::PreProcessZoneFile(const string &filePath)
 
 static ModifierManager s_modifierManager(NULL);
 
-void ZoneManager::GetWidgetNameAndModifiers(const string &line, string &baseWidgetName, int &modifier, bool &isValueInverted, bool &isFeedbackInverted, bool &hasHoldModifier, bool &hasDoublePressModifier, bool &isDecrease, bool &isIncrease)
+void ZoneManager::GetWidgetNameAndModifiers(const string &line, string &baseWidgetName, int &modifier, bool &isValueInverted, bool &isFeedbackInverted, bool &hasHoldModifier, bool &HasDoublePressPseudoModifier, bool &isDecrease, bool &isIncrease)
 {
     vector<string> tokens;
     GetTokens(tokens, line, '+');
@@ -2657,7 +2744,7 @@ void ZoneManager::GetWidgetNameAndModifiers(const string &line, string &baseWidg
             else if (tokens[i] == "Hold")
                 hasHoldModifier = true;
             else if (tokens[i] == "DoublePress")
-                hasDoublePressModifier = true;
+                HasDoublePressPseudoModifier = true;
             else if (tokens[i] == "Decrease")
                 isDecrease = true;
             else if (tokens[i] == "Increase")
@@ -2809,11 +2896,11 @@ void ZoneManager::LoadZoneFile(Zone *zone, const char *filePath, const char *wid
                 bool isValueInverted = false;
                 bool isFeedbackInverted = false;
                 bool hasHoldModifier = false;
-                bool hasDoublePressModifier = false;
+                bool HasDoublePressPseudoModifier = false;
                 bool isDecrease = false;
                 bool isIncrease = false;
                 
-                GetWidgetNameAndModifiers(tokens[0].c_str(), widgetName, modifier, isValueInverted, isFeedbackInverted, hasHoldModifier, hasDoublePressModifier, isDecrease, isIncrease);
+                GetWidgetNameAndModifiers(tokens[0].c_str(), widgetName, modifier, isValueInverted, isFeedbackInverted, hasHoldModifier, HasDoublePressPseudoModifier, isDecrease, isIncrease);
                 
                 Widget *widget = GetSurface()->GetWidgetByName(widgetName);
                                             
@@ -2842,8 +2929,11 @@ void ZoneManager::LoadZoneFile(Zone *zone, const char *filePath, const char *wid
                 if (hasHoldModifier && context->GetHoldDelay() == 0)
                     context->SetHoldDelay(ActionContext::HOLD_DELAY_INHERIT_VALUE);
                 
-                if (hasDoublePressModifier)
+                if (HasDoublePressPseudoModifier)
+                {
                     context->SetDoublePress();
+                    widget->SetHasDoublePressActions();
+                }
                 
                 vector<double> range;
                 

@@ -80,6 +80,8 @@ extern bool g_fxParamsWrite;
 
 extern REAPER_PLUGIN_HINSTANCE g_hInst;
 
+static const char * const REASCRIPT_PATH__CSI_OSD = "/Scripts/CSI/CSI OSD on-screen display.lua";
+static const char * const REASCRIPT_HASH__CSI_OSD = "_RSba74d8dbb9258d14b5305a183a5f20e8a6e0f64f";
 static const int REAPER__CONTROL_SURFACE_REFRESH_ALL_SURFACES = 41743;
 static const int REAPER__FILE_NEW_PROJECT = 40023;
 static const int REAPER__CLOSE_CURRENT_PROJECT_TAB = 40860;
@@ -482,6 +484,7 @@ private:
     int paramIndex_ = 0;
     string fxParamDisplayName_;
     
+    string actionTitle_ = "";
     int commandId_ = 0;
     
     double rangeMinimum_ = 0.0;
@@ -500,12 +503,12 @@ private:
     bool isFeedbackInverted_ = false;
     
     bool isDoublePress_ = false;
-    int doublePressStartTs_ = 0;
+    DWORD doublePressStartTs_ = 0;
 
     int  holdDelayMs_ = 0;
     int  holdRepeatIntervalMs_ = 0;
-    int  lastHoldRepeatTs_ = 0;
-    int  lastHoldStartTs_ = 0;
+    DWORD  lastHoldRepeatTs_ = 0;
+    DWORD  lastHoldStartTs_ = 0;
     bool holdActive_= false;
     bool holdRepeatActive_ = false;
     double deferredValue_ = 0.0;
@@ -530,8 +533,10 @@ private:
     void GetSteppedValues(Widget *widget, Action *action,  Zone *zone, int paramNumber, const vector<string> &params, const PropertyList &widgetProperties, double &deltaValue, vector<double> &acceleratedDeltaValues, double &rangeMinimum, double &rangeMaximum, vector<double> &steppedValues, vector<int> &acceleratedTickValues);
     void SetColor(const vector<string> &params, bool &supportsColor, bool &supportsTrackColor, vector<rgba_color> &colorValues);
     void GetColorValues(vector<rgba_color> &colorValues, const vector<string> &colors);
+    void ProcessActionTitle();
     void LogAction(double value);
-    void ProcessOSD(double value);
+    void ProcessOSD(double value, bool fromFeedback);
+    bool IgnoresButtonRelease();
 public:
     static int constexpr HOLD_DELAY_INHERIT_VALUE = -1;
     static double constexpr BUTTON_RELEASE_MESSAGE_VALUE = 0.0;
@@ -569,6 +574,7 @@ public:
     void SetIsValueInverted() { isValueInverted_ = true; }
     void SetIsFeedbackInverted() { isFeedbackInverted_ = true; }
     void SetDoublePress() { isDoublePress_ = true; }
+    bool IsDoublePress() { return isDoublePress_; }
     void SetHoldDelay(int value) { holdDelayMs_ = value; }
     int GetHoldDelay() { return holdDelayMs_; }
     
@@ -718,6 +724,8 @@ public:
 
     const char* GetFreeFormText() const { return m_freeFormText.c_str(); }
     void SetFreeFormText(const char* text) { m_freeFormText = (text ? text : ""); }
+
+    const char* GetActionTitle();
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -783,7 +791,7 @@ public:
     void SetNavigator(Navigator *navigator) {  navigator_ = navigator; }
     void SetSlotIndex(int index) { slotIndex_ = index; }
     bool GetIsActive() { return isActive_; }
-        
+
     void Toggle()
     {
         if (isActive_)
@@ -963,7 +971,7 @@ protected:
     bool hasBeenUsedByUpdate_ = false;
     
     bool isTwoState_ = false;
-    
+    bool hasDoublePressActions_ = false;
 public:
     // all Widgets are owned by their ControlSurface!
     Widget(CSurfIntegrator *const csi,  ControlSurface *surface, const char *name) : csi_(csi), surface_(surface), name_(name)
@@ -1019,6 +1027,10 @@ public:
     void SetXTouchDisplayColors(const char *colors);
     void RestoreXTouchDisplayColors();
     void ForceClear();
+
+    void SetHasDoublePressActions() { hasDoublePressActions_ = true; };
+    bool HasDoublePressActions() { return hasDoublePressActions_; };
+
     void LogInput(double value);
 };
 
@@ -1086,7 +1098,7 @@ private:
 
     void GoFXSlot(MediaTrack *track, Navigator *navigator, int fxSlot);
     void GoSelectedTrackFX();
-    void GetWidgetNameAndModifiers(const string &line, string &baseWidgetName, int &modifier, bool &isValueInverted, bool &isFeedbackInverted, bool &hasHoldModifier, bool &hasDoublePressModifier, bool &isDecrease, bool &isIncrease);
+    void GetWidgetNameAndModifiers(const string &line, string &baseWidgetName, int &modifier, bool &isValueInverted, bool &isFeedbackInverted, bool &hasHoldModifier, bool &HasDoublePressPseudoModifier, bool &isDecrease, bool &isIncrease);
     void GetNavigatorsForZone(const char *zoneName, const char *navigatorName, vector<Navigator *> &navigators);
     void LoadZones(vector<unique_ptr<Zone>> &zones, vector<string> &zoneList);
          
@@ -2117,6 +2129,8 @@ private:
     int latchTime_ = 100;
     int doublePressTime_ = 400;
     
+    bool isOsdEnabled_= false;
+
     vector<FeedbackProcessor *> trackColorFeedbackProcessors_; // does not own pointers
     
     vector<ChannelTouch> channelTouches_;
@@ -2531,6 +2545,48 @@ public:
     void OnInitialization()
     {
         DoWidgetAction("OnInitialization");
+    }
+    
+    bool IsOsdEnabled() { return isOsdEnabled_; }
+    void SetOsdEnabled(bool value) { 
+        if (value && !isOsdEnabled_) {
+            OpenOSDPanel();
+        }
+        isOsdEnabled_ = value;
+    }
+    void OpenOSDPanel() {
+        string scriptsPath = string(GetResourcePath()) + REASCRIPT_PATH__CSI_OSD;
+        int commandId = NamedCommandLookup(REASCRIPT_HASH__CSI_OSD);
+        if (commandId == 0) {
+            commandId = AddRemoveReaScript(true, 0, scriptsPath.c_str(), true);
+            if (commandId == 0) {
+                LogToConsole(256, "[ERROR] FAILED to OpenOSDPanel. ReaScript: '%s' installation failed\n", REASCRIPT_PATH__CSI_OSD);
+                return;
+            }
+            commandId = NamedCommandLookup(REASCRIPT_HASH__CSI_OSD);
+            LogToConsole(256, "[NOTICE] ReaScript %s was loaded: %s (%d)\n", REASCRIPT_PATH__CSI_OSD, REASCRIPT_HASH__CSI_OSD, commandId);
+        }
+        int runningState;
+        for (int attempt = 1; attempt <= 2; ++attempt) {
+            DAW::SendCommandMessage(commandId);
+            int runningState = GetToggleCommandState(commandId);
+            if (runningState == 1)
+                return;
+            if (attempt == 1) {
+                // Try re-register script if first open failed
+                commandId = AddRemoveReaScript(true, 0, scriptsPath.c_str(), true);
+                if (commandId == 0) {
+                    LogToConsole(256, "[ERROR] FAILED to reload ReaScript: '%s'\n", REASCRIPT_PATH__CSI_OSD);
+                    return;
+                }
+                const char* commandHash = ReverseNamedCommandLookup(commandId);
+                if (0 != strcmp(REASCRIPT_HASH__CSI_OSD + 1, commandHash))
+                    LogToConsole(256, "[ERROR] Command ID changed for '%s': '%s' >>> '_%s'\n", REASCRIPT_PATH__CSI_OSD, REASCRIPT_HASH__CSI_OSD, commandHash);
+            }
+        }
+        runningState = GetToggleCommandState(commandId);
+        LogToConsole(256, "[ERROR] FAILED to OpenOSDPanel. ReaScript: '%s' command ID: %s (%d) state: %d\n", 
+            REASCRIPT_PATH__CSI_OSD, REASCRIPT_HASH__CSI_OSD, commandId, runningState);
     }
 };
 
@@ -4010,8 +4066,6 @@ private:
     
     int projectMetronomePrimaryVolumeOffs_; // for double -- if invalid, use fallbacks
     int projectMetronomeSecondaryVolumeOffs_; // for double -- if invalid, use fallbacks
-    
-    osd_data queuedOSD_;
 
     void InitActionsDictionary();
 
@@ -4101,6 +4155,8 @@ public:
             osara_outputMessage(phrase);
     }
     
+    osd_data QueuedOSD;
+
     Action *GetFXParamAction(char *FXName)
     {
        if (strstr(FXName, "JS: "))
@@ -4266,7 +4322,7 @@ public:
         
     //int repeats = 0;
     
-    void EnqueueOSD(osd_data osdData_) { queuedOSD_ = osdData_; }
+    void EnqueueOSD(osd_data osdData_) { QueuedOSD = osdData_; }
 
     void Run() override
     {
@@ -4281,10 +4337,10 @@ public:
         }
         
         if (shouldRun_ && pages_.size() > currentPageIndex_ && pages_[currentPageIndex_]) {
-            if (!queuedOSD_.isEmpty() && !queuedOSD_.awaitsFeedback) {
-                if (g_debugLevel >= DEBUG_LEVEL_DEBUG) LogToConsole(256, "[DEBUG] OSD: %s\n", queuedOSD_.toString().c_str());
-                DAW::ShowOSD(queuedOSD_);
-                queuedOSD_ = osd_data();
+            if (!QueuedOSD.isEmpty() && !QueuedOSD.IsAwaitFeedback()) {
+                if (g_debugLevel >= DEBUG_LEVEL_DEBUG) LogToConsole(256, "[DEBUG] OSD: %s\n", QueuedOSD.toString().c_str());
+                DAW::ShowOSD(QueuedOSD);
+                QueuedOSD = osd_data();
             }
             try {
                 pages_[currentPageIndex_]->Run();
