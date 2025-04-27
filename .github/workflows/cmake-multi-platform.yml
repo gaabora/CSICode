@@ -37,7 +37,7 @@ jobs:
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: CSI_${{ github.ref_name }}_mac_intel
+          name: CSI_${{ github.ref_name }}_mac_intel.zip
           path: Package
 
       - name: Upload GitHub Release
@@ -82,7 +82,7 @@ jobs:
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: CSI_${{ github.ref_name }}_mac_arm
+          name: CSI_${{ github.ref_name }}_mac_arm.zip
           path: Package
 
       - name: Upload GitHub Release
@@ -126,7 +126,7 @@ jobs:
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: CSI_${{ github.ref_name }}_win
+          name: CSI_${{ github.ref_name }}_win.zip
           path: Package
 
       - name: Upload GitHub Release
@@ -171,7 +171,7 @@ jobs:
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: CSI_${{ github.ref_name }}_linux
+          name: CSI_${{ github.ref_name }}_linux.zip
           path: Package
 
       - name: Upload GitHub Release
