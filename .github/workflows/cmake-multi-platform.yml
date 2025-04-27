@@ -40,6 +40,12 @@ jobs:
           name: CSI_${{ github.ref_name }}_mac_intel.zip
           path: Package
 
+      - name: Create zip for release
+        run: |
+          cd Package
+          zip -r ../CSI_${{ github.ref_name }}_mac_intel.zip .
+        shell: bash
+
       - name: Upload GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -85,6 +91,12 @@ jobs:
           name: CSI_${{ github.ref_name }}_mac_arm.zip
           path: Package
 
+      - name: Create zip for release
+        run: |
+          cd Package
+          zip -r ../CSI_${{ github.ref_name }}_mac_arm.zip .
+        shell: bash
+
       - name: Upload GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -128,6 +140,12 @@ jobs:
         with:
           name: CSI_${{ github.ref_name }}_win.zip
           path: Package
+
+      - name: Create zip for release
+        run: |
+          cd Package
+          zip -r ../CSI_${{ github.ref_name }}_win.zip .
+        shell: bash
 
       - name: Upload GitHub Release
         uses: softprops/action-gh-release@v2
@@ -173,6 +191,12 @@ jobs:
         with:
           name: CSI_${{ github.ref_name }}_linux.zip
           path: Package
+
+      - name: Create zip for release
+        run: |
+          cd Package
+          zip -r ../CSI_${{ github.ref_name }}_linux.zip .
+        shell: bash
 
       - name: Upload GitHub Release
         uses: softprops/action-gh-release@v2
