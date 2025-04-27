@@ -3,7 +3,7 @@
 
 
 --[[
- * ReaScript Name: CSI_OnScreenDisplay
+ * ReaScript Name: CSI OSD on-screen display
  * About: Show OSD text box with data from CSI control surface. Code based on Region's Clock v1.3.1 by X-Raym
  * Screenshot: http://i.giphy.com/ //TODO
  * Author: X-Raym and others
@@ -19,15 +19,10 @@
 
 --[[
  * Changelog:
- * v1.0 (2025-04-22)
+ * v1.0 (2025-04-27)
   + Initial Release
 --]]
 
-
-
--- //TODO: https://github.com/daniellumertz/DanielLumertz-Scripts/blob/master/Json/Demo%20Serialize%20table.lua
---https://github.com/daniellumertz/DanielLumertz-Scripts/blob/master/Json/utils/json.lua
-displayDebug = false
 DEFAULT_FONT_NAME = "Arial"
 DEFAULT_OSD_TIMEOUT = 3000
 DEFAULT_BG_COLOR_ON = "#A4A4A4"
@@ -36,6 +31,7 @@ DEFAULT_BG_COLOR_OFF = "#333333"
 EXT_STATE_NAME = "CSI"
 TMP_EXT_STATE_NAME = "CSI_TMP"
 TMP_EXT_STATE_KEY = "OSD"
+MAX_FONT_SIZE = 36
 
 --// INITIAL VALUES //--
 font_size = 20
@@ -59,10 +55,29 @@ showUntilTime = 0
 
 local reaper = reaper -- Performance
 
-function log(value)
-  if displayDebug then
-    reaper.ShowConsoleMsg(tostring(value) .. "\n")
+function prettyPrint(value)
+  if type(value) == "table" then
+    local parts = {}
+    for k, v in pairs(value) do
+      table.insert(parts, "[" .. tostring(k) .. "]=" .. prettyPrint(v))
+    end
+    return "{" .. table.concat(parts, ", ") .. "}"
+  elseif type(value) == "boolean" then
+    return value and "true" or "false"
+  elseif type(value) == "nil" then
+    return "nil"
+  else
+    return tostring(value)
   end
+end
+
+function log(...)
+  local args = {...}
+  local output = {}
+  for i, v in ipairs(args) do
+    table.insert(output, prettyPrint(v))
+  end
+  reaper.ShowConsoleMsg(table.concat(output, " ") .. "\n")
 end
 
 function SetToolbarButtonState(set)

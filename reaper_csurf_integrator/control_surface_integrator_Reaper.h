@@ -37,16 +37,15 @@ static vector<string> ExplodeString(const char separator, const string& value)
     return result;
 }
 
-struct osd_data
-{
+struct osd_data {
     string origValue;
     string message;
     int timeoutMs = 0;
     vector<string> bgColors;
-
-    string lastValue;
-    bool awaitsFeedback;
     string bgColor;
+    string lastValue;
+
+    DWORD startWaitFeedback = 0;
 
     osd_data() = default; 
 
@@ -68,6 +67,13 @@ struct osd_data
     }
     const bool isEmpty() const {
         return message.empty();
+    }
+    bool IsAwaitFeedback() const {
+        DWORD now = GetTickCount();
+        return startWaitFeedback != 0 && (now - startWaitFeedback <= 100);
+    }
+    void SetAwaitFeedback(bool value) {
+        startWaitFeedback = value ? GetTickCount() : 0;
     }
 };
 
@@ -255,11 +261,6 @@ public:
         lastValue = osdData.toString();
         lastUpdateTs = now;
         ::SetExtState("CSI_TMP", "OSD", lastValue.c_str(), false);
-    }
-
-    static void SetExtState(const char* section, const char* key, const char* value, bool persist)
-    {
-        ::SetExtState(section, key, value, persist);
     }
 };
 
