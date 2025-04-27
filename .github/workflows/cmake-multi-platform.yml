@@ -144,8 +144,8 @@ jobs:
       - name: Create zip for release
         run: |
           cd Package
-          zip -r ../CSI_${{ github.ref_name }}_win.zip .
-        shell: bash
+          7z a ../CSI_${{ github.ref_name }}_win.zip *
+        shell: cmd
 
       - name: Upload GitHub Release
         uses: softprops/action-gh-release@v2
