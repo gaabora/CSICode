@@ -21,6 +21,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Import Developer ID certificate
+        uses: apple-actions/import-codesign-certs@v2
+        with:
+          p12-file-base64: ${{ secrets.APLDEV_CERT_CONTENT_BASE64 }}
+          p12-password: ${{ secrets.APLDEV_CERT_PASSWORD }}
+
       - name: Set up CMake
         uses: jwlawson/actions-setup-cmake@v2
 
@@ -34,8 +40,12 @@ jobs:
       - name: Build
         run: cmake --build ${{ github.workspace }}/build --config Release
 
+      - name: Code Sign Built dylibs
+        run: |
+          find build -name "*.dylib" -print0 | xargs -0 -I{} codesign --force --deep --options runtime --sign "$APLDEV_CODESIGN_IDENTITY" {}
+
       - name: Debug Build Output
-        run: find . -name '*.dylib'
+        run: find build -name '*.dylib'
 
       - name: Prepare Package folder
         run: |
