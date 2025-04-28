@@ -47,6 +47,12 @@ jobs:
   build-macos-arm:
     runs-on: macos-latest
 
+    env:
+      APLDEV_CODESIGN_IDENTITY: ${{ secrets.APLDEV_CODESIGN_IDENTITY }}
+      APLDEV_NOTARY_USERNAME: ${{ secrets.APLDEV_NOTARY_USERNAME }}
+      APLDEV_NOTARY_PASSWORD: ${{ secrets.APLDEV_NOTARY_PASSWORD }}
+      APLDEV_TEAM_ID: ${{ secrets.APLDEV_TEAM_ID }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

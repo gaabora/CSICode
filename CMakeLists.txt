@@ -123,6 +123,51 @@ endforeach()
 # ------------------------------------------------------------------------------
 
 add_library(reaper-sdk INTERFACE)
+
+if(APPLE)
+  # Force building Universal2 binary: Intel + Apple Silicon
+  set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64" CACHE STRING "" FORCE)
+  message(STATUS "Building Universal2 binary for macOS (x86_64 + arm64)")
+
+  # Set minimum macOS deployment target for best compatibility
+  set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum macOS deployment version" FORCE)
+  message(STATUS "Setting minimum deployment target to macOS 11.0 (Big Sur)")
+
+  # Code Signing if identity is set
+  if(DEFINED ENV{APLDEV_CODESIGN_IDENTITY})
+    message(STATUS "Code signing will be applied with identity: $ENV{APLDEV_CODESIGN_IDENTITY}")
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+      COMMAND codesign
+              --timestamp
+              --options runtime
+              --force
+              --sign "$ENV{APLDEV_CODESIGN_IDENTITY}"
+              $<TARGET_FILE:${PROJECT_NAME}>
+      COMMENT "Code signing completed with Developer ID certificate."
+      VERBATIM
+    )
+  else()
+    message(WARNING "Skipping code signing: CSI_CODESIGN_IDENTITY environment variable not set.")
+  endif()
+
+  # Notarization if username, password, and team ID are set
+  if(DEFINED ENV{APLDEV_NOTARY_USERNAME} AND DEFINED ENV{APLDEV_NOTARY_PASSWORD} AND DEFINED ENV{APLDEV_TEAM_ID})
+    message(STATUS "Notarization will be submitted to Apple ID: $ENV{APLDEV_NOTARY_USERNAME}")
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+      COMMAND xcrun notarytool submit $<TARGET_FILE:${PROJECT_NAME}> 
+              --apple-id "$ENV{APLDEV_NOTARY_USERNAME}" 
+              --team-id "$ENV{APLDEV_TEAM_ID}" 
+              --password "$ENV{APLDEV_NOTARY_PASSWORD}" 
+              --wait
+      COMMENT "Apple notarization process started and will wait for completion."
+      VERBATIM
+    )
+  else()
+    message(WARNING "Skipping notarization: CSI_NOTARY_USERNAME, CSI_NOTARY_PASSWORD, or CSI_TEAM_ID environment variables not set.")
+  endif()
+endif()
+
+
 target_include_directories(reaper-sdk INTERFACE ${header_paths} ${CMAKE_BINARY_DIR})
 target_link_libraries(reaper-sdk INTERFACE GSL)
 
