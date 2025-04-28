@@ -2,12 +2,11 @@ name: Build on macOS
 
 on:
   push:
-    branches: [ 'ci-test' ]
+    branches: ['ci-test']
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
-
   build-macos-arm:
     runs-on: macos-latest
 
@@ -58,5 +57,66 @@ jobs:
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: CSI_${{ github.ref_name }}_mac_arm
+          name: CSI_${{ github.ref_name }}_mac_arm.zip
           path: Package
+
+      - name: Create zip for release
+        run: |
+          cd Package
+          zip -r ../CSI_${{ github.ref_name }}_mac_arm.zip .
+        shell: bash
+
+      - name: Upload GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            CSI_${{ github.ref_name }}_mac_arm.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Step 1: Create a ZIP of the signed .dylib
+      - name: Create ZIP for Notarization
+        run: |
+          zip -r ${{ github.workspace }}/reaper_csurf_integrator.zip ./Package
+        shell: bash
+
+      # Step 2: Notarize using Apple's API
+      - name: Notarize ZIP file
+        id: notarize
+        run: |
+          notarize_response=$(xcrun altool --notarize-app \
+            --primary-bundle-id "com.example.reaper_csurf_integrator" \
+            --username $APLDEV_NOTARY_USERNAME \
+            --password $APLDEV_NOTARY_PASSWORD \
+            --file ${{ github.workspace }}/reaper_csurf_integrator.zip)
+          
+          echo "$notarize_response"
+          notarizationRequestUUID=$(echo "$notarize_response" | grep -o 'RequestUUID = [^ ]*' | awk '{print $2}')
+          echo "Notarization Request UUID: $notarizationRequestUUID"
+          echo "::set-output name=request_uuid::$notarizationRequestUUID"
+
+      # Step 3: Wait for Notarization to Complete
+      - name: Wait for Notarization Results
+        run: |
+          while true; do
+            result=$(xcrun altool --notarization-info ${{ steps.notarize.outputs.request_uuid }} \
+              --username $APLDEV_NOTARY_USERNAME \
+              --password $APLDEV_NOTARY_PASSWORD)
+            if [[ $result == *"Status: success"* ]]; then
+              echo "Notarization success!"
+              break
+            elif [[ $result == *"Status: invalid"* ]]; then
+              echo "Notarization failed!"
+              exit 1
+            else
+              echo "Notarization pending, checking again in 30 seconds..."
+              sleep 30
+            fi
+          done
+        shell: bash
+
+      # Step 4: Staple the Notarization Ticket to the .dylib
+      - name: Staple Notarization Ticket
+        run: |
+          xcrun stapler staple ./Package/UserPlugins/reaper_csurf_integrator.dylib
+        shell: bash
