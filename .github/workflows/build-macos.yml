@@ -59,7 +59,7 @@ jobs:
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ PLUGIN_NAME }}_${{ github.ref_name }}_mac_arm.zip
+          name: $PLUGIN_NAME_${{ github.ref_name }}_mac_arm.zip
           path: Package
 
       - name: Create ZIP for Notarization
@@ -108,13 +108,13 @@ jobs:
       - name: Create zip for release
         run: |
           cd Package
-          zip -r ../CSI_${{ github.ref_name }}_mac_arm.zip .
+          zip -r ../$PLUGIN_NAME_${{ github.ref_name }}_mac_arm.zip .
         shell: bash
 
       - name: Upload GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            ${{ github.workspace }}/CSI_${{ github.ref_name }}_mac_arm.zip
+            ${{ github.workspace }}/$PLUGIN_NAME_${{ github.ref_name }}_mac_arm.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
