@@ -84,6 +84,7 @@ static const char * const REASCRIPT_PATH__CSI_OSD = "/Scripts/CSI/CSI OSD on-scr
 static const char * const REASCRIPT_HASH__CSI_OSD = "_RSba74d8dbb9258d14b5305a183a5f20e8a6e0f64f";
 static const int REAPER__CONTROL_SURFACE_REFRESH_ALL_SURFACES = 41743;
 static const int REAPER__FILE_NEW_PROJECT = 40023;
+static const int REAPER__FILE_OPEN_PROJECT = 40025;
 static const int REAPER__CLOSE_CURRENT_PROJECT_TAB = 40860;
 static const int REAPER__TRACK_INSERT_TRACK_FROM_TEMPLATE = 46000;
 
