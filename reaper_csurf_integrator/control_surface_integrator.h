@@ -3290,12 +3290,14 @@ public:
             return "";
     }
     
-    const vector<MediaTrack *> &GetSelectedTracks()
+    const vector<MediaTrack *> &GetSelectedTracks(bool includeMaster = false)
     {
         selectedTracks_.clear();
-        
-        for (int i = 0; i < CountSelectedTracks2(NULL, false); ++i)
-            selectedTracks_.push_back(DAW::GetSelectedTrack(i));
+
+        for (int i = (includeMaster ? 0 : 1); i <= GetNumTracks(); i++) {
+            MediaTrack* track = CSurf_TrackFromID(i, false);
+            if (*(int*)GetSetMediaTrackInfo(track, "I_SELECTED", NULL)) selectedTracks_.push_back(track);
+        }
         
         return selectedTracks_;
     }
@@ -3594,10 +3596,10 @@ public:
     
     MediaTrack *GetSelectedTrack()
     {
-        if (CountSelectedTracks2(NULL, false) != 1)
+        if (selectedTracks_.size() != 1)
             return NULL;
         else
-            return DAW::GetSelectedTrack(0);
+            return selectedTracks_[0];
     }
     
 //  Page only uses the following:
@@ -3972,7 +3974,7 @@ public:
     const char *GetAutoModeDisplayName(int modeIndex) { return trackNavigationManager_->GetAutoModeDisplayName(modeIndex); }
     const char *GetGlobalAutoModeDisplayName() { return trackNavigationManager_->GetGlobalAutoModeDisplayName(); }
     const char *GetCurrentInputMonitorMode(MediaTrack *track) { return trackNavigationManager_->GetCurrentInputMonitorMode(track); }
-    const vector<MediaTrack *> &GetSelectedTracks() { return trackNavigationManager_->GetSelectedTracks(); }
+    const vector<MediaTrack *> &GetSelectedTracks(bool includeMaster = false) { return trackNavigationManager_->GetSelectedTracks(includeMaster); }
     
     
     /*
