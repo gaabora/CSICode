@@ -3187,7 +3187,7 @@ public:
     {
         double retVal = 0.0;
         
-        const vector<MediaTrack *> &selectedTracks = context->GetPage()->GetSelectedTracks();
+        const vector<MediaTrack *> &selectedTracks = context->GetPage()->GetSelectedTracks(true);
         for (auto selectedTrack : selectedTracks)
         {
             if (context->GetIntParam() == GetMediaTrackInfo_Value(selectedTrack, "I_AUTOMODE"))
@@ -3211,9 +3211,13 @@ public:
         
         int mode = context->GetIntParam();
         
-        const vector<MediaTrack *> &selectedTracks = context->GetPage()->GetSelectedTracks();
-        for (auto selectedTrack : selectedTracks)
-            GetSetMediaTrackInfo(selectedTrack, "I_AUTOMODE", &mode);
+        if (!strcmp(context->GetZone()->GetNavigator()->GetName(), "MasterTrackNavigator")) {
+            GetSetMediaTrackInfo(GetMasterTrack(NULL), "I_AUTOMODE", &mode);
+        } else {
+            const vector<MediaTrack *> &selectedTracks = context->GetPage()->GetSelectedTracks(true);
+            for (auto selectedTrack : selectedTracks)
+                GetSetMediaTrackInfo(selectedTrack, "I_AUTOMODE", &mode);
+        }
     }
 };
 
