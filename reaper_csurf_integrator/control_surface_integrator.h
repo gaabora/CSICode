@@ -2560,7 +2560,7 @@ public:
         if (commandId == 0) {
             commandId = AddRemoveReaScript(true, 0, scriptsPath.c_str(), true);
             if (commandId == 0) {
-                LogToConsole(256, "[ERROR] FAILED to OpenOSDPanel. ReaScript: '%s' installation failed\n", REASCRIPT_PATH__CSI_OSD);
+                LogToConsole(256, "[ERROR] FAILED to OpenOSDPanel. AddRemoveReaScript failed for '%s'\n", REASCRIPT_PATH__CSI_OSD);
                 return;
             }
             commandId = NamedCommandLookup(REASCRIPT_HASH__CSI_OSD);
@@ -2568,21 +2568,19 @@ public:
         }
         int runningState;
         for (int attempt = 1; attempt <= 2; ++attempt) {
-            DAW::SendCommandMessage(commandId);
-            int runningState = GetToggleCommandState(commandId);
-            if (runningState == 1)
-                return;
-            if (attempt == 1) {
-                // Try re-register script if first open failed
+            runningState = GetToggleCommandState(commandId);
+            if (runningState == 1) return;
+            if (attempt == 2) {
                 commandId = AddRemoveReaScript(true, 0, scriptsPath.c_str(), true);
                 if (commandId == 0) {
-                    LogToConsole(256, "[ERROR] FAILED to reload ReaScript: '%s'\n", REASCRIPT_PATH__CSI_OSD);
+                    LogToConsole(256, "[ERROR] FAILED to OpenOSDPanel. AddRemoveReaScript failed for '%s'\n", REASCRIPT_PATH__CSI_OSD);
                     return;
                 }
                 const char* commandHash = ReverseNamedCommandLookup(commandId);
                 if (0 != strcmp(REASCRIPT_HASH__CSI_OSD + 1, commandHash))
                     LogToConsole(256, "[ERROR] Command ID changed for '%s': '%s' >>> '_%s'\n", REASCRIPT_PATH__CSI_OSD, REASCRIPT_HASH__CSI_OSD, commandHash);
             }
+            DAW::SendCommandMessage(commandId);
         }
         runningState = GetToggleCommandState(commandId);
         LogToConsole(256, "[ERROR] FAILED to OpenOSDPanel. ReaScript: '%s' command ID: %s (%d) state: %d\n", 
