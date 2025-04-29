@@ -51,6 +51,7 @@ public:
         static const int reloadingCommands[] = {
              REAPER__CONTROL_SURFACE_REFRESH_ALL_SURFACES
             ,REAPER__FILE_NEW_PROJECT
+            ,REAPER__FILE_OPEN_PROJECT
             ,REAPER__CLOSE_CURRENT_PROJECT_TAB
             ,REAPER__TRACK_INSERT_TRACK_FROM_TEMPLATE
         };
