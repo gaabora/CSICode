@@ -1045,6 +1045,7 @@ actions_.insert(make_pair("TrackReceivePrePost", make_unique<TrackReceivePrePost
 actions_.insert(make_pair("TrackReceivePrePostDisplay", make_unique<TrackReceivePrePostDisplay>()));
 actions_.insert(make_pair("TrackReceiveMute", make_unique<TrackReceiveMute>()));
 actions_.insert(make_pair("TrackReceiveStereoMonoToggle", make_unique<TrackReceiveStereoMonoToggle>()));
+actions_.insert(make_pair("TrackReceiveStereoMonoDisplay", make_unique<TrackReceiveStereoMonoDisplay>()));
 actions_.insert(make_pair("TrackReceiveInvertPolarity", make_unique<TrackReceiveInvertPolarity>()));
 actions_.insert(make_pair("TrackReceiveVolumeDB", make_unique<TrackReceiveVolumeDB>()));
 actions_.insert(make_pair("TrackReceivePanPercent", make_unique<TrackReceivePanPercent>()));
