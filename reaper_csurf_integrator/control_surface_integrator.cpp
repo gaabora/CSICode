@@ -1031,6 +1031,7 @@ actions_.insert(make_pair("TrackSendPanDisplay", make_unique<TrackSendPanDisplay
 actions_.insert(make_pair("TrackSendPrePost", make_unique<TrackSendPrePost>()));
 actions_.insert(make_pair("TrackSendPrePostDisplay", make_unique<TrackSendPrePostDisplay>()));
 actions_.insert(make_pair("TrackSendMute", make_unique<TrackSendMute>()));
+actions_.insert(make_pair("TrackSendStereoMonoDisplay", make_unique<TrackSendStereoMonoDisplay>()));
 actions_.insert(make_pair("TrackSendStereoMonoToggle", make_unique<TrackSendStereoMonoToggle>()));
 actions_.insert(make_pair("TrackSendInvertPolarity", make_unique<TrackSendInvertPolarity>()));
 actions_.insert(make_pair("TrackSendVolumeDB", make_unique<TrackSendVolumeDB>()));
