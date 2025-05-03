@@ -158,8 +158,6 @@ function gfxOnRightClickShowDockerContextMenu()
 end
 
 function gfxCenterAndResizeText(string)
-  gfx.setfont(1, vars.font, 100)
-
   str_w, str_h = gfx.measurestr(string)
   fontsizefit=(gfx.w / (str_w + 50)) * 100 -- new font size needed to fit.
   fontsizefith=((gfx.h - gfx.y) / (str_h + 50)) * 100 -- new font size needed to fit in vertical.
@@ -194,7 +192,7 @@ function SetOSD(string, text_color, bg_color)
   gfxCenterAndResizeText(string)
 
   gfxSetColor(text_color)
-  gfx.printf(string)
+  gfx.drawstr(string)
   gfx.y = gfx.y + font_size
 end
 
