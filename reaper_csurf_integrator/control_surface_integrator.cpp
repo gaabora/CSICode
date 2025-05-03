@@ -1928,6 +1928,43 @@ void ActionContext::ProcessOSD(double value, bool fromFeedback)
     }
     if (osdData_.timeoutMs == 0) osdData_.timeoutMs = GetSurface()->GetOSDTime();
 
+    const string actionName = string(action_->GetName());
+
+    if (actionName == "TrackVolume" || actionName == "TrackSendVolume" || actionName == "TrackReceiveVolume"
+    || actionName == "TrackVolumeDB" || actionName == "TrackSendVolumeDB" || actionName == "TrackReceiveVolumeDB"
+    || actionName == "TrackPan" || actionName == "TrackPanPercent"
+    ) {
+        if (MediaTrack *track = this->GetTrack()) {
+            char trackName[256] = "";
+            const char* tn = (const char*)GetSetMediaTrackInfo(track, "P_NAME", nullptr);
+            if (tn && strlen(tn) > 0) strncpy(trackName, tn, sizeof(trackName));
+
+            double vol, pan = 0.0;
+            GetTrackUIVolPan(track, &vol, &pan);
+
+            ostringstream oss;
+            oss << "[" << trackName << "] ";
+            if (actionName == "TrackPan" || actionName == "TrackPanPercent") {
+                if (pan == 0.0) oss << "Center";
+                else oss << std::fixed << std::setprecision(2) << std::abs(pan * 100) << "%" << (pan > 0 ? "R" : "L");
+            } else oss << std::fixed << std::setprecision(2) << VAL2DB(vol) << " dB";
+            
+            osdData_.message = oss.str();
+        } else {
+            osdData_.message = actionName + ": No track selected";
+        }
+        osdData_.SetAwaitFeedback(false);
+        GetCSI()->EnqueueOSD(osdData_);
+        return;
+    }
+
+    if (actionName == "LastTouchedFXParam") {
+        osdData_.message = DAW::GetLastTouchedFXParamDisplay();
+        osdData_.SetAwaitFeedback(false);
+        GetCSI()->EnqueueOSD(osdData_);
+        return;
+    }
+
     if (provideFeedback_) {
         if (!osdData_.IsAwaitFeedback() && !fromFeedback) {
             osdData_.SetAwaitFeedback(true);
