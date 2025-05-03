@@ -909,7 +909,6 @@ public:
     virtual void ForceValue(const PropertyList &properties, const char * const &value) {}
     virtual void ForceColorValue(const rgba_color &color) {}
     virtual void ForceUpdateTrackColors() {}
-    virtual void RunDeferredActions() {}
     virtual void ForceClear() {}
     
     virtual void SetXTouchDisplayColors(const char *colors) {}
@@ -1038,7 +1037,6 @@ public:
     void UpdateValue(const PropertyList &properties, double value);
     void UpdateValue(const PropertyList &properties, const char * const &value);
     void ForceValue(const PropertyList &properties, const char * const &value);
-    void RunDeferredActions();
     void UpdateColorValue(const rgba_color &color);
     void SetXTouchDisplayColors(const char *colors);
     void RestoreXTouchDisplayColors();

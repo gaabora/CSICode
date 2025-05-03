@@ -1063,16 +1063,11 @@ class Fader14Bit_Midi_FeedbackProcessor : public Midi_FeedbackProcessor
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    bool shouldSetToZero_;
-    DWORD timeZeroValueReceived_;
-    
+    double lastValue_ = 0.0;
+
 public:
     virtual ~Fader14Bit_Midi_FeedbackProcessor() {}
-    Fader14Bit_Midi_FeedbackProcessor(CSurfIntegrator *const csi, Midi_ControlSurface *surface, Widget *widget, MIDI_event_ex_t feedback1) : Midi_FeedbackProcessor(csi, surface, widget, feedback1)
-    {
-        shouldSetToZero_ = false;
-        timeZeroValueReceived_ = 0;
-    }
+    Fader14Bit_Midi_FeedbackProcessor(CSurfIntegrator *const csi, Midi_ControlSurface *surface, Widget *widget, MIDI_event_ex_t feedback1) : Midi_FeedbackProcessor(csi, surface, widget, feedback1) {}
     
     virtual const char *GetName() override { return "Fader14Bit_Midi_FeedbackProcessor"; }
 
@@ -1081,35 +1076,14 @@ public:
         const PropertyList properties;
         ForceValue(properties, 0.0);
     }
-    
-    virtual void RunDeferredActions() override
-    {
-        if (shouldSetToZero_ && (GetTickCount() - timeZeroValueReceived_) > 250)
-        {
-            ForceMidiMessage(midiFeedbackMessage1_.midi_message[0], 0x00, 0x00);
-            shouldSetToZero_ = false;
-        }
-    }
 
     virtual void SetValue(const PropertyList &properties, double value) override
     {
-        if (value == 0.0)
-        {
-            shouldSetToZero_ = true;
-            timeZeroValueReceived_ = GetTickCount();
-            return;
-        }
-        else
-            shouldSetToZero_ = false;
-    
+        if (value == lastValue_) return;
+        lastValue_ = value;
+
         int volInt = int(value  *16383.0);
         SendMidiMessage(midiFeedbackMessage1_.midi_message[0], volInt&0x7f, (volInt>>7)&0x7f);
-    }
-    
-    virtual void ForceValue(const PropertyList &properties, double value) override
-    {
-        int volInt = int(value  *16383.0);
-        ForceMidiMessage(midiFeedbackMessage1_.midi_message[0], volInt&0x7f, (volInt>>7)&0x7f);
     }
 };
 
@@ -1118,16 +1092,11 @@ class FaderportClassicFader14Bit_Midi_FeedbackProcessor : public Midi_FeedbackPr
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    bool shouldSetToZero_;
-    DWORD timeZeroValueReceived_;
-    
+    double lastValue_ = 0.0;
+
 public:
     virtual ~FaderportClassicFader14Bit_Midi_FeedbackProcessor() {}
-    FaderportClassicFader14Bit_Midi_FeedbackProcessor(CSurfIntegrator *const csi, Midi_ControlSurface *surface, Widget *widget, MIDI_event_ex_t feedback1, MIDI_event_ex_t feedback2) : Midi_FeedbackProcessor(csi, surface, widget, feedback1, feedback2)
-    {
-        shouldSetToZero_ = false;
-        timeZeroValueReceived_ = 0;
-    }
+    FaderportClassicFader14Bit_Midi_FeedbackProcessor(CSurfIntegrator *const csi, Midi_ControlSurface *surface, Widget *widget, MIDI_event_ex_t feedback1, MIDI_event_ex_t feedback2) : Midi_FeedbackProcessor(csi, surface, widget, feedback1, feedback2) {}
     
     virtual const char *GetName() override { return "FaderportClassicFader14Bit_Midi_FeedbackProcessor"; }
 
@@ -1136,29 +1105,11 @@ public:
         const PropertyList properties;
         ForceValue(properties, 0.0);
     }
-    
-    virtual void RunDeferredActions() override
-    {
-        if (shouldSetToZero_ && (GetTickCount() - timeZeroValueReceived_) > 250)
-        {
-            ForceMidiMessage(midiFeedbackMessage1_.midi_message[0], midiFeedbackMessage1_.midi_message[1], 0x00);
-            ForceMidiMessage(midiFeedbackMessage2_.midi_message[0], midiFeedbackMessage2_.midi_message[1], 0x00);
-
-            shouldSetToZero_ = false;
-        }
-    }
 
     virtual void SetValue(const PropertyList &properties, double value) override
     {
-        if (value == 0.0)
-        {
-            shouldSetToZero_ = true;
-            timeZeroValueReceived_ = GetTickCount();
-            return;
-        }
-        else
-            shouldSetToZero_ = false;
-    
+        if (value == lastValue_) return;
+        lastValue_ = value;
         int volInt = int(value  *1024.0);
         
         if (midiFeedbackMessage1_.midi_message[2] != ((volInt>>7)&0x7f) || midiFeedbackMessage2_.midi_message[2] != (volInt&0x7f))
@@ -1169,14 +1120,6 @@ public:
             SendMidiMessage(midiFeedbackMessage1_.midi_message[0], midiFeedbackMessage1_.midi_message[1], midiFeedbackMessage1_.midi_message[2]);
             SendMidiMessage(midiFeedbackMessage2_.midi_message[0], midiFeedbackMessage2_.midi_message[1], midiFeedbackMessage2_.midi_message[2]);
         }
-    }
-    
-    virtual void ForceValue(const PropertyList &properties, double value) override
-    {
-        int volInt = int(value  *16383.0);
-        
-        ForceMidiMessage(midiFeedbackMessage1_.midi_message[0], midiFeedbackMessage1_.midi_message[1], (volInt>>7)&0x7f);
-        ForceMidiMessage(midiFeedbackMessage2_.midi_message[0], midiFeedbackMessage2_.midi_message[1], volInt&0x7f);
     }
 };
 
@@ -1199,11 +1142,6 @@ public:
     virtual void SetValue(const PropertyList &properties, double value) override
     {
         SendMidiMessage(midiFeedbackMessage1_.midi_message[0], midiFeedbackMessage1_.midi_message[1], int(value  *127.0));
-    }
-    
-    virtual void ForceValue(const PropertyList &properties, double value) override
-    {
-        ForceMidiMessage(midiFeedbackMessage1_.midi_message[0], midiFeedbackMessage1_.midi_message[1], int(value  *127.0));
     }
 };
 

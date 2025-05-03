@@ -2528,12 +2528,6 @@ void  Widget::ForceValue(const PropertyList &properties, const char * const &val
         feedbackProcessor->ForceValue(properties, value);
 }
 
-void Widget::RunDeferredActions()
-{
-    for (auto &feedbackProcessor : feedbackProcessors_)
-        feedbackProcessor->RunDeferredActions();
-}
-
 void  Widget::UpdateColorValue(const rgba_color &color)
 {
     for (auto &feedbackProcessor : feedbackProcessors_)
