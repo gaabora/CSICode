@@ -163,17 +163,7 @@ public:
     
     virtual void Touch(ActionContext *context, double value) override
     {
-        /*
-        if (MediaTrack *track = context->GetTrack())
-        {
-            double min, max = 0;
-            
-            if (value == 0)
-                DAW::TrackFX_EndParamEdit(track, context->GetSlotIndex(), context->GetParamIndex());
-            else
-                TrackFX_SetParam(track, context->GetSlotIndex(), context->GetParamIndex(), TrackFX_GetParam(track, context->GetSlotIndex(), context->GetParamIndex(), &min, &max));
-        }
-         */
+        // no-op
     }
 };
 
@@ -181,64 +171,53 @@ public:
 class LastTouchedFXParam : public FXAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
+private:
+    MediaTrack* track_;
+    int trackNum_ = -1, fxSlotNum_ = -1, fxParamNum_ = -1;
+    double lastValue_ = 0.0;
 public:
-    virtual const char *GetName() override { return "LastTouchedFXParam"; }
-   
-    virtual double GetCurrentNormalizedValue(ActionContext *context) override
+    virtual const char* GetName() override { return "LastTouchedFXParam"; }
+
+    bool CheckLastTouchedFX() {
+        if (GetLastTouchedFX(&trackNum_, &fxSlotNum_, &fxParamNum_))
+            if (track_ = DAW::GetTrack(trackNum_))
+                return true;
+        track_ = nullptr;
+        trackNum_ = -1;
+        fxSlotNum_ = -1;
+        fxParamNum_ = -1;
+        return false;
+    }
+
+    virtual double GetCurrentNormalizedValue(ActionContext* context) override
     {
-        double min = 0.0;
-        double max = 0.0;
-        int trackNum = 0;
-        int fxSlotNum = 0;
-        int fxParamNum = 0;
-        
-        if (GetLastTouchedFX(&trackNum, &fxSlotNum, &fxParamNum))
-            if (MediaTrack *track = DAW::GetTrack(trackNum))
-                return TrackFX_GetParam(track, fxSlotNum, fxParamNum, &min, &max);
-        
-        return 0.0;
+        if (!CheckLastTouchedFX()) return 0.0;
+        return DAW::GetTrackFxParamValue(track_, fxSlotNum_, fxParamNum_);
     }
 
     virtual void RequestUpdate(ActionContext *context) override
     {
-        double min = 0.0;
-        double max = 0.0;
-        int trackNum = 0;
-        int fxSlotNum = 0;
-        int fxParamNum = 0;
-
-        if (GetLastTouchedFX(&trackNum, &fxSlotNum, &fxParamNum))
-            if (MediaTrack *track = DAW::GetTrack(trackNum))
-                context->UpdateWidgetValue(TrackFX_GetParam(track, fxSlotNum, fxParamNum, &min, &max));
+        if (!CheckLastTouchedFX())
+            return context->ClearWidget();
+        double value = DAW::GetTrackFxParamValue(track_, fxSlotNum_, fxParamNum_);
+        if (DAW::CompareFaderValues(lastValue_, value)) return;
+        lastValue_ = value;
+        context->UpdateWidgetValue(value);
     }
-    
-    virtual void Do(ActionContext *context, double value) override
-    {
-        int trackNum = 0;
-        int fxSlotNum = 0;
-        int fxParamNum = 0;
 
-        if (GetLastTouchedFX(&trackNum, &fxSlotNum, &fxParamNum))
-            if (MediaTrack *track = DAW::GetTrack(trackNum))
-                TrackFX_SetParam(track, fxSlotNum, fxParamNum, value);
+    virtual void Do(ActionContext* context, double value) override
+    {
+        if (DAW::CompareFaderValues(lastValue_, value)) return;
+        lastValue_ = value;
+        if (!CheckLastTouchedFX()) return;
+        DAW::SetTrackFxParamValue(track_, fxSlotNum_, fxParamNum_, value);
     }
     
     virtual void Touch(ActionContext *context, double value) override
     {
-        int trackNum = 0;
-        int fxSlotNum = 0;
-        int fxParamNum = 0;
-
-        if (GetLastTouchedFX(&trackNum, &fxSlotNum, &fxParamNum))
-        {
-            if (MediaTrack *track =  DAW::GetTrack(trackNum))
-            {
-                if (value == 0)
-                    TrackFX_EndParamEdit(track, fxSlotNum, fxParamNum);
-                else
-                    TrackFX_SetParam(track, fxSlotNum, fxParamNum, GetCurrentNormalizedValue(context));
-            }
-        }
+        if (value != ActionContext::BUTTON_RELEASE_MESSAGE_VALUE) return;
+        if (!CheckLastTouchedFX()) return;
+        TrackFX_EndParamEdit(track_, fxSlotNum_, fxParamNum_);
     }
 };
 
