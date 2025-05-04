@@ -2,12 +2,12 @@ name: Build on Linux
 
 on:
   push:
-    branches: [ main ]
+    branches: [ '*' ]
   pull_request:
     branches: [ main ]
 
 jobs:
-  build:
+  build-linux:
     runs-on: ubuntu-24.04
 
     steps:
@@ -30,18 +30,16 @@ jobs:
       - name: Debug Build Output
         run: find . -name '*.so'
 
-      - name: Package Release ZIP
+      - name: Prepare Package folder
         run: |
           mkdir -p Package/UserPlugins
           cp ./build/reaper_csurf_integrator.so Package/UserPlugins/
           cp -r Scripts Package/
           cp -r CSI Package/
-          cd Package
-          zip -r ../CSI_Linux.zip *
         shell: bash
 
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: CSI_Linux
-          path: CSI_Linux.zip
+          name: CSI_${{ github.ref_name }}_linux
+          path: Package

@@ -29,8 +29,6 @@ if(GIT_FOUND)
 endif()
 message("Project version: ${PROJECT_VERSION}")
 
-add_definitions(-DUSING_CMAKE) # for #ifdef USING_CMAKE
-
 # ------------------------------------------------------------------------------
 # Build Number and Commit Info (e.g., for CI)
 # ------------------------------------------------------------------------------
@@ -48,7 +46,7 @@ set(CMAKE_PROJECT_VERSION_COMMIT "\"${CMAKE_PROJECT_VERSION_COMMIT}\"")
 # General Build Settings
 # ------------------------------------------------------------------------------
 
-add_definitions(-DUSING_CMAKE)
+add_definitions(-DUSING_CMAKE) # for #ifdef USING_CMAKE
 
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

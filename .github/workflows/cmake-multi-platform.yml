@@ -3,7 +3,7 @@ on:
     tags: [ 'v*' ]
 
 jobs:
-  build-macos:
+  build-macos-intel:
     runs-on: macos-13
 
     steps:
@@ -26,27 +26,70 @@ jobs:
       - name: Debug Build Output
         run: find . -name '*.dylib'
 
-      - name: Package Release ZIP
+      - name: Prepare Package folder
         run: |
           mkdir -p Package/UserPlugins
           cp ./build/reaper_csurf_integrator.dylib Package/UserPlugins/
           cp -r Scripts Package/
           cp -r CSI Package/
-          cd Package
-          zip -r ../CSI_${{ github.ref_name }}_mac.zip *
         shell: bash
 
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: CSI_${{ github.ref_name }}_mac
-          path: CSI_${{ github.ref_name }}_mac.zip
+          name: CSI_${{ github.ref_name }}_mac_intel
+          path: Package
 
       - name: Upload GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            CSI_${{ github.ref_name }}_mac.zip
+            CSI_${{ github.ref_name }}_mac_intel.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-macos-arm:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up CMake
+        uses: jwlawson/actions-setup-cmake@v2
+
+      - name: Configure CMake
+        run: >
+          cmake -B ${{ github.workspace }}/build
+          -DCMAKE_CXX_STANDARD=17
+          -DCMAKE_BUILD_TYPE=Release
+          -S ${{ github.workspace }}
+
+      - name: Build
+        run: cmake --build ${{ github.workspace }}/build --config Release
+
+      - name: Debug Build Output
+        run: find . -name '*.dylib'
+
+      - name: Prepare Package folder
+        run: |
+          mkdir -p Package/UserPlugins
+          cp ./build/reaper_csurf_integrator.dylib Package/UserPlugins/
+          cp -r Scripts Package/
+          cp -r CSI Package/
+        shell: bash
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: CSI_${{ github.ref_name }}_mac_arm
+          path: Package
+
+      - name: Upload GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            CSI_${{ github.ref_name }}_mac_arm.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -72,21 +115,19 @@ jobs:
         run: dir /s *.dll
         shell: cmd
 
-      - name: Package Release ZIP
+      - name: Prepare Package folder
         run: |
           mkdir Package\UserPlugins
           copy .\build\Release\reaper_csurf_integrator.dll Package\UserPlugins\
           xcopy Scripts Package\Scripts\ /E /I
           xcopy CSI Package\CSI\ /E /I
-          cd Package
-          7z a ..\CSI_${{ github.ref_name }}_win.zip *
         shell: cmd
 
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
           name: CSI_${{ github.ref_name }}_win
-          path: CSI_${{ github.ref_name }}_win.zip
+          path: Package
 
       - name: Upload GitHub Release
         uses: softprops/action-gh-release@v2
@@ -119,21 +160,19 @@ jobs:
       - name: Debug Build Output
         run: find . -name '*.so'
 
-      - name: Package Release ZIP
+      - name: Prepare Package folder
         run: |
           mkdir -p Package/UserPlugins
           cp ./build/reaper_csurf_integrator.so Package/UserPlugins/
           cp -r Scripts Package/
           cp -r CSI Package/
-          cd Package
-          zip -r ../CSI_${{ github.ref_name }}_linux.zip *
         shell: bash
 
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
           name: CSI_${{ github.ref_name }}_linux
-          path: CSI_${{ github.ref_name }}_linux.zip
+          path: Package
 
       - name: Upload GitHub Release
         uses: softprops/action-gh-release@v2
