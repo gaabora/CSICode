@@ -4323,6 +4323,12 @@ public:
         
     //int repeats = 0;
     
+    void ShowErrorOSD(string text) { ForceOSD(text, "#FF0000"); }
+    void ForceOSD(string text, string bgColor = "") {
+        osd_data osdData = osd_data(text);
+        osdData.bgColor = bgColor;
+        QueuedOSD = osdData;
+    }
     void EnqueueOSD(osd_data osdData_) { QueuedOSD = osdData_; }
 
     void Run() override

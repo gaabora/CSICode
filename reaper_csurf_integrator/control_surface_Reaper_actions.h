@@ -265,89 +265,56 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// class LastTouchedFXParam : public FXAction
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class LastTouchedFXParam : public FXAction
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
+private:
+    MediaTrack* track_;
+    int trackNum_ = -1, fxSlotNum_ = -1, fxParamNum_ = -1;
+    double lastValue_ = 0.0;
 public:
     virtual const char* GetName() override { return "LastTouchedFXParam"; }
 
+    bool CheckLastTouchedFX() {
+        if (GetLastTouchedFX(&trackNum_, &fxSlotNum_, &fxParamNum_))
+            if (track_ = DAW::GetTrack(trackNum_))
+                return true;
+        track_ = nullptr;
+        trackNum_ = -1;
+        fxSlotNum_ = -1;
+        fxParamNum_ = -1;
+        return false;
+    }
+
     virtual double GetCurrentNormalizedValue(ActionContext* context) override
     {
-        int trackNum = 0, fxSlotNum = 0, fxParamNum = 0;
-        if (!GetLastTouchedFX(&trackNum, &fxSlotNum, &fxParamNum)) return 0.0;
-        MediaTrack* track = DAW::GetTrack(trackNum);
-        if (!track) return 0.0;
-#if defined(REAPERAPI_WANT_TrackFX_GetParamNormalized)
-        return TrackFX_GetParamNormalized(track, fxSlotNum, fxParamNum);
-#else
-        double raw = 0.0, min = 0.0, max = 0.0;
-        raw = TrackFX_GetParam(track, fxSlotNum, fxParamNum, &min, &max);
-        double range = max - min;
-        return (range > 0.0) ? ((raw - min) / range) : 0.0;
-#endif
+        if (!CheckLastTouchedFX()) return 0.0;
+        return DAW::GetTrackFxParamValue(track_, fxSlotNum_, fxParamNum_);
     }
 
     virtual void RequestUpdate(ActionContext* context) override
     {
-        int trackNum = 0, fxSlotNum = 0, fxParamNum = 0;
-        if (!GetLastTouchedFX(&trackNum, &fxSlotNum, &fxParamNum))
-        {
-            context->ClearWidget();
-            return;
-        }
-        MediaTrack* track = DAW::GetTrack(trackNum);
-        if (!track) { context->ClearWidget(); return; }
-#if defined(REAPERAPI_WANT_TrackFX_GetParamNormalized)
-        context->UpdateWidgetValue(
-            TrackFX_GetParamNormalized(track, fxSlotNum, fxParamNum)
-        );
-#else
-        double raw = 0.0, min = 0.0, max = 0.0;
-        raw = TrackFX_GetParam(track, fxSlotNum, fxParamNum, &min, &max);
-        double range = max - min;
-        double norm = (range > 0.0) ? ((raw - min) / range) : 0.0;
-        context->UpdateWidgetValue(norm);
-#endif
+        if (!CheckLastTouchedFX())
+            return context->ClearWidget();
+        double value = DAW::GetTrackFxParamValue(track_, fxSlotNum_, fxParamNum_);
+        if (DAW::CompareFaderValues(lastValue_, value)) return;
+        lastValue_ = value;
+        context->UpdateWidgetValue(value);
     }
 
     virtual void Do(ActionContext* context, double value) override
     {
-        int trackNum = 0, fxSlotNum = 0, fxParamNum = 0;
-        if (!GetLastTouchedFX(&trackNum, &fxSlotNum, &fxParamNum)) return;
-        MediaTrack* track = DAW::GetTrack(trackNum);
-        if (!track) return;
-#if defined(REAPERAPI_WANT_TrackFX_SetParamNormalized)
-        TrackFX_SetParamNormalized(track, fxSlotNum, fxParamNum, value);
-#else
-        TrackFX_SetParam(track, fxSlotNum, fxParamNum, value);
-#endif
+        if (DAW::CompareFaderValues(lastValue_, value)) return;
+        lastValue_ = value;
+        if (!CheckLastTouchedFX()) return;
+        DAW::SetTrackFxParamValue(track_, fxSlotNum_, fxParamNum_, value);
     }
 
     virtual void Touch(ActionContext* context, double value) override
     {
-        int trackNum = 0, fxSlotNum = 0, fxParamNum = 0;
-        if (!GetLastTouchedFX(&trackNum, &fxSlotNum, &fxParamNum)) return;
-        MediaTrack* track = DAW::GetTrack(trackNum);
-        if (!track) return;
-
-        if (value == 0.0)
-            TrackFX_EndParamEdit(track, fxSlotNum, fxParamNum);
-        else
-        {
-#if defined(REAPERAPI_WANT_TrackFX_SetParamNormalized)
-            TrackFX_SetParamNormalized(
-                track, fxSlotNum, fxParamNum,
-                GetCurrentNormalizedValue(context)
-            );
-#else
-            double rawMin = 0.0, rawMax = 0.0;
-            TrackFX_GetParam(track, fxSlotNum, fxParamNum, &rawMin, &rawMax);
-            double norm = GetCurrentNormalizedValue(context);
-            double raw = rawMin + norm * (rawMax - rawMin);
-            TrackFX_SetParam(track, fxSlotNum, fxParamNum, raw);
-#endif
-        }
+        if (value != ActionContext::BUTTON_RELEASE_MESSAGE_VALUE) return;
+        if (!CheckLastTouchedFX()) return;
+        TrackFX_EndParamEdit(track_, fxSlotNum_, fxParamNum_);
     }
 };
 

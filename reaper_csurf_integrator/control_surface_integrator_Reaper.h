@@ -261,7 +261,7 @@ public:
         lastUpdateTs = now;
         ::SetExtState("CSI_TMP", "OSD", lastValue.c_str(), false);
     }
-    
+
     static std::string GetLastTouchedFXParamDisplay()
     {
         int trackNum = 0, fxSlotNum = 0, fxParamNum = 0;
@@ -299,6 +299,72 @@ public:
 
         return name;
     }
+
+    static bool CheckTrackFxParamHasVolumeCurve(MediaTrack *track, int fxSlotNum, int fxParamNum,
+        double* valueOut = nullptr, double* minOut = nullptr, double* maxOut = nullptr, double* midOut = nullptr, double* stepSizeOut = nullptr
+    ) {
+        double min = 0.0, max = 0.0, mid = 0.0, value = TrackFX_GetParamEx(track, fxSlotNum, fxParamNum, &min, &max, &mid);
+        double stepSize = DAW::GetTrackFxParamStepSize(track, fxSlotNum, fxParamNum);
+        if (valueOut) *valueOut = value;
+        if (minOut) *minOut = min;
+        if (maxOut) *maxOut = max;
+        if (midOut) *midOut = mid;
+        if (stepSizeOut) *stepSizeOut = stepSize;
+
+        return (stepSize == 1.0 && min == 0.0 && max == 2.0);
+    }
+
+    static double GetTrackFxParamValue(MediaTrack *track, int fxSlotNum, int fxParamNum)
+    {
+        double value = 0.0, rawValue = 0.0, min = 0.0, max = 0.0;
+        if (CheckTrackFxParamHasVolumeCurve(track, fxSlotNum, fxParamNum, &rawValue, &min, &max)) {
+            value = (rawValue == 0.0) ? 0.0 : volToNormalized(rawValue);
+        } else {
+            #if defined(REAPERAPI_WANT_TrackFX_GetParamNormalized)
+                value = TrackFX_GetParamNormalized(track, fxSlotNum, fxParamNum);
+            #else
+                double range = max - min;
+                value = (range > 0.0) ? ((rawValue - min) / range) : 0.0;
+            #endif
+        }
+        return value;
+    }
+
+    static void SetTrackFxParamValue(MediaTrack *track, int fxSlotNum, int fxParamNum, double value)
+    {
+        double newValue = value, rawValue = 0.0, min = 0.0, max = 0.0, mid = 0.0, stepSize = 0.0;
+        if (CheckTrackFxParamHasVolumeCurve(track, fxSlotNum, fxParamNum, &rawValue, &min, &max, &mid, &stepSize)) {
+            newValue = normalizedToVol(value);
+            TrackFX_SetParam(track, fxSlotNum, fxParamNum, newValue);
+        } else {
+            #if defined(REAPERAPI_WANT_TrackFX_SetParamNormalized)
+                TrackFX_SetParamNormalized(track, fxSlotNum, fxParamNum,  newValue);
+            #else
+                newValue = min + value * (max - min);
+                TrackFX_SetParam(track, fxSlotNum, fxParamNum, newValue);
+            #endif
+        }
+       
+    }
+
+    static double GetTrackFxParamStepSize(MediaTrack *track, int fxSlotNum, int fxParamNum)
+    {
+        double stepSize = 1.0, smallstep, largestep;
+        bool isToggle;
+        TrackFX_GetParameterStepSizes(track, fxSlotNum, fxParamNum, &stepSize, &smallstep, &largestep, &isToggle);
+        return stepSize;
+    }
+
+    static bool CompareFaderValues(double a, double b, int decimals = 3) {
+        double tolerance = std::pow(10.0, -decimals);
+        return std::fabs(a - b) < tolerance;
+    }
+
+    static double RoundDouble(double value, int decimals = 6) {
+        double multiplier = std::pow(10.0, decimals);
+        return std::round(value * multiplier) / multiplier;
+    }
+
 };
 
 #endif /* control_surface_integrator_Reaper_h */
