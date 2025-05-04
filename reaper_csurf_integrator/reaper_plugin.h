@@ -46,7 +46,11 @@ typedef double ReaSample;
 #define REAPER_PLUGIN_HINSTANCE HINSTANCE
 
 #else
-#include "../WDL/swell/swell.h"
+#ifdef USING_CMAKE
+  #include "../lib/WDL/WDL/swell/swell.h"
+#else
+  #include "../WDL/swell/swell.h"
+#endif
 #include <pthread.h>
 
 #define REAPER_PLUGIN_DLL_EXPORT __attribute__((visibility("default")))
@@ -153,7 +157,7 @@ typedef struct reaper_plugin_info_t
 
 
 /****************************************************************************************
-**** interface for plugin objects to save/load state. they should use ../WDL/LineParser.h too...
+**** interface for plugin objects to save/load state. they should use WDL/LineParser.h too...
 ***************************************************************************************/
 
 // ProjectStateContext tempflags meaning for &0xFFFF

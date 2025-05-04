@@ -1,0 +1,32 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "(Windows) Debug in REAPER",
+        "type": "cppvsdbg",
+        "request": "launch",
+        "program": "${env:REAPER_PATH}\\reaper.exe",
+        "args": [
+          "-cfgfile",
+          "${env:REAPER_RESOURCE_PATH}\\reaper.ini"
+        ],
+        "stopAtEntry": false,
+        "cwd": "${env:REAPER_PATH}",
+        "console": "externalTerminal",
+        "environment": [
+          {
+            "name": "REAPER_PATH",
+            "value": "${env:REAPER_PATH}"
+          },
+          {
+            "name": "REAPER_RESOURCE_PATH",
+            "value": "${env:REAPER_RESOURCE_PATH}"
+          }
+        ]
+      }
+    ]
+  }
+  

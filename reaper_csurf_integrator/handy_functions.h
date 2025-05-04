@@ -7,7 +7,11 @@
 #ifndef handy_functions_h
 #define handy_functions_h
 
-#include "../WDL/db2val.h"
+#ifdef USING_CMAKE
+  #include "../lib/WDL/WDL/db2val.h"
+#else
+  #include "../WDL/db2val.h"
+#endif
 
 #ifdef _DEBUG
   #if defined(__cpp_lib_stacktrace)

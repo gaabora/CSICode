@@ -36,19 +36,34 @@
 #include <filesystem>
 #include <map>
 
-#include "../WDL/win32_utf8.h"
-#include "../WDL/ptrlist.h"
-#include "../WDL/queue.h"
+#ifdef USING_CMAKE
+  #include "../lib/WDL/WDL/win32_utf8.h"
+  #include "../lib/WDL/WDL/ptrlist.h"
+  #include "../lib/WDL/WDL/queue.h"
+#else // FIXME: remove WDL from repo everyhere, move to git submodule
+  #include "../WDL/win32_utf8.h"
+  #include "../WDL/ptrlist.h"
+  #include "../WDL/queue.h"
+#endif
 
 #include "control_surface_integrator_Reaper.h"
 
 #include "handy_functions.h"
 
 #ifdef INCLUDE_LOCALIZE_IMPORT_H
-#define LOCALIZE_IMPORT_PREFIX "csi_"
-#include "../WDL/localize/localize-import.h"
+  #define LOCALIZE_IMPORT_PREFIX "csi_"
+  #ifdef USING_CMAKE
+    #include "../lib/WDL/WDL/localize/localize-import.h"
+  #else
+    #include "../WDL/localize/localize-import.h"
+  #endif
 #endif
-#include "../WDL/localize/localize.h"
+
+#ifdef USING_CMAKE
+  #include "../lib/WDL/WDL/localize/localize.h"
+#else
+  #include "../WDL/localize/localize.h"
+#endif
 
 #ifdef _WIN32
 #include "commctrl.h"
