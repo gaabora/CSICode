@@ -2,9 +2,9 @@ name: Build on macOS
 
 on:
   push:
-    branches: ['ci-test','CI-Testing']
+    branches: ['mac-sign-test']
   pull_request:
-    branches: [ '*' ]
+    branches: ['mac-sign-test']
 
 jobs:
   build-macos-arm:
@@ -41,12 +41,12 @@ jobs:
       - name: Build
         run: cmake --build ${{ github.workspace }}/build --config Release
 
+      - name: Debug Build Output
+        run: find build -name '*.dylib'
+
       - name: Code Sign Built dylibs
         run: |
           find build -name "*.dylib" -print0 | xargs -0 -I{} codesign --force --deep --options runtime --sign "$APLDEV_CODESIGN_IDENTITY" {}
-
-      - name: Debug Build Output
-        run: find build -name '*.dylib'
 
       - name: Prepare Package folder
         run: |
@@ -59,7 +59,7 @@ jobs:
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: $PLUGIN_NAME_${{ github.ref_name }}_mac_arm.zip
+          name: $PLUGIN_NAME_mac_intel
           path: Package
 
       - name: Create ZIP for Notarization
@@ -111,10 +111,3 @@ jobs:
           zip -r ../$PLUGIN_NAME_${{ github.ref_name }}_mac_arm.zip .
         shell: bash
 
-      - name: Upload GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            ${{ github.workspace }}/$PLUGIN_NAME_${{ github.ref_name }}_mac_arm.zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

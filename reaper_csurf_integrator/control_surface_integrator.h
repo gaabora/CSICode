@@ -41,6 +41,11 @@
   #include "../lib/WDL/WDL/ptrlist.h"
   #include "../lib/WDL/WDL/queue.h"
 #else // FIXME: remove WDL from repo everyhere, move to git submodule
+    #ifdef _WIN32
+    #ifndef strnicmp
+      #define strnicmp _strnicmp
+    #endif
+    #endif
   #include "../WDL/win32_utf8.h"
   #include "../WDL/ptrlist.h"
   #include "../WDL/queue.h"
