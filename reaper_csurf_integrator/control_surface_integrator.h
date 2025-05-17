@@ -3568,6 +3568,14 @@ public:
             return nullptr;
     }
 
+    bool IsAtRootFolderLevel()
+    {
+        if (currentFolderTrackID_ == 0)
+            return true;
+        else
+            return false;
+    }
+
     bool GetIsVCASpilled(MediaTrack *track)
     {
         if (vcaLeadTrack_ == NULL && (DAW::GetTrackGroupMembership(track, "VOLUME_VCA_LEAD") != 0 || DAW::GetTrackGroupMembershipHigh(track, "VOLUME_VCA_LEAD") != 0))
@@ -4031,6 +4039,7 @@ public:
     bool GetIsFolderViewActive() { return trackNavigationManager_->GetIsFolderViewActive(); }
     MediaTrack* SetCurrentFolder(MediaTrack* track) { return trackNavigationManager_->SetCurrentFolder(track); }
     MediaTrack* ExitCurrentFolder() { return trackNavigationManager_->ExitCurrentFolder(); }
+    bool IsAtRootFolderLevel() { return trackNavigationManager_->IsAtRootFolderLevel(); }
     void VCAModeActivated() { trackNavigationManager_->VCAModeActivated(); }
     void VCAModeDeactivated() { trackNavigationManager_->VCAModeDeactivated(); }
     void FolderModeActivated() { trackNavigationManager_->FolderModeActivated(); }
