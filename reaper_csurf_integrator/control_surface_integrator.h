@@ -100,6 +100,14 @@ extern bool g_fxParamsWrite;
 
 extern REAPER_PLUGIN_HINSTANCE g_hInst;
 
+static vector<HWND> g_openDialogs;
+static void CloseAllDialogs() {
+    for (HWND hwnd : g_openDialogs)
+        if (IsWindow(hwnd))
+            DestroyWindow(hwnd);
+    g_openDialogs.clear();
+}
+
 static const char * const REASCRIPT_PATH__CSI_OSD = "/Scripts/CSI/CSI OSD on-screen display.lua";
 static const char * const REASCRIPT_HASH__CSI_OSD = "_RSba74d8dbb9258d14b5305a183a5f20e8a6e0f64f";
 static const int REAPER__CONTROL_SURFACE_REFRESH_ALL_SURFACES = 41743;
@@ -129,6 +137,7 @@ static char *format_number(double v, char *buf, int bufsz)
 
 extern void GetTokens(vector<string> &tokens, const string &line);
 extern void GetTokens(vector<string> &tokens, const string &line, char delimiter);
+static bool IsCommentedOrEmpty(string& line) { return line == "" || line[0] == '\r' || line[0] == '/'; }
 
 class ReloadPluginException : public std::runtime_error {
 public:
@@ -294,7 +303,7 @@ class PropertyList
 
     static PropertyType prop_from_string(const char *str)
     {
-#define CHK(x) if (!strcmp(str,#x)) return PropertyType_##x;
+#define CHK(x) if (IsSameString(str,#x)) return PropertyType_##x;
         DECLARE_PROPERTY_TYPES(CHK)
 #undef CHK
         return PropertyType_Unknown;
@@ -714,9 +723,9 @@ public:
         {
             if (!dualPan || !dualPan[0])
                 lstrcpyn_safe(buf, "  <C>  ", bufsz);
-            else if (!strcmp(dualPan, "L"))
+            else if (IsSameString(dualPan, "L"))
                 lstrcpyn_safe(buf, " L<C>  ", bufsz);
-            else if (!strcmp(dualPan, "R"))
+            else if (IsSameString(dualPan, "R"))
                 lstrcpyn_safe(buf, " <C>R  ", bufsz);
         }
 
@@ -863,7 +872,7 @@ public:
     {
         for (auto &subZone : subZones_)
         {
-            if ( ! strcmp(subZone->GetName(), subZoneName))
+            if (IsSameString(subZone->GetName(), subZoneName))
             {
                 subZone->SetSlotIndex(GetSlotIndex());
                 subZone->Activate();
@@ -1141,7 +1150,7 @@ private:
                 
                 lineNumber++;
                 
-                if (line == "" || (line.size() > 0 && line[0] == '/')) // ignore blank lines and comment lines
+                if (IsCommentedOrEmpty(line))
                     continue;
                 
                 vector<string> tokens;
@@ -1193,25 +1202,25 @@ private:
     
     void ListenToGoZone(const char *zoneName)
     {
-        if (!strcmp("SelectedTrackSend", zoneName))
+        if (IsSameString("SelectedTrackSend", zoneName))
             for (auto &listener : listeners_)
             {
                 if (listener->GetListensToSends())
                     listener->GoZone(zoneName);
             }
-        else if (!strcmp("SelectedTrackReceive", zoneName))
+        else if (IsSameString("SelectedTrackReceive", zoneName))
             for (auto &listener : listeners_)
             {
                 if (listener->GetListensToReceives())
                     listener->GoZone(zoneName);
             }
-        else if (!strcmp("SelectedTrackFX", zoneName))
+        else if (IsSameString("SelectedTrackFX", zoneName))
             for (auto &listener : listeners_)
             {
                 if (listener->GetListensToSelectedTrackFX())
                     listener->GoZone(zoneName);
             }
-        else if (!strcmp("SelectedTrackFXMenu", zoneName))
+        else if (IsSameString("SelectedTrackFXMenu", zoneName))
             for (auto &listener : listeners_)
             {
                 if (listener->GetListensToFXMenu())
@@ -1223,19 +1232,19 @@ private:
     
     void ListenToClearFXZone(const char *zoneToClear)
     {
-        if (!strcmp("LastTouchedFXParam", zoneToClear))
+        if (IsSameString("LastTouchedFXParam", zoneToClear))
             for (auto &listener : listeners_)
                 listener->ClearLastTouchedFXParam();
-        else if (!strcmp("FocusedFX", zoneToClear))
+        else if (IsSameString("FocusedFX", zoneToClear))
             for (auto &listener : listeners_)
                 listener->ClearFocusedFX();
-        else if (!strcmp("SelectedTrackFX", zoneToClear))
+        else if (IsSameString("SelectedTrackFX", zoneToClear))
             for (auto &listener : listeners_)
             {
                 if (listener->GetListensToSelectedTrackFX())
                     listener->GoZone(zoneToClear);
             }
-        else if (!strcmp("FXSlot", zoneToClear))
+        else if (IsSameString("FXSlot", zoneToClear))
             for (auto &listener : listeners_)
             {
                 if (listener->GetListensToFXMenu())
@@ -1328,7 +1337,7 @@ private:
     void ReactivateFXMenuZone()
     {
         for (int i = 0; i < goZones_.size(); ++i)
-            if (!strcmp(goZones_[i]->GetName(), "TrackFXMenu") || !strcmp(goZones_[i]->GetName(), "SelectedTrackFXMenu"))
+            if (IsSameString(goZones_[i]->GetName(), "TrackFXMenu") || IsSameString(goZones_[i]->GetName(), "SelectedTrackFXMenu"))
                 if (goZones_[i]->GetIsActive())
                     goZones_[i]->Activate();
     }
@@ -1522,12 +1531,12 @@ public:
         
         for (int i = 0; i < goZones_.size(); ++i)
         {
-            if (!strcmp(zoneName, goZones_[i]->GetName()))
+            if (IsSameString(zoneName, goZones_[i]->GetName()))
             {
                 if (goZones_[i]->GetIsActive())
                 {
                     for (int j = i; j < goZones_.size(); ++j)
-                        if (!strcmp(zoneName, goZones_[j]->GetName()))
+                        if (IsSameString(zoneName, goZones_[j]->GetName()))
                             goZones_[j]->Deactivate();
                     
                     return;
@@ -1536,14 +1545,14 @@ public:
         }
         
         for (auto &goZone : goZones_)
-            if (strcmp(zoneName, goZone->GetName()))
+            if (!IsSameString(zoneName, goZone->GetName()))
                 goZone->Deactivate();
         
         for (auto &goZone : goZones_)
-            if (!strcmp(zoneName, goZone->GetName()))
+            if (IsSameString(zoneName, goZone->GetName()))
                goZone->Activate();
         
-        if ( ! strcmp(zoneName, "SelectedTrackFX"))
+        if (IsSameString(zoneName, "SelectedTrackFX"))
             GoSelectedTrackFX();
     }
     
@@ -1551,13 +1560,13 @@ public:
     {
         if (! GetIsBroadcaster() && ! GetIsListener()) // No Broadcasters/Listeners relationships defined
         {
-            if (!strcmp("LastTouchedFXParam", zoneName))
+            if (IsSameString("LastTouchedFXParam", zoneName))
                 ClearLastTouchedFXParam();
-            else if (!strcmp("FocusedFX", zoneName))
+            else if (IsSameString("FocusedFX", zoneName))
                 ClearFocusedFX();
-            else if (!strcmp("SelectedTrackFX", zoneName))
+            else if (IsSameString("SelectedTrackFX", zoneName))
                 ClearSelectedTrackFX();
-            else if (!strcmp("FXSlot", zoneName))
+            else if (IsSameString("FXSlot", zoneName))
                 ClearFXSlot();
         }
         else
@@ -1646,10 +1655,10 @@ public:
         
         for (auto &goZone : goZones_)
         {
-            if (!strcmp(goZone->GetName(), "SelectedTrack") ||
-                !strcmp(goZone->GetName(), "SelectedTrackSend") ||
-                !strcmp(goZone->GetName(), "SelectedTrackReceive") ||
-                !strcmp(goZone->GetName(), "SelectedTrackFXMenu"))
+            if (IsSameString(goZone->GetName(), "SelectedTrack") ||
+                IsSameString(goZone->GetName(), "SelectedTrackSend") ||
+                IsSameString(goZone->GetName(), "SelectedTrackReceive") ||
+                IsSameString(goZone->GetName(), "SelectedTrackFXMenu"))
             {
                 goZone->Deactivate();
             }
@@ -1689,7 +1698,7 @@ public:
     bool GetIsGoZoneActive(const char *zoneName)
     {
         for (auto &goZone : goZones_)
-            if (!strcmp(zoneName, goZone->GetName()))
+            if (IsSameString(zoneName, goZone->GetName()))
                 return goZone->GetIsActive();
         
         return false;
@@ -1715,29 +1724,27 @@ public:
         
     void AdjustBank(const char *zoneName, int amount)
     {
-        if (!strcmp(zoneName, "TrackSend"))
+        if (IsSameString(zoneName, "TrackSend"))
             AdjustBank(trackSendOffset_, amount);
-        else if (!strcmp(zoneName, "TrackReceive"))
+        else if (IsSameString(zoneName, "TrackReceive"))
             AdjustBank(trackReceiveOffset_, amount);
-        else if (!strcmp(zoneName, "TrackFXMenu"))
+        else if (IsSameString(zoneName, "TrackFXMenu"))
             AdjustBank(trackFXMenuOffset_, amount);
-        else if (!strcmp(zoneName, "SelectedTrackSend"))
+        else if (IsSameString(zoneName, "SelectedTrackSend"))
             AdjustBank(selectedTrackSendOffset_, amount);
-        else if (!strcmp(zoneName, "SelectedTrackReceive"))
+        else if (IsSameString(zoneName, "SelectedTrackReceive"))
             AdjustBank(selectedTrackReceiveOffset_, amount);
-        else if (!strcmp(zoneName, "SelectedTrackFXMenu"))
+        else if (IsSameString(zoneName, "SelectedTrackFXMenu"))
             AdjustBank(selectedTrackFXMenuOffset_, amount);
-        else if (!strcmp(zoneName, "MasterTrackFXMenu"))
+        else if (IsSameString(zoneName, "MasterTrackFXMenu"))
             AdjustBank(masterTrackFXMenuOffset_, amount);
     }
                 
     void AddZoneFilePath(const string &name, CSIZoneInfo &zoneInfo)
     {
-        if (g_debugLevel >= DEBUG_LEVEL_DEBUG) LogToConsole(256, "[DEBUG] AddZoneFilePath %s\n", GetRelativePath(name.c_str()));
-        if (zoneInfo_.find(name) == zoneInfo_.end())
+        if (zoneInfo_.find(name) == zoneInfo_.end()) {
             zoneInfo_[name] = zoneInfo;
-        else
-        {
+        } else {
             CSIZoneInfo &info = zoneInfo_[name];
             info.alias = zoneInfo.alias;
         }
@@ -1868,16 +1875,16 @@ private:
     
     static Modifiers modifierFromString(const char *s)
     {
-         if (!strcmp(s,"Shift")) return Shift;
-         if (!strcmp(s,"Option")) return Option;
-         if (!strcmp(s,"Control")) return Control;
-         if (!strcmp(s,"Alt")) return Alt;
-         if (!strcmp(s,"Flip")) return Flip;
-         if (!strcmp(s,"Global")) return Global;
-         if (!strcmp(s,"Marker")) return Marker;
-         if (!strcmp(s,"Nudge")) return Nudge;
-         if (!strcmp(s,"Zoom")) return Zoom;
-         if (!strcmp(s,"Scrub")) return Scrub;
+         if (IsSameString(s,"Shift")) return Shift;
+         if (IsSameString(s,"Option")) return Option;
+         if (IsSameString(s,"Control")) return Control;
+         if (IsSameString(s,"Alt")) return Alt;
+         if (IsSameString(s,"Flip")) return Flip;
+         if (IsSameString(s,"Global")) return Global;
+         if (IsSameString(s,"Marker")) return Marker;
+         if (IsSameString(s,"Nudge")) return Nudge;
+         if (IsSameString(s,"Zoom")) return Zoom;
+         if (IsSameString(s,"Scrub")) return Scrub;
          return ErrorModifier;
     }
 
@@ -3928,15 +3935,15 @@ public:
     
     void AdjustBank(const char *zoneName, int amount)
     {
-        if (!strcmp(zoneName, "Track"))
+        if (IsSameString(zoneName, "Track"))
             trackNavigationManager_->AdjustTrackBank(amount);
-        else if (!strcmp(zoneName, "VCA"))
+        else if (IsSameString(zoneName, "VCA"))
             trackNavigationManager_->AdjustVCABank(amount);
-        else if (!strcmp(zoneName, "Folder"))
+        else if (IsSameString(zoneName, "Folder"))
             trackNavigationManager_->AdjustFolderBank(amount);
-        else if (!strcmp(zoneName, "SelectedTracks"))
+        else if (IsSameString(zoneName, "SelectedTracks"))
             trackNavigationManager_->AdjustSelectedTracksBank(amount);
-        else if (!strcmp(zoneName, "SelectedTrack"))
+        else if (IsSameString(zoneName, "SelectedTrack"))
             trackNavigationManager_->AdjustSelectedTrackBank(amount);
         else
             for (auto &surface : surfaces_)
@@ -4259,7 +4266,7 @@ public:
     {
         for (int i = 0; i < pages_.size(); ++i)
         {
-            if (! strcmp(pages_[i]->GetName(), pageName))
+            if (IsSameString(pages_[i]->GetName(), pageName))
             {
                 if (pages_.size() > currentPageIndex_ && pages_[currentPageIndex_])
                     pages_[currentPageIndex_]->LeavePage();

@@ -127,20 +127,58 @@ static void LogStackTraceToConsole() {
 #endif
 }
 
-static const char* GetRelativePath(const char* absolutePath)
-{
+static const char* GetRelativePath(const char* absolutePath) {
     const char* resourcePath = GetResourcePath();
     size_t resourcePathLen = strlen(resourcePath);
 
-    if (strncmp(absolutePath, resourcePath, resourcePathLen) == 0)
-    {
+    if (strncmp(absolutePath, resourcePath, resourcePathLen) == 0) {
         const char* rel = absolutePath + resourcePathLen;
         if (*rel == '/' || *rel == '\\')
             ++rel;
-        return rel;
+        static std::string relativePath;
+        relativePath.clear();
+        for (const char* ptr = rel; *ptr != '\0'; ++ptr) {
+            relativePath.push_back(*ptr == '\\' ? '/' : *ptr);
+        }
+        return relativePath.c_str();
     }
 
     return absolutePath;
+}
+
+static bool IsSameString(const char* a, const char* b) {
+    if (a == nullptr || b == nullptr) return false;
+    return std::strcmp(a, b) == 0;
+}
+static bool IsSameString(const std::string& a, const std::string& b) {
+    return a == b;
+}
+static bool IsSameString(const std::string& a, const char* b) {
+    return IsSameString(a.c_str(), b);
+}
+static bool IsSameString(const char* a, const std::string& b) {
+    return IsSameString(a, b.c_str());
+}
+
+static int ExtractSuffixNumber(const std::string& name) {
+    int result = -1;
+    size_t index = name.length() - 1;
+    while (index >= 0 && isdigit(name[index])) index--;
+    if (index < name.length() - 1) 
+        result = stoi(name.substr(index + 1));
+
+    return result;
+}
+
+template <size_t N>
+std::string JoinStringArray(const std::string (&arr)[N], const std::string& delimiter) {
+    std::ostringstream oss;
+    for (size_t i = 0; i < N; ++i) {
+        oss << arr[i];
+        if (i < N - 1)
+            oss << delimiter;
+    }
+    return oss.str();
 }
 
 #endif /* handy_functions_h */

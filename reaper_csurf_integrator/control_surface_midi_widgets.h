@@ -599,7 +599,7 @@ public:
 
     virtual void SetValue(const PropertyList &properties, const char * const &inputText) override
     {
-        if (strcmp(inputText, lastStringSent_.c_str()))
+        if (!IsSameString(inputText, lastStringSent_.c_str()))
             ForceValue(properties, inputText);
     }
     
@@ -795,13 +795,13 @@ public:
         const char *ringstyle = properties.get_prop(PropertyType_RingStyle);
         if (ringstyle)
         {
-            if (!strcmp(ringstyle, "Dot"))
+            if (IsSameString(ringstyle, "Dot"))
                 displayMode = 0;
-            else if (!strcmp(ringstyle, "BoostCut"))
+            else if (IsSameString(ringstyle, "BoostCut"))
                 displayMode = 1;
-            else if (!strcmp(ringstyle, "Fill"))
+            else if (IsSameString(ringstyle, "Fill"))
                 displayMode = 2;
-            else if (!strcmp(ringstyle, "Spread"))
+            else if (IsSameString(ringstyle, "Spread"))
                 displayMode = 3;
         }
 
@@ -1180,13 +1180,13 @@ public:
         const char *ringstyle = properties.get_prop(PropertyType_RingStyle);
         if (ringstyle)
         {
-            if (!strcmp(ringstyle, "Dot"))
+            if (IsSameString(ringstyle, "Dot"))
                 displayMode = 0;
-            else if (!strcmp(ringstyle, "BoostCut"))
+            else if (IsSameString(ringstyle, "BoostCut"))
                 displayMode = 1;
-            else if (!strcmp(ringstyle, "Fill"))
+            else if (IsSameString(ringstyle, "Fill"))
                 displayMode = 2;
-            else if (!strcmp(ringstyle, "Spread"))
+            else if (IsSameString(ringstyle, "Spread"))
                 displayMode = 3;
         }
 
@@ -1243,9 +1243,9 @@ public:
         const char *ringstyle = properties.get_prop(PropertyType_RingStyle);
         if (ringstyle)
         {
-            if (!strcmp(ringstyle, "Fill"))
+            if (IsSameString(ringstyle, "Fill"))
                 displayMode_ = 1;
-            else if (!strcmp(ringstyle, "Dot"))
+            else if (IsSameString(ringstyle, "Dot"))
                 displayMode_ = 2;
         }
 
@@ -1559,13 +1559,13 @@ private:
         const char *barstyle = properties.get_prop(PropertyType_BarStyle);
         if (barstyle)
         {
-            if (!strcmp(barstyle, "Normal"))
+            if (IsSameString(barstyle, "Normal"))
                 return 0;
-            else if (!strcmp(barstyle, "BiPolar"))
+            else if (IsSameString(barstyle, "BiPolar"))
                 return 1;
-            else if (!strcmp(barstyle, "Fill"))
+            else if (IsSameString(barstyle, "Fill"))
                 return 2;
-            else if (!strcmp(barstyle, "Spread"))
+            else if (IsSameString(barstyle, "Spread"))
                 return 3;
         }
 
@@ -1639,7 +1639,7 @@ public:
 
     virtual void SetValue(const PropertyList &properties, const char * const &inputText) override
     {
-        if (strcmp(inputText, lastStringSent_.c_str())) // changes since last send
+        if (!IsSameString(inputText, lastStringSent_.c_str())) // changes since last send
             ForceValue(properties, inputText);
     }
     
@@ -1650,7 +1650,7 @@ public:
         char tmp[MEDBUF];
         const char *text = GetWidget()->GetSurface()->GetRestrictedLengthText(inputText, tmp, sizeof(tmp));
 
-        if (!strcmp(text,"-150.00")) text="";
+        if (IsSameString(text,"-150.00")) text="";
 
         struct
         {
@@ -1707,7 +1707,7 @@ public:
 
     virtual void SetValue(const PropertyList &properties, const char * const &inputText) override
     {
-        if (strcmp(inputText, lastStringSent_.c_str())) // changes since last send
+        if (!IsSameString(inputText, lastStringSent_.c_str())) // changes since last send
             ForceValue(properties, inputText);
     }
     
@@ -1718,7 +1718,7 @@ public:
         char tmp[MEDBUF];
         const char *text = GetWidget()->GetSurface()->GetRestrictedLengthText(inputText, tmp, sizeof(tmp));
 
-        if (!strcmp(text,"-150.00")) text="";
+        if (IsSameString(text,"-150.00")) text="";
 
         struct
         {
@@ -1773,7 +1773,7 @@ public:
 
     virtual void SetValue(const PropertyList &properties, const char * const &inputText) override
     {
-        if (strcmp(inputText, lastStringSent_.c_str())) // changes since last send
+        if (!IsSameString(inputText, lastStringSent_.c_str())) // changes since last send
             ForceValue(properties, inputText);
     }
     
@@ -1784,7 +1784,7 @@ public:
         char tmp[MEDBUF];
         const char *text = GetWidget()->GetSurface()->GetRestrictedLengthText(inputText, tmp, sizeof(tmp));
 
-        if (!strcmp(text,"-150.00")) text = "";
+        if (IsSameString(text,"-150.00")) text = "";
 
         struct
         {
@@ -1846,14 +1846,14 @@ private:
 
     static XTouchColor colorFromString(const char *str)
     {
-        if (!strcmp(str, "Black"))   return COLOR_OFF;
-        if (!strcmp(str, "Red"))     return COLOR_RED;
-        if (!strcmp(str, "Green"))   return COLOR_GREEN;
-        if (!strcmp(str, "Yellow"))  return COLOR_YELLOW;
-        if (!strcmp(str, "Blue"))    return COLOR_BLUE;
-        if (!strcmp(str, "Magenta")) return COLOR_MAGENTA;
-        if (!strcmp(str, "Cyan"))    return COLOR_CYAN;
-        if (!strcmp(str, "White"))   return COLOR_WHITE;
+        if (IsSameString(str, "Black"))   return COLOR_OFF;
+        if (IsSameString(str, "Red"))     return COLOR_RED;
+        if (IsSameString(str, "Green"))   return COLOR_GREEN;
+        if (IsSameString(str, "Yellow"))  return COLOR_YELLOW;
+        if (IsSameString(str, "Blue"))    return COLOR_BLUE;
+        if (IsSameString(str, "Magenta")) return COLOR_MAGENTA;
+        if (IsSameString(str, "Cyan"))    return COLOR_CYAN;
+        if (IsSameString(str, "White"))   return COLOR_WHITE;
         return COLOR_INVALID;
     }
 
@@ -1986,7 +1986,7 @@ public:
     
     virtual void SetValue(const PropertyList &properties, const char * const &inputText) override
     {
-        if (strcmp(inputText, lastStringSent_.c_str())) // changes since last send
+        if (!IsSameString(inputText, lastStringSent_.c_str())) // changes since last send
             ForceValue(properties, inputText);
     }
     
@@ -1997,7 +1997,7 @@ public:
         char tmp[MEDBUF];
         const char *text = GetWidget()->GetSurface()->GetRestrictedLengthText(inputText, tmp, sizeof(tmp));
 
-        if (!strcmp(text, "-150.00")) text = "";
+        if (IsSameString(text, "-150.00")) text = "";
 
         struct
         {
@@ -2094,9 +2094,9 @@ private:
         const char *textalign = properties.get_prop(PropertyType_TextAlign);
         if (textalign)
         {
-            if (!strcmp(textalign, "Left"))
+            if (IsSameString(textalign, "Left"))
                 return 1;
-            else if (!strcmp(textalign, "Right"))
+            else if (IsSameString(textalign, "Right"))
                 return 2;
         }
 
@@ -2106,7 +2106,7 @@ private:
     int GetTextInvert(const PropertyList &properties)
     {
         const char *textinvert = properties.get_prop(PropertyType_TextInvert);
-        if (textinvert && !strcmp(textinvert, "Yes"))
+        if (textinvert && IsSameString(textinvert, "Yes"))
             return 4;
 
         return 0;
@@ -2129,7 +2129,7 @@ public:
     
     virtual void SetValue(const PropertyList &properties, const char * const &inputText) override
     {
-        if (strcmp(inputText, lastStringSent_.c_str())) // changes since last send
+        if (!IsSameString(inputText, lastStringSent_.c_str())) // changes since last send
             ForceValue(properties, inputText);
     }
     
@@ -2287,7 +2287,7 @@ public:
     
     virtual void SetValue(const PropertyList &properties, const char * const &inputText) override
     {
-        if (strcmp(inputText, lastStringSent_.c_str())) // changes since last send
+        if (!IsSameString(inputText, lastStringSent_.c_str())) // changes since last send
             ForceValue(properties, inputText);
     }
     

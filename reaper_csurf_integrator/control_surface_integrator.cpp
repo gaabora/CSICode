@@ -255,6 +255,27 @@ void GetTokens(vector<string> &tokens, const string &line, char delimiter)
         tokens.push_back(token);
 }
 
+vector<vector<string>> GetTokenLines(ifstream &file, string endToken, int &lastProcessedLine) {
+    vector<vector<string>> tokenLines;
+    for (string line; getline(file, line);) {
+        TrimLine(line);
+
+        lastProcessedLine++;
+        
+        if (IsCommentedOrEmpty(line))
+            continue;
+        
+        vector<string> tokens;
+        GetTokens(tokens, line);
+
+        if (tokens[0] == endToken)
+            break;
+        
+        tokenLines.push_back(tokens);
+    }
+    return tokenLines;
+}
+
 int strToHex(string &valueStr)
 {
     return strtol(valueStr.c_str(), NULL, 16);
@@ -434,13 +455,12 @@ static oscpkt::UdpSocket *GetOutputSocketForAddressAndPort(const string &surface
     return NULL;
 }
 
-// files
-static void listFilesOfType(const string &path, vector<string> &results, const string &type)
+static void collectFilesOfType(const string &type, const string &searchPath, vector<string> &results)
 {
-    filesystem::path zonePath { path };
+    filesystem::path zonePath { searchPath };
     
-    if (filesystem::exists(path) && filesystem::is_directory(path))
-        for (auto &file : filesystem::recursive_directory_iterator(path))
+    if (filesystem::exists(searchPath) && filesystem::is_directory(searchPath))
+        for (auto &file : filesystem::recursive_directory_iterator(searchPath))
             if (file.path().extension() == type)
                 results.push_back(file.path().string());
 }
@@ -462,31 +482,12 @@ void Midi_ControlSurface::ProcessMidiWidget(int &lineNumber, ifstream &surfaceTe
 
     Widget *widget = GetWidgetByName(in_tokens[1]);
     
-    if (widget == NULL)
-    {
-        LogToConsole(2048, "[ERROR] FAILED to ProcessMidiWidget: widget not found by name %s. Line %s\n", in_tokens[1].c_str(), lineNumber);
+    if (widget == NULL) {
+        LogToConsole(2048, "[ERROR] FAILED to ProcessMidiWidget: no widgets found by name '%s'. Line %s\n", in_tokens[1].c_str(), lineNumber);
         return;
     }
-    vector<vector<string>> tokenLines;
-    
-    for (string line; getline(surfaceTemplateFile, line) ; )
-    {
-        TrimLine(line);
-        
-        lineNumber++;
-        
-        if (line == "" || line[0] == '\r' || line[0] == '/') // ignore comment lines and blank lines
-            continue;
-        
-        vector<string> tokens;
-        GetTokens(tokens, line);
 
-        if (tokens[0] == "WidgetEnd")    // Widget list complete
-            break;
-        
-        tokenLines.push_back(tokens);
-    }
-    
+    vector<vector<string>> tokenLines = GetTokenLines(surfaceTemplateFile, "WidgetEnd", lineNumber);
     if (tokenLines.size() < 1)
         return;
     
@@ -784,23 +785,7 @@ void OSC_ControlSurface::ProcessOSCWidget(int &lineNumber, ifstream &surfaceTemp
         return;
     }
     
-    vector<vector<string>> tokenLines;
-
-    for (string line; getline(surfaceTemplateFile, line) ; )
-    {
-        lineNumber++;
-        
-        if (line == "" || line[0] == '\r' || line[0] == '/') // ignore comment lines and blank lines
-            continue;
-        
-        vector<string> tokens;
-        GetTokens(tokens, line);
-
-        if (tokens[0] == "WidgetEnd")    // Widget list complete
-            break;
-        
-        tokenLines.push_back(tokens);
-    }
+    vector<vector<string>> tokenLines = GetTokenLines(surfaceTemplateFile, "WidgetEnd", lineNumber);
 
     for (int i = 0; i < (int)tokenLines.size(); ++i)
     {
@@ -910,7 +895,7 @@ void Midi_ControlSurface::ProcessMIDIWidgetFile(const string &filePath, Midi_Con
             
             lineNumber++;
             
-            if (line == "" || line[0] == '\r' || line[0] == '/') // ignore comment lines and blank lines
+            if (IsCommentedOrEmpty(line))
                 continue;
             
             vector<string> tokens;
@@ -950,14 +935,14 @@ void OSC_ControlSurface::ProcessOSCWidgetFile(const string &filePath)
     {
         ifstream file(filePath);
         
-        if (g_debugLevel >= DEBUG_LEVEL_DEBUG) LogToConsole(2048, "[DEBUG] ProcessOSCWidgetFile: %s\n", filePath.c_str());
+        if (g_debugLevel >= DEBUG_LEVEL_DEBUG) LogToConsole(2048, "[DEBUG] ProcessOSCWidgetFile: %s\n", GetRelativePath(filePath.c_str()));
         for (string line; getline(file, line) ; )
         {
             TrimLine(line);
             
             lineNumber++;
             
-            if (line == "" || line[0] == '\r' || line[0] == '/') // ignore comment lines and blank lines
+            if (IsCommentedOrEmpty(line))
                 continue;
             
             vector<string> tokens;
@@ -1209,10 +1194,9 @@ void CSurfIntegrator::Init()
                 const char *versionProp = pList.get_prop(PropertyType_Version);
                 if (versionProp)
                 {
-                    if (strcmp(versionProp, s_MajorVersionToken))
-                    {
+                    if (!IsSameString(versionProp, s_MajorVersionToken)) {
                         LogToConsole(MEDBUF, __LOCALIZE_VERFMT("[ERROR] CSI.ini version mismatch. -- Your CSI.ini file is not %s.\n", "csi_mbox"), s_MajorVersionToken);
-
+                        //FIXME: so what? make backup and generate new, or at least prompt to confirm
                         iniFile.close();
                         return;
                     }
@@ -1225,20 +1209,19 @@ void CSurfIntegrator::Init()
                 else
                 {
                     LogToConsole(MEDBUF, __LOCALIZE_VERFMT("[ERROR] CSI.ini has no version.\n", "csi_mbox"));
-
+                    //FIXME: so what? generate new, or at least prompt to confirm
                     iniFile.close();
                     return;
                 }
             }
             
-            if (line == "" || line[0] == '\r' || line[0] == '/') // ignore comment lines and blank lines
+            if (IsCommentedOrEmpty(line))
                 continue;
             
             vector<string> tokens;
             GetTokens(tokens, line.c_str());
             
-            if (tokens.size() > 0) // ignore comment lines and blank lines
-            {
+            if (tokens.size() > 0) {
                 PropertyList pList;
                 GetPropertiesFromTokens(0, (int) tokens.size(), tokens, pList);
                 
@@ -1250,7 +1233,7 @@ void CSurfIntegrator::Init()
                         {
                             int channelCount = atoi(channelCountProp);
                             
-                            if ( ! strcmp(typeProp, s_MidiSurfaceToken) && tokens.size() == 7)
+                            if (IsSameString(typeProp, s_MidiSurfaceToken) && tokens.size() == 7)
                             {
                                 if (pList.get_prop(PropertyType_MidiInput) != NULL &&
                                     pList.get_prop(PropertyType_MidiOutput) != NULL &&
@@ -1265,7 +1248,7 @@ void CSurfIntegrator::Init()
                                     midiSurfacesIO_.push_back(make_unique<Midi_ControlSurfaceIO>(this, nameProp, channelCount, GetMidiInputForPort(midiIn), GetMidiOutputForPort(midiOut), surfaceRefreshRate, maxMIDIMesssagesPerRun));
                                 }
                             }
-                            else if (( ! strcmp(typeProp, s_OSCSurfaceToken) || ! strcmp(typeProp, s_OSCX32SurfaceToken)) && tokens.size() == 7)
+                            else if ((IsSameString(typeProp, s_OSCSurfaceToken) || IsSameString(typeProp, s_OSCX32SurfaceToken)) && tokens.size() == 7)
                             {
                                 if (pList.get_prop(PropertyType_ReceiveOnPort) != NULL &&
                                     pList.get_prop(PropertyType_TransmitToPort) != NULL &&
@@ -1277,9 +1260,9 @@ void CSurfIntegrator::Init()
                                     const char *transmitToIPAddress = pList.get_prop(PropertyType_TransmitToIPAddress);
                                     int maxPacketsPerRun = atoi(pList.get_prop(PropertyType_MaxPacketsPerRun));
                                     
-                                    if ( ! strcmp(typeProp, s_OSCSurfaceToken))
+                                    if (IsSameString(typeProp, s_OSCSurfaceToken))
                                         oscSurfacesIO_.push_back(make_unique<OSC_ControlSurfaceIO>(this, nameProp, channelCount, receiveOnPort, transmitToPort, transmitToIPAddress, maxPacketsPerRun));
-                                    else if ( ! strcmp(typeProp, s_OSCX32SurfaceToken))
+                                    else if (IsSameString(typeProp, s_OSCX32SurfaceToken))
                                         oscSurfacesIO_.push_back(make_unique<OSC_X32ControlSurfaceIO>(this, nameProp, channelCount, receiveOnPort, transmitToPort, transmitToIPAddress, maxPacketsPerRun));
                                 }
                             }
@@ -1299,25 +1282,25 @@ void CSurfIntegrator::Init()
                     {
                         if (const char *pageFollowsMCPProp = pList.get_prop(PropertyType_PageFollowsMCP))
                         {
-                            if ( ! strcmp(pageFollowsMCPProp, "No"))
+                            if (IsSameString(pageFollowsMCPProp, "No"))
                                 followMCP = false;
                         }
                         
                         if (const char *synchPagesProp = pList.get_prop(PropertyType_SynchPages))
                         {
-                            if ( ! strcmp(synchPagesProp, "No"))
+                            if (IsSameString(synchPagesProp, "No"))
                                 synchPages = false;
                         }
                         
                         if (const char *scrollLinkProp = pList.get_prop(PropertyType_ScrollLink))
                         {
-                            if ( ! strcmp(scrollLinkProp, "Yes"))
+                            if (IsSameString(scrollLinkProp, "Yes"))
                                 isScrollLinkEnabled = true;
                         }
                         
                         if (const char *scrollSynchProp = pList.get_prop(PropertyType_ScrollSynch))
                         {
-                            if ( ! strcmp(scrollSynchProp, "Yes"))
+                            if (IsSameString(scrollSynchProp, "Yes"))
                                 isScrollSynchEnabled = true;
                         }
 
@@ -1415,7 +1398,7 @@ void CSurfIntegrator::Init()
                                 
                                 for (auto &io : midiSurfacesIO_)
                                 {
-                                    if ( ! strcmp(surfaceProp, io->GetName()))
+                                    if (IsSameString(surfaceProp, io->GetName()))
                                     {
                                         foundIt = true;
                                         currentPage->GetSurfaces().push_back(make_unique<Midi_ControlSurface>(this, currentPage, surfaceProp, startChannel, surfaceFile.c_str(), zoneFolder.c_str(), fxZoneFolder.c_str(), io.get()));
@@ -1427,7 +1410,7 @@ void CSurfIntegrator::Init()
                                 {
                                     for (auto &io : oscSurfacesIO_)
                                     {
-                                        if ( ! strcmp(surfaceProp, io->GetName()))
+                                        if (IsSameString(surfaceProp, io->GetName()))
                                         {
                                             foundIt = true;
                                             currentPage->GetSurfaces().push_back(make_unique<OSC_ControlSurface>(this, currentPage, surfaceProp, startChannel, surfaceFile.c_str(), zoneFolder.c_str(), fxZoneFolder.c_str(), io.get()));
@@ -1531,7 +1514,7 @@ ActionContext::ActionContext(CSurfIntegrator *const csi, Action *action, Widget 
 
     
     const char* feedback = widgetProperties_.get_prop(PropertyType_Feedback);
-    if (feedback && !strcmp(feedback, "No"))
+    if (feedback && IsSameString(feedback, "No"))
         provideFeedback_ = false;
 
     const char* holdDelay = widgetProperties_.get_prop(PropertyType_HoldDelay);
@@ -1567,7 +1550,7 @@ ActionContext::ActionContext(CSurfIntegrator *const csi, Action *action, Widget 
         stringParam_ = params[1];
         intParam_= atol(params[2].c_str());
     }
-        
+
     // Action with param index, must be positive
     if (params.size() > 1 && isdigit(params[1][0]))  // C++ 2003 says empty strings can be queried without catastrophe :)
     {
@@ -1662,12 +1645,12 @@ void ActionContext::ProcessActionTitle()
     const char* actionName = this->GetAction()->GetName();
     const char* stringParam = this->GetStringParam();
     
-    if (strcmp(actionName, "TrackAutoMode") == 0)
+    if (IsSameString(actionName, "TrackAutoMode"))
         actionTitle_ = string("Automation: ") + TrackNavigationManager::GetAutoModeDisplayNameNoOverride(atoi(stringParam));
-    else if (strcmp(stringParam, "{") == 0 || strcmp(stringParam, "[") == 0)
+    else if (IsSameString(stringParam, "{")|| IsSameString(stringParam, "["))
         actionTitle_ = actionName; //TODO: fix parser?
     else
-        actionTitle_ = string(actionName) + " " + stringParam;
+        actionTitle_ = (stringParam && !stringParam[0]) ? string(actionName) + " " + stringParam : actionName;
 }
 
 Page *ActionContext::GetPage()
@@ -1982,46 +1965,47 @@ bool ActionContext::IgnoresButtonRelease()
 {
     const char* name = this->GetAction()->GetName();
     if (!name) return true;
-    if ( 0 == strcmp(name, "Bank")
-      || 0 == strcmp(name, "SetShift")
-      || 0 == strcmp(name, "SetOption")
-      || 0 == strcmp(name, "SetControl")
-      || 0 == strcmp(name, "SetAlt")
-      || 0 == strcmp(name, "SetFlip")
-      || 0 == strcmp(name, "SetGlobal")
-      || 0 == strcmp(name, "SetMarker")
-      || 0 == strcmp(name, "SetNudge")
-      || 0 == strcmp(name, "SetZoom")
-      || 0 == strcmp(name, "SetScrub")
-      || 0 == strcmp(name, "FXParam")
-      || 0 == strcmp(name, "JSFXParam")
-      || 0 == strcmp(name, "TCPFXParam")
-      || 0 == strcmp(name, "LastTouchedFXParam")
-      || 0 == strcmp(name, "TrackVolume")
-      || 0 == strcmp(name, "SoftTakeover7BitTrackVolume")
-      || 0 == strcmp(name, "SoftTakeover14BitTrackVolume")
-      || 0 == strcmp(name, "TrackVolumeDB")
-      || 0 == strcmp(name, "TrackPan")
-      || 0 == strcmp(name, "TrackPanPercent")
-      || 0 == strcmp(name, "TrackPanWidth")
-      || 0 == strcmp(name, "TrackPanWidthPercent")
-      || 0 == strcmp(name, "TrackPanL")
-      || 0 == strcmp(name, "TrackPanLPercent")
-      || 0 == strcmp(name, "TrackPanR")
-      || 0 == strcmp(name, "TrackPanRPercent")
-      || 0 == strcmp(name, "TrackPanAutoLeft")
-      || 0 == strcmp(name, "TrackPanAutoRight")
-      || 0 == strcmp(name, "TrackSendVolume")
-      || 0 == strcmp(name, "TrackSendVolumeDB")
-      || 0 == strcmp(name, "TrackSendPan")
-      || 0 == strcmp(name, "TrackSendPanPercent")
-      || 0 == strcmp(name, "TrackReceiveVolume")
-      || 0 == strcmp(name, "TrackReceiveVolumeDB")
-      || 0 == strcmp(name, "TrackReceivePan")
-      || 0 == strcmp(name, "TrackReceivePanPercent")
-      || 0 == strcmp(name, "MoveCursor")
-      || 0 == strcmp(name, "TrackVolumeWithMeterAverageLR")
-      || 0 == strcmp(name, "TrackVolumeWithMeterMaxPeakLR")
+    //FIXME: make adequate comparison, not by the name string
+    if (IsSameString(name, "Bank")
+     || IsSameString(name, "SetShift")
+     || IsSameString(name, "SetOption")
+     || IsSameString(name, "SetControl")
+     || IsSameString(name, "SetAlt")
+     || IsSameString(name, "SetFlip")
+     || IsSameString(name, "SetGlobal")
+     || IsSameString(name, "SetMarker")
+     || IsSameString(name, "SetNudge")
+     || IsSameString(name, "SetZoom")
+     || IsSameString(name, "SetScrub")
+     || IsSameString(name, "FXParam")
+     || IsSameString(name, "JSFXParam")
+     || IsSameString(name, "TCPFXParam")
+     || IsSameString(name, "LastTouchedFXParam")
+     || IsSameString(name, "TrackVolume")
+     || IsSameString(name, "SoftTakeover7BitTrackVolume")
+     || IsSameString(name, "SoftTakeover14BitTrackVolume")
+     || IsSameString(name, "TrackVolumeDB")
+     || IsSameString(name, "TrackPan")
+     || IsSameString(name, "TrackPanPercent")
+     || IsSameString(name, "TrackPanWidth")
+     || IsSameString(name, "TrackPanWidthPercent")
+     || IsSameString(name, "TrackPanL")
+     || IsSameString(name, "TrackPanLPercent")
+     || IsSameString(name, "TrackPanR")
+     || IsSameString(name, "TrackPanRPercent")
+     || IsSameString(name, "TrackPanAutoLeft")
+     || IsSameString(name, "TrackPanAutoRight")
+     || IsSameString(name, "TrackSendVolume")
+     || IsSameString(name, "TrackSendVolumeDB")
+     || IsSameString(name, "TrackSendPan")
+     || IsSameString(name, "TrackSendPanPercent")
+     || IsSameString(name, "TrackReceiveVolume")
+     || IsSameString(name, "TrackReceiveVolumeDB")
+     || IsSameString(name, "TrackReceivePan")
+     || IsSameString(name, "TrackReceivePanPercent")
+     || IsSameString(name, "MoveCursor")
+     || IsSameString(name, "TrackVolumeWithMeterAverageLR")
+     || IsSameString(name, "TrackVolumeWithMeterMaxPeakLR")
     ) {
         return false;
     }
@@ -2285,7 +2269,7 @@ void Zone::Activate()
     //TODO: fix WidgetN forme HomeZone stops working if subzone has Shift+WidgetN but no WidgetN / subsone requires redefining WidgetN if there are WidgetN+ModifierX
     for (auto &widget : widgets_)
     {
-        if (!strcmp(widget->GetName(), "OnZoneActivation"))
+        if (IsSameString(widget->GetName(), "OnZoneActivation"))
             for (auto &actionContext :  GetActionContexts(widget))
                 actionContext->DoAction(1.0);
         
@@ -2294,11 +2278,11 @@ void Zone::Activate()
 
     isActive_ = true;
     
-    if (!strcmp(GetName(), "VCA"))
+    if (IsSameString(GetName(), "VCA"))
         zoneManager_->GetSurface()->GetPage()->VCAModeActivated();
-    else if (!strcmp(GetName(), "Folder"))
+    else if (IsSameString(GetName(), "Folder"))
         zoneManager_->GetSurface()->GetPage()->FolderModeActivated();
-    else if (!strcmp(GetName(), "SelectedTracks"))
+    else if (IsSameString(GetName(), "SelectedTracks"))
         zoneManager_->GetSurface()->GetPage()->SelectedTracksModeActivated();
 
     zoneManager_->GetSurface()->SendOSCMessage(GetName());
@@ -2321,18 +2305,18 @@ void Zone::Deactivate()
             actionContext->UpdateWidgetValue(0.0);
             actionContext->UpdateWidgetValue("");
 
-            if (!strcmp(widget->GetName(), "OnZoneDeactivation"))
+            if (IsSameString(widget->GetName(), "OnZoneDeactivation"))
                 actionContext->DoAction(1.0);
         }
     }
 
     isActive_ = false;
     
-    if (!strcmp(GetName(), "VCA"))
+    if (IsSameString(GetName(), "VCA"))
         zoneManager_->GetSurface()->GetPage()->VCAModeDeactivated();
-    else if (!strcmp(GetName(), "Folder"))
+    else if (IsSameString(GetName(), "Folder"))
         zoneManager_->GetSurface()->GetPage()->FolderModeDeactivated();
-    else if (!strcmp(GetName(), "SelectedTracks"))
+    else if (IsSameString(GetName(), "SelectedTracks"))
         zoneManager_->GetSurface()->GetPage()->SelectedTracksModeDeactivated();
     
     for (auto &includedZone : includedZones_)
@@ -2505,10 +2489,11 @@ void Zone::UpdateCurrentActionContextModifier(Widget *widget)
 ActionContext *Zone::AddActionContext(Widget *widget, int modifier, Zone *zone, const char *actionName, vector<string> &params)
 {
     const auto& action = csi_->GetAction(actionName);
-    if (strcmp(action->GetName(), actionName) && !strcmp(action->GetName(), "NoAction")) LogToConsole(256, "[ERROR] Unsupported action: '%s'. Zone: {%s}, Widget: [%s]\n"
-        ,actionName
+    if (!IsSameString(action->GetName(), actionName) && IsSameString(action->GetName(), "InvalidAction")) LogToConsole(256, "[ERROR] @%s/{%s} [%s] InvalidAction: '%s'.\n"
+        ,widget->GetSurface()->GetName()
         ,zone->GetName()
         ,widget->GetName()
+        ,actionName
     );
 
     actionContextDictionary_[widget][modifier].push_back(make_unique<ActionContext>(csi_, action, widget, zone, 0, params));
@@ -2804,33 +2789,34 @@ void ZoneManager::GetWidgetNameAndModifiers(const string &line, string &baseWidg
 
 void ZoneManager::GetNavigatorsForZone(const char *zoneName, const char *navigatorName, vector<Navigator *> &navigators)
 {
-    if (!strcmp(navigatorName, "MasterTrackNavigator") || !strcmp(zoneName, "MasterTrack"))
+    if (IsSameString(navigatorName, "MasterTrackNavigator") || IsSameString(zoneName, "MasterTrack"))
         navigators.push_back(GetMasterTrackNavigator());
-    else if (!strcmp(zoneName, "MasterTrackFXMenu"))
+    else if (IsSameString(zoneName, "MasterTrackFXMenu"))
         for (int i = 0; i < GetNumChannels(); ++i)
             navigators.push_back(GetMasterTrackNavigator());
-    else if (!strcmp(navigatorName, "TrackNavigator") ||
-             !strcmp(zoneName, "Track") ||
-             !strcmp(zoneName, "VCA") ||
-             !strcmp(zoneName, "Folder") ||
-             !strcmp(zoneName, "SelectedTracks") ||
-             !strcmp(zoneName, "TrackSend") ||
-             !strcmp(zoneName, "TrackReceive") ||
-             !strcmp(zoneName, "TrackFXMenu"))
+    else if (IsSameString(navigatorName, "TrackNavigator") ||
+             IsSameString(zoneName, "Track") ||
+             IsSameString(zoneName, "VCA") ||
+             IsSameString(zoneName, "Folder") ||
+             IsSameString(zoneName, "SelectedTracks") ||
+             IsSameString(zoneName, "TrackSend") ||
+             IsSameString(zoneName, "TrackReceive") ||
+             IsSameString(zoneName, "TrackFXMenu"))
         for (int i = 0; i < GetNumChannels(); ++i)
         {
             Navigator *channelNavigator = GetSurface()->GetPage()->GetNavigatorForChannel(i + GetSurface()->GetChannelOffset());
             if (channelNavigator)
                 navigators.push_back(channelNavigator);
         }
-    else if (!strcmp(zoneName, "SelectedTrack") ||
-             !strcmp(zoneName, "SelectedTrackSend") ||
-             !strcmp(zoneName, "SelectedTrackReceive") ||
-             !strcmp(zoneName, "SelectedTrackFXMenu"))
+    else if (IsSameString(zoneName, "SelectedTrack") ||
+             IsSameString(zoneName, "SelectedTrackSend") ||
+             IsSameString(zoneName, "SelectedTrackReceive") ||
+             IsSameString(zoneName, "SelectedTrackFXMenu"))
         for (int i = 0; i < GetNumChannels(); ++i)
             navigators.push_back(GetSelectedTrackNavigator());
-    else if (!strcmp(navigatorName, "FocusedFXNavigator"))
+    else if (IsSameString(navigatorName, "FocusedFXNavigator"))
         navigators.push_back(GetFocusedFXNavigator());
+    //TODO: what about FixedTrackNavigator?
     else
         navigators.push_back(GetSelectedTrackNavigator());
 }
@@ -3012,27 +2998,27 @@ void ZoneManager::AddListener(ControlSurface *surface)
 void ZoneManager::SetListenerCategories(PropertyList &pList)
 {
     if (const char *property =  pList.get_prop(PropertyType_GoHome))
-        if (! strcmp(property, "Yes"))
+        if (IsSameString(property, "Yes"))
             listensToGoHome_ = true;
     
     if (const char *property =  pList.get_prop(PropertyType_SelectedTrackSends))
-        if (! strcmp(property, "Yes"))
+        if (IsSameString(property, "Yes"))
             listensToSends_ = true;
     
     if (const char *property =  pList.get_prop(PropertyType_SelectedTrackReceives))
-        if (! strcmp(property, "Yes"))
+        if (IsSameString(property, "Yes"))
             listensToReceives_ = true;
     
     if (const char *property =  pList.get_prop(PropertyType_FXMenu))
-        if (! strcmp(property, "Yes"))
+        if (IsSameString(property, "Yes"))
             listensToFXMenu_ = true;
     
     if (const char *property =  pList.get_prop(PropertyType_SelectedTrackFX))
-        if (! strcmp(property, "Yes"))
+        if (IsSameString(property, "Yes"))
             listensToSelectedTrackFX_ = true;
     
     if (const char *property =  pList.get_prop(PropertyType_Modifiers))
-        if (! strcmp(property, "Yes"))
+        if (IsSameString(property, "Yes"))
             surface_->SetListensToModifiers();;
 }
 
@@ -3077,7 +3063,7 @@ void ZoneManager::CheckFocusedFXState()
         char fxName[MEDBUF];
         TrackFX_GetFXName(focusedTrack, fxSlot, fxName, sizeof(fxName));
         
-        if(focusedFXZone_ != NULL && focusedFXZone_->GetSlotIndex() == fxSlot && !strcmp(fxName, focusedFXZone_->GetName()))
+        if(focusedFXZone_ != NULL && focusedFXZone_->GetSlotIndex() == fxSlot && IsSameString(fxName, focusedFXZone_->GetName()))
             return;
         else
             ClearFocusedFX();
@@ -3161,25 +3147,16 @@ void ZoneManager::UpdateCurrentActionContextModifiers()
 void ZoneManager::PreProcessZones()
 {
     if (zoneFolder_[0] == 0)
-    {
-        LogToConsole(MEDBUF, __LOCALIZE_VERFMT("[ERROR] Please check your CSI.ini, cannot find Zone folder for %s in: %s/CSI/Zones/","csi_mbox"), GetSurface()->GetName(), GetResourcePath());
+        return LogToConsole(MEDBUF, __LOCALIZE_VERFMT("[ERROR] Please check your CSI.ini, cannot find Zone folder for %s in: %s/CSI/Zones/","csi_mbox"), GetSurface()->GetName(), GetResourcePath());
 
-        return;
-    }
-    
     vector<string>  zoneFilesToProcess;
-    
-    listFilesOfType(zoneFolder_ + "/", zoneFilesToProcess, ".zon"); // recursively find all .zon files, starting at zoneFolder
-       
-    if (zoneFilesToProcess.size() == 0)
-    {
-        LogToConsole(MEDBUF, __LOCALIZE_VERFMT("[ERROR] Cannot find Zone files for %s in: %s","csi_mbox"), GetSurface()->GetName(), zoneFolder_.c_str());
+    collectFilesOfType(".zon", zoneFolder_, zoneFilesToProcess);
 
-        return;
-    }
-          
-    listFilesOfType(fxZoneFolder_ + "/", zoneFilesToProcess, ".zon"); // recursively find all .zon files, starting at fxZoneFolder
-     
+    if (zoneFilesToProcess.size() == 0)
+        return LogToConsole(MEDBUF, __LOCALIZE_VERFMT("[ERROR] Cannot find Zone files for %s in: %s","csi_mbox"), GetSurface()->GetName(), zoneFolder_.c_str());
+    
+    collectFilesOfType(".zon", fxZoneFolder_, zoneFilesToProcess);
+
     for (const string &zoneFile : zoneFilesToProcess)
         PreProcessZoneFile(zoneFile);
 }
@@ -4058,8 +4035,7 @@ OSC_ControlSurfaceIO::OSC_ControlSurfaceIO(CSurfIntegrator *const csi, const cha
     // private:
     maxPacketsPerRun_ = maxPacketsPerRun < 0 ? 0 : maxPacketsPerRun;
 
-    if (strcmp(receiveOnPort, transmitToPort))
-    {
+    if (!IsSameString(receiveOnPort, transmitToPort)) {
         inSocket_  = GetInputSocketForPort(surfaceName, atoi(receiveOnPort));
         outSocket_ = GetOutputSocketForAddressAndPort(surfaceName, transmitToIpAddress, atoi(transmitToPort));
     }
@@ -4438,7 +4414,9 @@ static IReaperControlSurface *createFunc(const char *type_string, const char *co
 
 static HWND configFunc(const char *type_string, HWND parent, const char *initConfigString)
 {
-    return CreateDialogParam(g_hInst, MAKEINTRESOURCE(IDD_SURFACEEDIT_CSI), parent, dlgProcMainConfig, (LPARAM)initConfigString);
+    HWND hwnd = CreateDialogParam(g_hInst, MAKEINTRESOURCE(IDD_SURFACEEDIT_CSI), parent, dlgProcMainConfig, (LPARAM)initConfigString);
+    if (hwnd) g_openDialogs.push_back(hwnd);
+    return hwnd;
 }
 
 reaper_csurf_reg_t csurf_integrator_reg =

@@ -759,12 +759,12 @@ public:
        
         const char *name = context->GetStringParam();
         
-        if (!strcmp(name, "Folder") ||
-            !strcmp(name, "VCA") ||
-            !strcmp(name, "TrackSend") ||
-            !strcmp(name, "TrackReceive") ||
-            !strcmp(name, "MasterTrackFXMenu") ||
-            !strcmp(name, "TrackFXMenu"))
+        if (IsSameString(name, "Folder") ||
+            IsSameString(name, "VCA") ||
+            IsSameString(name, "TrackSend") ||
+            IsSameString(name, "TrackReceive") ||
+            IsSameString(name, "MasterTrackFXMenu") ||
+            IsSameString(name, "TrackFXMenu"))
             context->GetPage()->GoZone(name);
         else
             context->GetSurface()->GetZoneManager()->DeclareGoZone(name);
