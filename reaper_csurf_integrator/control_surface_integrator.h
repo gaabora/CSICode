@@ -111,6 +111,7 @@ static void CloseAllDialogs() {
 static const char * const REASCRIPT_PATH__CSI_OSD = "/Scripts/CSI/CSI OSD on-screen display.lua";
 static const char * const REASCRIPT_HASH__CSI_OSD = "_RSba74d8dbb9258d14b5305a183a5f20e8a6e0f64f";
 static const int REAPER__CONTROL_SURFACE_REFRESH_ALL_SURFACES = 41743;
+static const int REAPER__RESET_ALL_MIDI_CONTROL_SURFACE_DEVICES = 42348;
 static const int REAPER__FILE_NEW_PROJECT = 40023;
 static const int REAPER__FILE_OPEN_PROJECT = 40025;
 static const int REAPER__CLOSE_CURRENT_PROJECT_TAB = 40860;
@@ -363,6 +364,13 @@ public:
     virtual ~Action() {}
     
     virtual const char *GetName() { return "Action"; }
+    virtual bool IsModifier() { return false; }
+    virtual bool IsSwitch() { return false; }
+    virtual bool IsDisplayRelated() { return false; }
+    virtual bool IsMeterRelated() { return false; }
+    virtual bool IsVolumeRelated() { return false; }
+    virtual bool IsPanRelated() { return false; }
+    virtual bool IsFxRelated() { return false; }
 
     virtual void Touch(ActionContext *context, double value) {}
     virtual void RequestUpdate(ActionContext *context) {}
@@ -516,6 +524,8 @@ private:
     
     string actionTitle_ = "";
     int commandId_ = 0;
+    const char* commandText_;
+    bool needsReloadAfterRun_ = false;
     
     double rangeMinimum_ = 0.0;
     double rangeMaximum_ = 1.0;
@@ -563,10 +573,10 @@ private:
     void GetSteppedValues(Widget *widget, Action *action,  Zone *zone, int paramNumber, const vector<string> &params, const PropertyList &widgetProperties, double &deltaValue, vector<double> &acceleratedDeltaValues, double &rangeMinimum, double &rangeMaximum, vector<double> &steppedValues, vector<int> &acceleratedTickValues);
     void SetColor(const vector<string> &params, bool &supportsColor, bool &supportsTrackColor, vector<rgba_color> &colorValues);
     void GetColorValues(vector<rgba_color> &colorValues, const vector<string> &colors);
-    void ProcessActionTitle();
+    void ProcessActionTitle(string fallbackName);
     void LogAction(double value);
     void ProcessOSD(double value, bool fromFeedback);
-    bool IgnoresButtonRelease();
+    bool OsdIgnoresButtonRelease();
 public:
     static int constexpr HOLD_DELAY_INHERIT_VALUE = -1;
     static double constexpr BUTTON_RELEASE_MESSAGE_VALUE = 0.0;
@@ -584,6 +594,8 @@ public:
 
     int GetIntParam() { return intParam_; }
     int GetCommandId() { return commandId_; }
+    const char* GetCommandText() { return commandText_; }
+    bool NeedsReloadAfterRun() { return needsReloadAfterRun_; }
     
     const char *GetFXParamDisplayName() { return fxParamDisplayName_.c_str(); }
     
@@ -756,6 +768,15 @@ public:
     void SetFreeFormText(const char* text) { m_freeFormText = (text ? text : ""); }
 
     const char* GetActionTitle();
+
+    inline static const int ReloadingCommands[] = {
+        REAPER__CONTROL_SURFACE_REFRESH_ALL_SURFACES
+       ,REAPER__RESET_ALL_MIDI_CONTROL_SURFACE_DEVICES
+       ,REAPER__FILE_NEW_PROJECT
+       ,REAPER__FILE_OPEN_PROJECT
+       ,REAPER__CLOSE_CURRENT_PROJECT_TAB
+       ,REAPER__TRACK_INSERT_TRACK_FROM_TEMPLATE
+   };
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -999,22 +1020,18 @@ protected:
     
     bool hasBeenUsedByUpdate_ = false;
     
+    bool isVirtual_ = false;
     bool isTwoState_ = false;
     bool hasDoublePressActions_ = false;
 public:
     // all Widgets are owned by their ControlSurface!
     Widget(CSurfIntegrator *const csi,  ControlSurface *surface, const char *name) : csi_(csi), surface_(surface), name_(name)
     {
-        int index = (int)strlen(name) - 1;
-        if (isdigit(name[index]))
-        {
-            while (index>=0 && isdigit(name[index]))
-                index--;
-               
-            index++;
-            
-            channelNumber_ = atoi(name + index);
-        }
+        int suffixNumber = ExtractSuffixNumber(name);
+        if (suffixNumber > 0)
+            channelNumber_ = suffixNumber;
+
+        isVirtual_ = find(VIRTUAL_TRIGGERS.begin(), VIRTUAL_TRIGGERS.end(), name) != VIRTUAL_TRIGGERS.end();
     }
     
     ~Widget()
@@ -1024,6 +1041,19 @@ public:
     
     vector<unique_ptr<FeedbackProcessor>> &GetFeedbackProcessors() { return feedbackProcessors_; }
     
+    static inline const vector<string> VIRTUAL_TRIGGERS = {
+        "OnTrackSelection",
+        "OnPageEnter",
+        "OnPageLeave",
+        "OnInitialization",
+        "OnPlayStart",
+        "OnPlayStop",
+        "OnRecordStart",
+        "OnRecordStop",
+        "OnZoneActivation",
+        "OnZoneDeactivation"
+    };
+    
     void ClearHasBeenUsedByUpdate() { hasBeenUsedByUpdate_ = false; }
     void SetHasBeenUsedByUpdate() { hasBeenUsedByUpdate_ = true; }
     bool GetHasBeenUsedByUpdate() { return hasBeenUsedByUpdate_; }
@@ -1031,13 +1061,15 @@ public:
     const char *GetName() { return name_.c_str(); }
     ControlSurface *GetSurface() { return surface_; }
     ZoneManager *GetZoneManager();
+    bool IsVirtual() { return isVirtual_; }
+
     int GetChannelNumber() { return channelNumber_; }
     
     void SetStepSize(double stepSize) { stepSize_ = stepSize; }
     double GetStepSize() { return stepSize_; }
     bool GetIsTwoState() { return isTwoState_; }
     void SetIsTwoState() { isTwoState_ = true; }
-    
+
     void SetAccelerationValues(const vector<double> accelerationValues) { accelerationValues_ = accelerationValues; }
     const vector<double> &GetAccelerationValues() { return accelerationValues_; }
     
@@ -2241,17 +2273,9 @@ protected:
     
     virtual void InitHardwiredWidgets(ControlSurface *surface)
     {
-        // Add the "hardwired" widgets
-        AddWidget(surface, "OnTrackSelection");
-        AddWidget(surface, "OnPageEnter");
-        AddWidget(surface, "OnPageLeave");
-        AddWidget(surface, "OnInitialization");
-        AddWidget(surface, "OnPlayStart");
-        AddWidget(surface, "OnPlayStop");
-        AddWidget(surface, "OnRecordStart");
-        AddWidget(surface, "OnRecordStop");
-        AddWidget(surface, "OnZoneActivation");
-        AddWidget(surface, "OnZoneDeactivation");
+        for (const std::string& name : Widget::VIRTUAL_TRIGGERS) {
+            AddWidget(surface, name.c_str());
+        }
     }
     
     void DoWidgetAction(const string &widgetName)
@@ -2572,45 +2596,9 @@ public:
     {
         DoWidgetAction("OnInitialization");
     }
-    
     bool IsOsdEnabled() { return isOsdEnabled_; }
-    void SetOsdEnabled(bool value) { 
-        if (value && !isOsdEnabled_) {
-            OpenOSDPanel();
-        }
+    void SetOsdEnabled(bool value) {
         isOsdEnabled_ = value;
-    }
-    void OpenOSDPanel() {
-        string scriptsPath = string(GetResourcePath()) + REASCRIPT_PATH__CSI_OSD;
-        int commandId = NamedCommandLookup(REASCRIPT_HASH__CSI_OSD);
-        if (commandId == 0) {
-            commandId = AddRemoveReaScript(true, 0, scriptsPath.c_str(), true);
-            if (commandId == 0) {
-                LogToConsole(256, "[ERROR] FAILED to OpenOSDPanel. AddRemoveReaScript failed for '%s'\n", REASCRIPT_PATH__CSI_OSD);
-                return;
-            }
-            commandId = NamedCommandLookup(REASCRIPT_HASH__CSI_OSD);
-            LogToConsole(256, "[NOTICE] ReaScript %s was loaded: %s (%d)\n", REASCRIPT_PATH__CSI_OSD, REASCRIPT_HASH__CSI_OSD, commandId);
-        }
-        int runningState;
-        for (int attempt = 1; attempt <= 2; ++attempt) {
-            runningState = GetToggleCommandState(commandId);
-            if (runningState == 1) return;
-            if (attempt == 2) {
-                commandId = AddRemoveReaScript(true, 0, scriptsPath.c_str(), true);
-                if (commandId == 0) {
-                    LogToConsole(256, "[ERROR] FAILED to OpenOSDPanel. AddRemoveReaScript failed for '%s'\n", REASCRIPT_PATH__CSI_OSD);
-                    return;
-                }
-                const char* commandHash = ReverseNamedCommandLookup(commandId);
-                if (0 != strcmp(REASCRIPT_HASH__CSI_OSD + 1, commandHash))
-                    LogToConsole(256, "[ERROR] Command ID changed for '%s': '%s' >>> '_%s'\n", REASCRIPT_PATH__CSI_OSD, REASCRIPT_HASH__CSI_OSD, commandHash);
-            }
-            DAW::SendCommandMessage(commandId);
-        }
-        runningState = GetToggleCommandState(commandId);
-        LogToConsole(256, "[ERROR] FAILED to OpenOSDPanel. ReaScript: '%s' command ID: %s (%d) state: %d\n", 
-            REASCRIPT_PATH__CSI_OSD, REASCRIPT_HASH__CSI_OSD, commandId, runningState);
     }
 };
 
@@ -4082,7 +4070,7 @@ private:
     bool shouldRun_ = true;
     
     ReaProject* currentProject_ = NULL;
-    
+
     // these are offsets to be passed to projectconfig_var_addr() when needed in order to get the actual pointers
     int timeModeOffs_;
     int timeMode2Offs_;
@@ -4184,6 +4172,38 @@ public:
     }
     
     osd_data QueuedOSD;
+    void OpenOSDPanel() {
+        string scriptsPath = string(GetResourcePath()) + REASCRIPT_PATH__CSI_OSD;
+        int commandId = NamedCommandLookup(REASCRIPT_HASH__CSI_OSD);
+        if (commandId == 0) {
+            commandId = AddRemoveReaScript(true, 0, scriptsPath.c_str(), true);
+            if (commandId == 0) {
+                LogToConsole(256, "[ERROR] FAILED to OpenOSDPanel. AddRemoveReaScript failed for '%s'\n", REASCRIPT_PATH__CSI_OSD);
+                return;
+            }
+            commandId = NamedCommandLookup(REASCRIPT_HASH__CSI_OSD);
+            LogToConsole(256, "[NOTICE] ReaScript %s was loaded: %s (%d)\n", REASCRIPT_PATH__CSI_OSD, REASCRIPT_HASH__CSI_OSD, commandId);
+        }
+        int runningState;
+        for (int attempt = 1; attempt <= 2; ++attempt) {
+            runningState = GetToggleCommandState(commandId);
+            if (runningState == 1) return;
+            if (attempt == 2) {
+                commandId = AddRemoveReaScript(true, 0, scriptsPath.c_str(), true);
+                if (commandId == 0) {
+                    LogToConsole(256, "[ERROR] FAILED to OpenOSDPanel. AddRemoveReaScript failed for '%s'\n", REASCRIPT_PATH__CSI_OSD);
+                    return;
+                }
+                const char* commandHash = ReverseNamedCommandLookup(commandId);
+                if (!IsSameString(REASCRIPT_HASH__CSI_OSD + 1, commandHash))
+                    LogToConsole(256, "[ERROR] Command ID changed for '%s': '%s' >>> '_%s'\n", REASCRIPT_PATH__CSI_OSD, REASCRIPT_HASH__CSI_OSD, commandHash);
+            }
+            DAW::SendCommandMessage(commandId);
+        }
+        runningState = GetToggleCommandState(commandId);
+        LogToConsole(256, "[ERROR] FAILED to OpenOSDPanel. ReaScript: '%s' command ID: %s (%d) state: %d\n", 
+            REASCRIPT_PATH__CSI_OSD, REASCRIPT_HASH__CSI_OSD, commandId, runningState);
+    }
 
     Action *GetFXParamAction(char *FXName)
     {
@@ -4198,7 +4218,7 @@ public:
         if (actions_.find(actionName) != actions_.end())
             return actions_[actionName].get();
         else
-            return actions_["NoAction"].get();
+            return actions_["InvalidAction"].get();
     }
     
     void OnTrackSelection(MediaTrack *track) override
@@ -4350,7 +4370,9 @@ public:
         
     //int repeats = 0;
     
-    void ShowErrorOSD(string text) { ForceOSD(text, "#FF0000"); }
+    void ShowErrorOSD(string text) {
+        ForceOSD(text, osd_data::COLOR_ERROR);
+    }
     void ForceOSD(string text, string bgColor = "") {
         osd_data osdData = osd_data(text);
         osdData.bgColor = bgColor;
@@ -4373,14 +4395,17 @@ public:
         if (shouldRun_ && pages_.size() > currentPageIndex_ && pages_[currentPageIndex_]) {
             if (!QueuedOSD.isEmpty() && !QueuedOSD.IsAwaitFeedback()) {
                 if (g_debugLevel >= DEBUG_LEVEL_DEBUG) LogToConsole(256, "[DEBUG] OSD: %s\n", QueuedOSD.toString().c_str());
+                OpenOSDPanel();
                 DAW::ShowOSD(QueuedOSD);
                 QueuedOSD = osd_data();
             }
             try {
                 pages_[currentPageIndex_]->Run();
             } catch (const ReloadPluginException& e) {
-                if (g_debugLevel >= DEBUG_LEVEL_NOTICE) LogToConsole(256, "[NOTICE] RELOADING: : %s\n", e.what());
+                if (g_debugLevel >= DEBUG_LEVEL_NOTICE) LogToConsole(256, "[NOTICE] RELOADING: %s\n", e.what());
                 ResetWidgets();
+                ShutdownLearn();
+                CloseAllDialogs();
             } catch (const std::exception& e) {
                 LogToConsole(256, "[ERROR] # CSurfIntegrator::RUN: %s\n", e.what());
                 LogStackTraceToConsole();

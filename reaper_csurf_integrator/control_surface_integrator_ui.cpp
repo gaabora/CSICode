@@ -2168,7 +2168,7 @@ void WidgetMoved(ZoneManager *zoneManager, Widget *widget, int modifier)
     
     vector<Widget *> widgets = zoneManager->GetLearnedFocusedFXZone()->GetWidgets();
     if (find(widgets.begin(), widgets.end(), widget) == widgets.end())
-        return;
+        return zoneManager->GetCSI()->ShowErrorOSD(string("Widget [") + widget->GetName() + "] is not defined in FXWidgetLayout");
 
     s_currentWidget = widget;
     s_currentModifier = modifier; 
@@ -2250,52 +2250,19 @@ void LaunchLearnFocusedFXDialog(ZoneManager *zoneManager)
     InitLearnFocusedFXDialog(zoneManager);
 }
 
-static void CaptureFX(ZoneManager *zoneManager, MediaTrack *track, int fxSlot, int lastTouchedParamNum)
-{
-    s_focusedTrack = track;
-    s_fxSlot = fxSlot;
-    s_lastTouchedParamNum = lastTouchedParamNum;
-}
-
 void RequestFocusedFXDialog(ZoneManager *zoneManager)
 {
-    if (s_focusedTrack == NULL)
-    {
-        int trackNumber = 0;
-        int fxSlot = 0;
-        int itemNumber = 0;
-        int takeNumber = 0;
-        int paramIndex = 0;
-        
-        int retVal = GetTouchedOrFocusedFX(1, &trackNumber, &itemNumber, &takeNumber, &fxSlot, &paramIndex);
-        
-        MediaTrack *focusedTrack = NULL;
-        
-        trackNumber++;
-        
-        if (retVal && ! (paramIndex & 0x01))
-        {
-            if (trackNumber > 0)
-                focusedTrack = DAW::GetTrack(trackNumber);
-            else if (trackNumber == 0)
-                focusedTrack = GetMasterTrack(NULL);
-        }
-        
-        if (focusedTrack != NULL)
-        {
-            CaptureFX(zoneManager, focusedTrack, fxSlot, -1);
-            
-            LaunchLearnFocusedFXDialog(zoneManager);
-        }
-        
-    }
-    else if (s_focusedTrack != NULL && s_surfaceFXTemplates.size() == 1 && s_surfaceFXTemplates[0]->zoneManager == zoneManager)
-    {   // If this is only one, release and close -- always true -- for now...
-
+    if (s_focusedTrack != NULL && s_surfaceFXTemplates.size() == 1 && s_surfaceFXTemplates[0]->zoneManager == zoneManager) {
         SurfaceFXTemplate const *t = s_surfaceFXTemplates[0].get();
-        if (t->hwnd != NULL)
+        if (t->hwnd != NULL) {
             SendMessage(t->hwnd, WM_CLOSE, 0, 0);
+            return;
+        }
     }
+    if (DAW::CheckTouchedOrFocusedFX(&s_focusedTrack, &s_fxSlot, &s_lastTouchedParamNum))
+        LaunchLearnFocusedFXDialog(zoneManager);
+    else
+        zoneManager->GetCSI()->ShowErrorOSD("No active FX windows!");
 }
 
 void ShutdownLearn()

@@ -1110,6 +1110,7 @@ actions_.insert(make_pair("CycleTrackAutoMode", make_unique<CycleTrackAutoMode>(
 //// Other ////
 actions_.insert(make_pair("Reaper", make_unique<ReaperAction>()));
 actions_.insert(make_pair("NoAction", make_unique<NoAction>()));
+actions_.insert(make_pair("InvalidAction", make_unique<InvalidAction>()));
 actions_.insert(make_pair("FixedTextDisplay", make_unique<FixedTextDisplay>()));
 actions_.insert(make_pair("FixedRGBColorDisplay", make_unique<FixedRGBColorDisplay>()));
 actions_.insert(make_pair("ClearAllSolo", make_unique<ClearAllSolo>()));
@@ -1142,7 +1143,7 @@ actions_.insert(make_pair("ClearModifier", make_unique<ClearModifier>()));
 actions_.insert(make_pair("ClearModifiers", make_unique<ClearModifiers>()));
 // Invert, Hold, DoublePress - are pseudo modifiers
 //// Global settings ////
-actions_.insert(make_pair("SetOsdEnabled", make_unique<SetOsdEnabled>()));
+actions_.insert(make_pair("EnableOSD", make_unique<EnableOSD>()));
 actions_.insert(make_pair("SetOSDTime", make_unique<SetOSDTime>()));
 actions_.insert(make_pair("SetLatchTime", make_unique<SetLatchTime>()));
 actions_.insert(make_pair("SetHoldTime", make_unique<SetHoldTime>()));
@@ -1580,16 +1581,34 @@ ActionContext::ActionContext(CSurfIntegrator *const csi, Action *action, Widget 
          actionName == "ReaperDec" ||
          actionName == "ReaperInc") && params.size() > 1)
     {
-        if (isdigit(params[1][0]))
-        {
+        if (isdigit(params[1][0])) {
             commandId_ =  atol(params[1].c_str());
-        }
-        else // look up by string
-        {
+        } else {
             commandId_ = NamedCommandLookup(params[1].c_str());
-            
             if (commandId_ == 0) // can't find it
                 commandId_ = 65535; // no-op
+        }
+
+        commandText_ = DAW::GetCommandName(commandId_);
+
+        for (size_t i = 0; i < sizeof(ReloadingCommands); ++i) {
+            if (ReloadingCommands[i] == commandId_) {
+                needsReloadAfterRun_ = true;
+            }
+        }
+
+        int feedbackState = GetToggleCommandState(commandId_);
+        if (feedbackState == -1) {
+            provideFeedback_ = false;
+            if (g_debugLevel >= DEBUG_LEVEL_NOTICE) LogToConsole(256, "[NOTICE] @%s/{%s}: [%s] %s(%s) # action '%s' (%d) does not provide feedback\n"
+                ,this->GetSurface()->GetName()
+                ,this->GetZone()->GetName()
+                ,this->GetWidget()->GetName()
+                ,this->GetAction()->GetName()
+                ,this->GetStringParam()
+                ,DAW::GetCommandName(commandId_)
+                ,commandId_
+            );
         }
     }
         
@@ -1626,17 +1645,20 @@ ActionContext::ActionContext(CSurfIntegrator *const csi, Action *action, Widget 
     if (acceleratedTickValues_.size() < 1)
         acceleratedTickValues_.push_back(0);
 
-    ProcessActionTitle();
-
+    ProcessActionTitle(actionName);
+    
     const char* osdValue = widgetProperties_.get_prop(PropertyType_OSD);
     osdData_ = osd_data(osdValue ? osdValue : "?");
     if (osdData_.message == "No")
         osdData_.message.clear();
     else if (osdData_.message == "?")
         osdData_.message = actionTitle_;
+
+    if (actionName == "InvalidAction")
+        osdData_.bgColor = osd_data::COLOR_ERROR;
 }
 
-void ActionContext::ProcessActionTitle()
+void ActionContext::ProcessActionTitle(string origName)
 {
     if (commandId_ > 0) {
         actionTitle_ = DAW::GetCommandName(commandId_);
@@ -1649,6 +1671,8 @@ void ActionContext::ProcessActionTitle()
         actionTitle_ = string("Automation: ") + TrackNavigationManager::GetAutoModeDisplayNameNoOverride(atoi(stringParam));
     else if (IsSameString(stringParam, "{")|| IsSameString(stringParam, "["))
         actionTitle_ = actionName; //TODO: fix parser?
+    else if (IsSameString(actionName, "InvalidAction"))
+        actionTitle_ = "InvalidAction: " + origName;
     else
         actionTitle_ = (stringParam && !stringParam[0]) ? string(actionName) + " " + stringParam : actionName;
 }
@@ -1885,8 +1909,9 @@ void ActionContext::DoRelativeAction(int accelerationIndex, double delta)
 void ActionContext::ProcessOSD(double value, bool fromFeedback)
 {
     if (!GetSurface()->IsOsdEnabled()) return;
+    if (GetWidget()->IsVirtual()) return;
     if (osdData_.message.empty()) return;
-    if (!fromFeedback && IgnoresButtonRelease() && value == ActionContext::BUTTON_RELEASE_MESSAGE_VALUE) return;
+    if (!fromFeedback && OsdIgnoresButtonRelease() && value == ActionContext::BUTTON_RELEASE_MESSAGE_VALUE) return;
     if (value < 0 && GetRangeMinimum() >= 0) return;
     if (value > 0 && GetRangeMinimum() < 0) return;
 
@@ -1911,12 +1936,24 @@ void ActionContext::ProcessOSD(double value, bool fromFeedback)
     }
     if (osdData_.timeoutMs == 0) osdData_.timeoutMs = GetSurface()->GetOSDTime();
 
+    bool awaitFeedback = osdData_.IsAwaitFeedback();
+    if (provideFeedback_) {
+        if (awaitFeedback) {
+            if (fromFeedback) {
+                osdData_.SetAwaitFeedback(false);
+            } else {
+                return;
+            }
+        } else {
+            return osdData_.SetAwaitFeedback(!fromFeedback);
+        }
+    } else {
+        osdData_.SetAwaitFeedback(false);
+    }
+
     const string actionName = string(action_->GetName());
 
-    if (actionName == "TrackVolume" || actionName == "TrackSendVolume" || actionName == "TrackReceiveVolume"
-    || actionName == "TrackVolumeDB" || actionName == "TrackSendVolumeDB" || actionName == "TrackReceiveVolumeDB"
-    || actionName == "TrackPan" || actionName == "TrackPanPercent"
-    ) {
+    if ((action_->IsVolumeRelated() || action_->IsPanRelated()) && !(action_->IsDisplayRelated() || action_->IsMeterRelated())) {
         if (MediaTrack *track = this->GetTrack()) {
             char trackName[256] = "";
             const char* tn = (const char*)GetSetMediaTrackInfo(track, "P_NAME", nullptr);
@@ -1927,7 +1964,7 @@ void ActionContext::ProcessOSD(double value, bool fromFeedback)
 
             ostringstream oss;
             oss << "[" << trackName << "] ";
-            if (actionName == "TrackPan" || actionName == "TrackPanPercent") {
+            if (action_->IsPanRelated()) {
                 if (pan == 0.0) oss << "Center";
                 else oss << std::fixed << std::setprecision(2) << std::abs(pan * 100) << "%" << (pan > 0 ? "R" : "L");
             } else oss << std::fixed << std::setprecision(2) << VAL2DB(vol) << " dB";
@@ -1937,32 +1974,29 @@ void ActionContext::ProcessOSD(double value, bool fromFeedback)
             osdData_.message = actionName + ": No track selected";
         }
         osdData_.SetAwaitFeedback(false);
-        GetCSI()->EnqueueOSD(osdData_);
-        return;
+        return GetCSI()->EnqueueOSD(osdData_);
+    }
+
+    if (action_->IsFxRelated() && !(action_->IsDisplayRelated() || action_->IsMeterRelated())) {
+       
+        return GetCSI()->EnqueueOSD(osdData_);
+    }
+    
+    if (action_->IsFxRelated() && !(action_->IsDisplayRelated() || action_->IsMeterRelated())) {
+       
+        return GetCSI()->EnqueueOSD(osdData_);
     }
 
     if (actionName == "LastTouchedFXParam") {
         osdData_.message = DAW::GetLastTouchedFXParamDisplay();
         osdData_.SetAwaitFeedback(false);
-        GetCSI()->EnqueueOSD(osdData_);
-        return;
+        return GetCSI()->EnqueueOSD(osdData_);
     }
 
-    if (provideFeedback_) {
-        if (!osdData_.IsAwaitFeedback() && !fromFeedback) {
-            osdData_.SetAwaitFeedback(true);
-            return;
-        } else if (fromFeedback) {
-            osdData_.SetAwaitFeedback(false);
-        }
-    } else {
-        osdData_.SetAwaitFeedback(false);
-    }
     GetCSI()->EnqueueOSD(osdData_);
 }
 
-bool ActionContext::IgnoresButtonRelease()
-{
+bool ActionContext::OsdIgnoresButtonRelease() {
     const char* name = this->GetAction()->GetName();
     if (!name) return true;
     //FIXME: make adequate comparison, not by the name string
@@ -2015,7 +2049,6 @@ bool ActionContext::IgnoresButtonRelease()
 void ActionContext::DoRangeBoundAction(double value)
 {
     this->LogAction(value);
-    this->ProcessOSD(value, false);
 
     if (value > rangeMaximum_)
         value = rangeMaximum_;
@@ -2028,6 +2061,8 @@ void ActionContext::DoRangeBoundAction(double value)
     
     for (int i = 0; i < runCount_; ++i)
         action_->Do(this, value);
+
+    this->ProcessOSD(value, false);
 }
 
 void ActionContext::DoSteppedValueAction(double delta)
@@ -2691,12 +2726,8 @@ void ZoneManager::Initialize()
     PreProcessZones();
 
     if (zoneInfo_.find("Home") == zoneInfo_.end())
-    {
-        LogToConsole(MEDBUF, __LOCALIZE_VERFMT("[ERROR] Missing Home Zone for %s\n", "csi_mbox"), surface_->GetName());
+        return LogToConsole(MEDBUF, __LOCALIZE_VERFMT("[ERROR] Missing Home Zone for %s\n", "csi_mbox"), surface_->GetName());
 
-        return;
-    }
-            
     homeZone_ = make_unique<Zone>(csi_, this, GetSelectedTrackNavigator(), 0, "Home", "Home", zoneInfo_["Home"].filePath);
     LoadZoneFile(homeZone_.get(), "");
     
@@ -2728,7 +2759,7 @@ void ZoneManager::PreProcessZoneFile(const string &filePath)
         {
             TrimLine(line);
             
-            if (line == "" || (line.size() > 0 && line[0] == '/')) // ignore blank lines and comment lines
+            if (IsCommentedOrEmpty(line))
                 continue;
             
             vector<string> tokens;
@@ -2879,14 +2910,14 @@ void ZoneManager::LoadZoneFile(Zone *zone, const char *filePath, const char *wid
     {
         ifstream file(filePath);
         
-        if (g_debugLevel >= DEBUG_LEVEL_DEBUG) LogToConsole(2048, "[DEBUG] {Z:%s} # LoadZoneFile: %s\n", zone->GetName(), GetRelativePath(filePath));
-        for (string line; getline(file, line) ; )
-        {
+        if (g_debugLevel >= DEBUG_LEVEL_DEBUG) LogToConsole(2048, "[DEBUG] {%s} # LoadZoneFile: %s\n", zone->GetName(), GetRelativePath(filePath));
+        
+        for (string line; getline(file, line);) {
             TrimLine(line);
             
             lineNumber++;
             
-            if (line == "" || (line.size() > 0 && line[0] == '/')) // ignore blank lines and comment lines
+            if (IsCommentedOrEmpty(line))
                 continue;
             
             if (line == s_BeginAutoSection || line == s_EndAutoSection)
@@ -2905,7 +2936,7 @@ void ZoneManager::LoadZoneFile(Zone *zone, const char *filePath, const char *wid
             else if (tokens[0] == "SubZonesEnd")
             {
                 isInSubZonesSection = false;
-                zone->InitSubZones(subZonesList, widgetSuffix);
+                zone->InitSubZones(subZonesList, widgetSuffix); //FIXME prevent recursion
             }
             else if (isInSubZonesSection)
                 subZonesList.push_back(tokens[0]);
@@ -2915,7 +2946,11 @@ void ZoneManager::LoadZoneFile(Zone *zone, const char *filePath, const char *wid
             else if (tokens[0] == "IncludedZonesEnd")
             {
                 isInIncludedZonesSection = false;
-                LoadZones(zone->GetIncludedZones(), includedZonesList);
+                try {
+                    LoadZones(zone->GetIncludedZones(), includedZonesList);  //FIXME prevent recursion
+                } catch (const std::exception& e) {
+                    LogToConsole(256, "[ERROR] %s in IncludedZones section in file %s\n", e.what(), GetRelativePath(zone->GetSourceFilePath()));
+                }
             }
             else if (isInIncludedZonesSection)
                 includedZonesList.push_back(tokens[0]);
@@ -2952,7 +2987,7 @@ void ZoneManager::LoadZoneFile(Zone *zone, const char *filePath, const char *wid
                 ActionContext *context = zone->AddActionContext(widget, modifier, zone, tokens[1].c_str(), memberParams);
 
                 if (isValueInverted)
-                        context->SetIsValueInverted();
+                    context->SetIsValueInverted();
                     
                 if (isFeedbackInverted)
                     context->SetIsFeedbackInverted();
@@ -3172,7 +3207,7 @@ void ZoneManager::DoAction(Widget *widget, double value)
     
 void ZoneManager::DoAction(Widget *widget, double value, bool &isUsed)
 {
-    if (surface_->GetModifiers().size() > 0)
+    if (!widget->IsVirtual() && value != ActionContext::BUTTON_RELEASE_MESSAGE_VALUE && surface_->GetModifiers().size() > 0)
         WidgetMoved(this, widget, surface_->GetModifiers()[0]);
     
     if (learnFocusedFXZone_ != NULL)

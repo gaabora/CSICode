@@ -39,9 +39,10 @@ static vector<string> ExplodeString(const char separator, const string& value)
 }
 
 struct osd_data {
+    inline static const string COLOR_ERROR = "#FF0000";
     string origValue;
     string message;
-    int timeoutMs = 0;
+    int timeoutMs = 3000;
     vector<string> bgColors;
     string bgColor;
     string lastValue;
@@ -162,6 +163,9 @@ class DAW
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
+    static int constexpr QUERY_LAST_TOUCHED_PARAMETER = 0;
+    static int constexpr QUERY_CURRENTLY_FOCUSED_FX = 1;
+    
     static void SendCommandMessage(WPARAM wparam) { ::SendMessage(g_hwnd, WM_COMMAND, wparam, 0); }
     
     static MediaTrack *GetSelectedTrack(int seltrackidx) { return ::GetSelectedTrack(NULL, seltrackidx); }
@@ -263,6 +267,42 @@ public:
         lastUpdateTs = now;
         ::SetExtState("CSI_TMP", "OSD", lastValue.c_str(), false);
     }
+    static bool CheckTouchedOrFocusedFX(MediaTrack** outTrack, int* fxSlotNum, int* fxParamNum)
+    {
+        if (!outTrack || !fxSlotNum || !fxParamNum)
+            return false;
+
+        int trackNum, trackIdx, itemIdx, itemTake, slotIdx, paramIdx;
+
+        if (GetTouchedOrFocusedFX) {
+            if (GetTouchedOrFocusedFX(QUERY_CURRENTLY_FOCUSED_FX, &trackIdx, &itemIdx, &itemTake, &slotIdx, &paramIdx)) {
+                if (paramIdx & 1) // open, but no longer focused
+                    *fxParamNum = -1;
+            } else {
+                if (!GetTouchedOrFocusedFX(QUERY_LAST_TOUCHED_PARAMETER, &trackIdx, &itemIdx, &itemTake, &slotIdx, &paramIdx))
+                    return false;
+            }
+            trackNum = trackIdx + 1;
+        } else {
+            int type = GetFocusedFX2(&trackNum, fxSlotNum, fxParamNum);
+            if (!type || (type & 4)) // closed or open, but no longer focused
+                *fxParamNum = -1;
+        }
+
+        MediaTrack* track = nullptr;
+        if (trackNum > 0)
+            track = GetTrack(trackNum);
+        else if (trackNum == 0)
+            track = GetMasterTrack(nullptr);
+
+        if (!track)
+            return false;
+
+        *outTrack = track;
+        *fxSlotNum = slotIdx;
+        *fxParamNum = paramIdx;
+        return true;
+    }
 
     static std::string GetLastTouchedFXParamDisplay()
     {
@@ -346,7 +386,6 @@ public:
                 TrackFX_SetParam(track, fxSlotNum, fxParamNum, newValue);
             #endif
         }
-       
     }
 
     static double GetTrackFxParamStepSize(MediaTrack *track, int fxSlotNum, int fxParamNum)
@@ -355,6 +394,18 @@ public:
         bool isToggle;
         TrackFX_GetParameterStepSizes(track, fxSlotNum, fxParamNum, &stepSize, &smallstep, &largestep, &isToggle);
         return stepSize;
+    }
+
+    static double GetTrackVolumeValue(MediaTrack *track)
+    {
+        double value = 0.0, pan = 0.0;
+        GetTrackUIVolPan(track, &value, &pan);
+        return volToNormalized(value);
+    }
+
+    static void SetTrackVolumeValue(MediaTrack *track, double value)
+    {
+        CSurf_SetSurfaceVolume(track, CSurf_OnVolumeChange(track, normalizedToVol(value), false), NULL);
     }
 
     static bool CompareFaderValues(double a, double b, int decimals = 3) {
