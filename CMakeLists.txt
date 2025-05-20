@@ -303,7 +303,7 @@ if(WIN32)
 else()
   target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic)
 
-  # Clang (macOS) specific suppression
+  #TODO: cleanup code as much as possible (except submodules) and remove warnings from ignore lists
   if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     target_compile_options(${PROJECT_NAME} PRIVATE 
       -Wno-unused-parameter
@@ -317,6 +317,19 @@ else()
       -Wno-inconsistent-missing-override
       -Wno-unused-but-set-variable
       -Wno-reorder-ctor
+    )
+  elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(${PROJECT_NAME} PRIVATE 
+      -Wno-unused-parameter
+      -Wno-missing-field-initializers
+      -Wno-ignored-qualifiers
+      -Wno-deprecated-declarations
+      -Wno-unused-function
+      -Wno-sign-compare
+      -Wno-format
+      -Wno-format-security
+      -Wno-parentheses
+      -Wno-type-limits
     )
   endif()
 

@@ -150,7 +150,7 @@ static const char* GetRelativePath(const char* absolutePath) {
 
 static bool IsSameString(const char* a, const char* b) {
     if (a == nullptr || b == nullptr) return false;
-    return std::strcmp(a, b) == 0;
+    return strcmp(a, b) == 0;
 }
 static bool IsSameString(const std::string& a, const std::string& b) {
     return a == b;
