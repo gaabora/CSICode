@@ -2,31 +2,17 @@ name: Build on macOS
 
 on:
   push:
-    branches: ['ci-test','CI-Testing']
+    branches: [ '*' ]
   pull_request:
     branches: [ '*' ]
 
 jobs:
-  build-macos-arm:
-    runs-on: macos-latest
-
-    env:
-      PLUGIN_NAME: reaper_csurf_integrator
-      BUNDLE_ID: com.example.reaper_csurf_integrator
-      APLDEV_CODESIGN_IDENTITY: ${{ secrets.APLDEV_CODESIGN_IDENTITY }}
-      APLDEV_NOTARY_USERNAME: ${{ secrets.APLDEV_NOTARY_USERNAME }}
-      APLDEV_NOTARY_PASSWORD: ${{ secrets.APLDEV_NOTARY_PASSWORD }}
-      APLDEV_TEAM_ID: ${{ secrets.APLDEV_TEAM_ID }}
+  build-macos-intel:
+    runs-on: macos-13
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Import Developer ID certificate
-        uses: apple-actions/import-codesign-certs@v2
-        with:
-          p12-file-base64: ${{ secrets.APLDEV_CERT_CONTENT_BASE64 }}
-          p12-password: ${{ secrets.APLDEV_CERT_PASSWORD }}
 
       - name: Set up CMake
         uses: jwlawson/actions-setup-cmake@v2
@@ -41,17 +27,13 @@ jobs:
       - name: Build
         run: cmake --build ${{ github.workspace }}/build --config Release
 
-      - name: Code Sign Built dylibs
-        run: |
-          find build -name "*.dylib" -print0 | xargs -0 -I{} codesign --force --deep --options runtime --sign "$APLDEV_CODESIGN_IDENTITY" {}
-
       - name: Debug Build Output
-        run: find build -name '*.dylib'
+        run: find . -name '*.dylib'
 
       - name: Prepare Package folder
         run: |
           mkdir -p Package/UserPlugins
-          cp ./build/$PLUGIN_NAME.dylib Package/UserPlugins/
+          cp ./build/reaper_csurf_integrator.dylib Package/UserPlugins/
           cp -r Scripts Package/
           cp -r CSI Package/
         shell: bash
@@ -59,62 +41,42 @@ jobs:
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: $PLUGIN_NAME_${{ github.ref_name }}_mac_arm.zip
+          name: CSI_mac_intel
           path: Package
 
-      - name: Create ZIP for Notarization
-        run: |
-          zip ${{ github.workspace }}/to_notarization.zip ./Package/UserPlugins/$PLUGIN_NAME.dylib
-        shell: bash
+  build-macos-arm:
+    runs-on: macos-latest
 
-      - name: Notarize ZIP file
-        id: notarize
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up CMake
+        uses: jwlawson/actions-setup-cmake@v2
+
+      - name: Configure CMake
         run: >
-          notarize_response=$(xcrun altool --notarize-app
-            --primary-bundle-id "$BUNDLE_ID"
-            --username $APLDEV_NOTARY_USERNAME
-            --password $APLDEV_NOTARY_PASSWORD
-            --file ${{ github.workspace }}/to_notarization.zip)
-          
-          echo "$notarize_response"
-          notarizationRequestUUID=$(echo "$notarize_response" | grep -o 'RequestUUID = [^ ]*' | awk '{print $2}')
-          echo "Notarization Request UUID: $notarizationRequestUUID"
-          echo "::set-output name=request_uuid::$notarizationRequestUUID"
+          cmake -B ${{ github.workspace }}/build
+          -DCMAKE_CXX_STANDARD=17
+          -DCMAKE_BUILD_TYPE=Release
+          -S ${{ github.workspace }}
 
-      - name: Wait for Notarization Results
+      - name: Build
+        run: cmake --build ${{ github.workspace }}/build --config Release
+
+      - name: Debug Build Output
+        run: find . -name '*.dylib'
+
+      - name: Prepare Package folder
         run: |
-          while true; do
-            result=$(xcrun altool --notarization-info ${{ steps.notarize.outputs.request_uuid }} \
-              --username $APLDEV_NOTARY_USERNAME \
-              --password $APLDEV_NOTARY_PASSWORD)
-            if [[ $result == *"Status: success"* ]]; then
-              echo "Notarization success!"
-              break
-            elif [[ $result == *"Status: invalid"* ]]; then
-              echo "Notarization failed!"
-              exit 1
-            else
-              echo "Notarization pending, checking again in 30 seconds..."
-              sleep 30
-            fi
-          done
+          mkdir -p Package/UserPlugins
+          cp ./build/reaper_csurf_integrator.dylib Package/UserPlugins/
+          cp -r Scripts Package/
+          cp -r CSI Package/
         shell: bash
 
-      - name: Staple Notarization Ticket
-        run: |
-          xcrun stapler staple ./Package/UserPlugins/$PLUGIN_NAME.dylib
-        shell: bash
-
-      - name: Create zip for release
-        run: |
-          cd Package
-          zip -r ../$PLUGIN_NAME_${{ github.ref_name }}_mac_arm.zip .
-        shell: bash
-
-      - name: Upload GitHub Release
-        uses: softprops/action-gh-release@v2
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
         with:
-          files: |
-            ${{ github.workspace }}/$PLUGIN_NAME_${{ github.ref_name }}_mac_arm.zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: CSI_mac_arm
+          path: Package

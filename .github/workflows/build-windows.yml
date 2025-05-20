@@ -2,7 +2,7 @@ name: Build on Windows
 
 on:
   push:
-    branches: [ main ]
+    branches: [ '*' ]
   pull_request:
     branches: [ '*' ]
 
@@ -40,5 +40,5 @@ jobs:
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: CSI_${{ github.ref_name }}_win
+          name: CSI_win
           path: Package

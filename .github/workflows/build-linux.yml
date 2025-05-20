@@ -2,7 +2,7 @@ name: Build on Linux
 
 on:
   push:
-    branches: [ main ]
+    branches: [ '*' ]
   pull_request:
     branches: [ '*' ]
 
@@ -41,5 +41,5 @@ jobs:
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: CSI_${{ github.ref_name }}_linux
+          name: CSI_linux
           path: Package
