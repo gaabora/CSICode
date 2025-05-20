@@ -30,14 +30,13 @@ static int s_fxSlot = 0;
 static char s_fxName[MEDBUF];
 static char s_fxAlias[MEDBUF];
 
-static bool OnDialogInit(HWND hwndDlg) {
+static void OnDialogInit(HWND hwndDlg) {
     g_openDialogs.push_back(hwndDlg);
-    return true;
 }
 
-static bool OnDialogDestroy(HWND hwndDlg, int ret) {
+static void OnDialogDestroy(HWND hwndDlg, int ret) {
     g_openDialogs.erase(std::remove(g_openDialogs.begin(), g_openDialogs.end(), hwndDlg), g_openDialogs.end());
-    return EndDialog(hwndDlg, ret);
+    EndDialog(hwndDlg, ret);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -437,7 +436,7 @@ static WDL_DLGRET dlgProcEditAdvanced(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
                         if (context == NULL)
                         {
                             s_dlgResult = IDCANCEL;
-                            OnDialogDestroy(hwndDlg, 0);
+                            EndDialog(hwndDlg, 0);
                             return 0;
                         }
 
@@ -479,21 +478,22 @@ static WDL_DLGRET dlgProcEditAdvanced(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
                         context->SetFreeFormText(buf);
 
                         s_dlgResult = IDOK;
-                        OnDialogDestroy(hwndDlg, 0);
+
+                        EndDialog(hwndDlg, 0);
                     }
-                    break ;
+                    break;
                     
                 case IDCANCEL:
                     if (HIWORD(wParam) == BN_CLICKED)
-                        OnDialogDestroy(hwndDlg, 0);
-                    break ;
+                        EndDialog(hwndDlg, 0);
+                    break;
             }
         }
-            break ;
+            break;
             
         case WM_CLOSE:
             DestroyWindow(hwndDlg) ;
-            break ;
+            break;
             
         case WM_DESTROY:
             OnDialogDestroy(hwndDlg, 0);
@@ -1463,7 +1463,6 @@ static WDL_DLGRET dlgProcEditFXAlias(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
             break;
             
         case WM_COMMAND:
-        {
             switch(LOWORD(wParam))
             {
                 case IDOK:
@@ -1471,15 +1470,16 @@ static WDL_DLGRET dlgProcEditFXAlias(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                     {
                         GetDlgItemText(hwndDlg, IDC_EDIT_FXAlias, s_fxAlias, sizeof(s_fxAlias));
                         s_dlgResult = IDOK;
-                        OnDialogDestroy(hwndDlg, 0);
+                        EndDialog(hwndDlg, 0);
                     }
-                    break ;
+                    break;
                     
                 case IDCANCEL:
                     if (HIWORD(wParam) == BN_CLICKED)
-                        OnDialogDestroy(hwndDlg, 0);
+                    EndDialog(hwndDlg, 0);
             }
-        }
+            break;
+
         case WM_DESTROY:
             OnDialogDestroy(hwndDlg, 0);
             break;
@@ -1565,7 +1565,7 @@ static WDL_DLGRET dlgProcLearnFXDeepEdit(HWND hwndDlg, UINT uMsg, WPARAM wParam,
     switch(uMsg)
     {
         case WM_INITDIALOG:
-            {
+        {
                 hFont16 = CreateFont(16, 0, 0, 0, 0, 0, 0, 0, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
                 
                 if (hFont16)
@@ -1581,7 +1581,7 @@ static WDL_DLGRET dlgProcLearnFXDeepEdit(HWND hwndDlg, UINT uMsg, WPARAM wParam,
                 
                 FillParams(hwndDlg, t, s_currentWidget, s_currentModifier);
                 OnDialogInit(hwndDlg);
-            }
+        }
             break;
             
         case WM_CLOSE:
@@ -1594,7 +1594,7 @@ static WDL_DLGRET dlgProcLearnFXDeepEdit(HWND hwndDlg, UINT uMsg, WPARAM wParam,
             
             DestroyWindow(hwndDlg) ;
         }
-            break ;
+            break;
             
         case WM_DESTROY:
             OnDialogDestroy(hwndDlg, 0);
@@ -2127,7 +2127,7 @@ static WDL_DLGRET dlgProcLearnFX(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
                         else if (s_pageSurfaceFXLearnLevel == "Level3")
                             DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_LearnFXLevel3), g_hwnd, dlgProcLearnFXDeepEdit);
                     }
-                    break ;
+                    break;
                     
                 case IDC_Save:
                     if (HIWORD(wParam) == BN_CLICKED)
@@ -2138,7 +2138,7 @@ static WDL_DLGRET dlgProcLearnFX(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
                             SendMessage(hwndDlg, WM_CLOSE, 0, 0);
                         }
                     }
-                    break ;
+                    break;
             }
         }
             break;
@@ -2400,6 +2400,20 @@ static string s_pageSurfaceZoneFolder;
 static string s_pageSurfaceFXZoneFolder;
 static int s_channelOffset = 0;
 
+// TODO: on reload close all windows to prevent crash
+// bool CALLBACK CloseWindowProc(HWND hwnd, LPARAM lParam) {
+//     DWORD processId = 0;
+//     GetWindowThreadProcessId(hwnd, &processId);
+//     if (processId == GetCurrentProcessId()) {
+//         PostMessage(hwnd, WM_CLOSE, 0, 0);
+//     }
+//     return true;
+// }
+
+// void CloseAllWindows() {
+//     EnumWindows(CloseWindowProc, 0);
+// }
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // structs
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2566,21 +2580,21 @@ static WDL_DLGRET dlgProcPage(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
                         s_scrollSynch = !! IsDlgButtonChecked(hwndDlg, IDC_CHECK_ScrollSynch);
                         
                         s_dlgResult = IDOK;
-                        OnDialogDestroy(hwndDlg, 0);
+                        EndDialog(hwndDlg, 0);
                     }
-                    break ;
+                    break;
                     
                 case IDCANCEL:
                     if (HIWORD(wParam) == BN_CLICKED)
-                        OnDialogDestroy(hwndDlg, 0);
-                    break ;
+                        EndDialog(hwndDlg, 0);
+                    break;
             }
         }
-            break ;
+            break;
 
         case WM_CLOSE:
             DestroyWindow(hwndDlg) ;
-            break ;
+            break;
             
         case WM_DESTROY:
             OnDialogDestroy(hwndDlg, 0);
@@ -2663,21 +2677,21 @@ static WDL_DLGRET dlgProcPageSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                         s_channelOffset = atoi(buf);
 
                         s_dlgResult = IDOK;
-                        OnDialogDestroy(hwndDlg, 0);
+                        EndDialog(hwndDlg, 0);
                     }
-                    break ;
+                    break;
                     
                 case IDCANCEL:
                     if (HIWORD(wParam) == BN_CLICKED)
-                        OnDialogDestroy(hwndDlg, 0);
-                    break ;
+                        EndDialog(hwndDlg, 0);
+                    break;
             }
         }
-            break ;
+            break;
             
         case WM_CLOSE:
             DestroyWindow(hwndDlg) ;
-            break ;
+            break;
             
         case WM_DESTROY:
             OnDialogDestroy(hwndDlg, 0);
@@ -2768,21 +2782,21 @@ static WDL_DLGRET dlgProcMidiSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                             s_surfaceOutPort = (int)SendDlgItemMessage(hwndDlg, IDC_COMBO_MidiOut, CB_GETITEMDATA, currentSelection, 0);
                         
                         s_dlgResult = IDOK;
-                        OnDialogDestroy(hwndDlg, 0);
+                        EndDialog(hwndDlg, 0);
                     }
-                    break ;
+                    break;
                     
                 case IDCANCEL:
                     if (HIWORD(wParam) == BN_CLICKED)
-                        OnDialogDestroy(hwndDlg, 0);
-                    break ;
+                        EndDialog(hwndDlg, 0);
+                    break;
             }
         }
-            break ;
+            break;
             
         case WM_CLOSE:
             DestroyWindow(hwndDlg) ;
-            break ;
+            break;
             
         case WM_DESTROY:
             OnDialogDestroy(hwndDlg, 0);
@@ -2871,21 +2885,21 @@ static WDL_DLGRET dlgProcOSCSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         s_surfaceMaxPacketsPerRun = atoi(buf);
 
                         s_dlgResult = IDOK;
-                        OnDialogDestroy(hwndDlg, 0);
+                        EndDialog(hwndDlg, 0);
                     }
-                    break ;
+                    break;
                     
                 case IDCANCEL:
                     if (HIWORD(wParam) == BN_CLICKED)
-                        OnDialogDestroy(hwndDlg, 0);
-                    break ;
+                        EndDialog(hwndDlg, 0);
+                    break;
             }
         }
-            break ;
+            break;
             
         case WM_CLOSE:
             DestroyWindow(hwndDlg) ;
-            break ;
+            break;
             
         case WM_DESTROY:
             OnDialogDestroy(hwndDlg, 0);
@@ -3195,12 +3209,12 @@ static WDL_DLGRET dlgProcAdvancedSetup(HWND hwndDlg, UINT uMsg, WPARAM wParam, L
                                     
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Listeners), LB_SETCURSEL, s_broadcasters[broadcasterIndex]->listeners.size() - 1, 0);
                                 
-#ifdef WIN32
+                              #ifdef WIN32
                                 listenerIndex = (int)SendDlgItemMessage(hwndDlg, IDC_LIST_Listeners, LB_GETCURSEL, 0, 0);
                                 
                                 if (listenerIndex >= 0)
                                     SetCheckBoxes(hwndDlg, s_broadcasters[broadcasterIndex]->listeners[listenerIndex].get());
-#endif
+                              #endif
                             }
                         }
                     }
@@ -3209,7 +3223,7 @@ static WDL_DLGRET dlgProcAdvancedSetup(HWND hwndDlg, UINT uMsg, WPARAM wParam, L
                 case IDCANCEL:
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
-                         OnDialogDestroy(hwndDlg, 0);
+                        EndDialog(hwndDlg, 0);
                     }
                     break;
                     
@@ -3227,11 +3241,12 @@ static WDL_DLGRET dlgProcAdvancedSetup(HWND hwndDlg, UINT uMsg, WPARAM wParam, L
                         
                         TransferBroadcasters(s_broadcasters, s_pages[s_pageIndex]->broadcasters);
 
-                        OnDialogDestroy(hwndDlg, 0);
+                        EndDialog(hwndDlg, 0);
                     }
                     break;
             }
         }
+            break;
         case WM_DESTROY:
             OnDialogDestroy(hwndDlg, 0);
             break;
@@ -3282,20 +3297,20 @@ WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                     case IDC_LIST_Surfaces:
                         if (HIWORD(wParam) == LBN_DBLCLK)
                         {
-#ifdef WIN32
+                          #ifdef WIN32
                             // pretend we clicked the Edit button
                             SendMessage(GetDlgItem(hwndDlg, IDC_BUTTON_EditSurface), BM_CLICK, 0, 0);
-#endif
+                          #endif
                         }
                         break;
                         
                     case IDC_LIST_PageSurfaces:
                         if (HIWORD(wParam) == LBN_DBLCLK)
                         {
-#ifdef WIN32
+                          #ifdef WIN32
                             // pretend we clicked the Edit button
                             SendMessage(GetDlgItem(hwndDlg, IDC_BUTTON_EditPageSurface), BM_CLICK, 0, 0);
-#endif
+                          #endif
                         }
                         break;
                         
@@ -3313,7 +3328,7 @@ WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Surfaces), LB_SETCURSEL, s_surfaces.size() - 1, 0);
                             }
                         }
-                        break ;
+                        break;
                         
                     case IDC_BUTTON_AddOSCSurface:
                         if (HIWORD(wParam) == BN_CLICKED)
@@ -3329,7 +3344,7 @@ WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Surfaces), LB_SETCURSEL, s_surfaces.size() - 1, 0);
                             }
                         }
-                        break ;
+                        break;
                      
                     case IDC_BUTTON_AddPage:
                         if (HIWORD(wParam) == BN_CLICKED)
@@ -3353,7 +3368,7 @@ WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Pages), LB_SETCURSEL, s_pages.size() - 1, 0);
                             }
                         }
-                        break ;
+                        break;
 
                     case IDC_BUTTON_AddPageSurface:
                         if (HIWORD(wParam) == BN_CLICKED)
@@ -3381,7 +3396,7 @@ WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                                 }
                             }
                         }
-                        break ;
+                        break;
 
                     case IDC_BUTTON_EditSurface:
                         if (HIWORD(wParam) == BN_CLICKED)
@@ -3463,7 +3478,7 @@ WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                                 s_editMode = false;
                             }
                         }
-                        break ;
+                        break;
                     
                     case IDC_BUTTON_EditPage:
                         if (HIWORD(wParam) == BN_CLICKED)
@@ -3499,7 +3514,7 @@ WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                                 s_editMode = false;
                             }
                         }
-                        break ;
+                        break;
                         
                     case IDC_BUTTON_Advanced:
                         if (HIWORD(wParam) == BN_CLICKED)
@@ -3549,7 +3564,7 @@ WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                                 s_editMode = false;
                             }
                         }
-                        break ;
+                        break;
                         
 
                     case IDC_BUTTON_RemoveSurface:
@@ -3598,7 +3613,7 @@ WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                                 }
                             }
                         }
-                        break ;
+                        break;
                         
                     case IDC_BUTTON_RemovePage:
                         if (HIWORD(wParam) == BN_CLICKED)
@@ -3609,15 +3624,15 @@ WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                                 s_pages.erase(s_pages.begin() + index);
                                 
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Pages), LB_RESETCONTENT, 0, 0);
-#ifdef WIN32
+                              #ifdef WIN32
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_PageSurfaces), LB_RESETCONTENT, 0, 0);
-#endif
+                              #endif
                                 for (auto &page : s_pages)
                                     AddListEntry(hwndDlg, page->name, IDC_LIST_Pages);
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Pages), LB_SETCURSEL, index, 0);
                             }
                         }
-                        break ;
+                        break;
 
                     case IDC_BUTTON_RemovePageSurface:
                         if (HIWORD(wParam) == BN_CLICKED)
@@ -3638,10 +3653,10 @@ WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                                 }
                             }
                         }
-                        break ;
+                        break;
                 }
             }
-            break ;
+            break;
             
         case WM_INITDIALOG:
         {

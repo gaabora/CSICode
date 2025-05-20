@@ -63,9 +63,11 @@ public:
     virtual const char* GetName() override { return "LastTouchedFXParam"; }
 
     bool CheckLastTouchedFX() {
-        if (GetLastTouchedFX(&trackNum_, &fxSlotNum_, &fxParamNum_))
-            if (track_ = DAW::GetTrack(trackNum_))
+        if (GetLastTouchedFX(&trackNum_, &fxSlotNum_, &fxParamNum_)) {
+            track_ = DAW::GetTrack(trackNum_);
+            if (track_)
                 return true;
+        }
         track_ = nullptr;
         trackNum_ = -1;
         fxSlotNum_ = -1;
