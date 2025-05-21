@@ -47,7 +47,7 @@ void GetPropertiesFromTokens(int start, int finish, const vector<string>& tokens
                 properties.set_prop(prop, value.c_str());
             } else {
                 properties.set_prop(prop, token.data()); // unknown properties are preserved as Unknown, key=value pair
-                if (g_debugLevel >= DEBUG_LEVEL_WARNING) LogToConsole(256, "[WARNING] CSI does not support property named %s\n", key.c_str());
+                if (g_debugLevel >= DEBUG_LEVEL_WARNING) LogToConsole("[WARNING] CSI does not support property named %s\n", key.c_str());
             }
         }
     }
@@ -196,7 +196,7 @@ void TrimLine(string &line)
            line.append(p++,1);
         }
     }
-    if (!line.empty() && g_debugLevel > DEBUG_LEVEL_DEBUG) LogToConsole(2048, "[DEBUG] %s\n", line.c_str());
+    if (!line.empty() && g_debugLevel > DEBUG_LEVEL_DEBUG) LogToConsole("[DEBUG] %s\n", line.c_str());
 }
 
 void ReplaceAllWith(string &output, const char *charsToReplace, const char *replacement)
@@ -483,7 +483,7 @@ void Midi_ControlSurface::ProcessMidiWidget(int &lineNumber, ifstream &surfaceTe
     Widget *widget = GetWidgetByName(in_tokens[1]);
     
     if (widget == NULL) {
-        LogToConsole(2048, "[ERROR] FAILED to ProcessMidiWidget: no widgets found by name '%s'. Line %s\n", in_tokens[1].c_str(), lineNumber);
+        LogToConsole("[ERROR] FAILED to ProcessMidiWidget: no widgets found by name '%s'. Line %s\n", in_tokens[1].c_str(), lineNumber);
         return;
     }
 
@@ -781,7 +781,7 @@ void OSC_ControlSurface::ProcessOSCWidget(int &lineNumber, ifstream &surfaceTemp
     
     if (widget == NULL)
     {
-        LogToConsole(2048, "[ERROR] FAILED to ProcessOSCWidget: widget not found by name %s. Line %s\n", in_tokens[1].c_str(), lineNumber);
+        LogToConsole("[ERROR] FAILED to ProcessOSCWidget: widget not found by name %s. Line %s\n", in_tokens[1].c_str(), lineNumber);
         return;
     }
     
@@ -888,7 +888,7 @@ void Midi_ControlSurface::ProcessMIDIWidgetFile(const string &filePath, Midi_Con
     {
         ifstream file(filePath);
         
-        if (g_debugLevel >= DEBUG_LEVEL_DEBUG) LogToConsole(2048, "[DEBUG] ProcessMIDIWidgetFile: %s\n", GetRelativePath(filePath.c_str()));
+        if (g_debugLevel >= DEBUG_LEVEL_DEBUG) LogToConsole("[DEBUG] ProcessMIDIWidgetFile: %s\n", GetRelativePath(filePath.c_str()));
         for (string line; getline(file, line) ; )
         {
             TrimLine(line);
@@ -913,8 +913,8 @@ void Midi_ControlSurface::ProcessMIDIWidgetFile(const string &filePath, Midi_Con
     }
     catch (const std::exception& e)
     {
-        LogToConsole(256, "[ERROR] FAILED to ProcessMIDIWidgetFile in %s, around line %d\n", filePath.c_str(), lineNumber);
-        LogToConsole(2048, "Exception: %s\n", e.what());
+        LogToConsole("[ERROR] FAILED to ProcessMIDIWidgetFile in %s, around line %d\n", filePath.c_str(), lineNumber);
+        LogToConsole("Exception: %s\n", e.what());
     }
 }
 
@@ -935,7 +935,7 @@ void OSC_ControlSurface::ProcessOSCWidgetFile(const string &filePath)
     {
         ifstream file(filePath);
         
-        if (g_debugLevel >= DEBUG_LEVEL_DEBUG) LogToConsole(2048, "[DEBUG] ProcessOSCWidgetFile: %s\n", GetRelativePath(filePath.c_str()));
+        if (g_debugLevel >= DEBUG_LEVEL_DEBUG) LogToConsole("[DEBUG] ProcessOSCWidgetFile: %s\n", GetRelativePath(filePath.c_str()));
         for (string line; getline(file, line) ; )
         {
             TrimLine(line);
@@ -960,8 +960,8 @@ void OSC_ControlSurface::ProcessOSCWidgetFile(const string &filePath)
     }
     catch (const std::exception& e)
     {
-        LogToConsole(256, "[ERROR] FAILED to ProcessOSCWidgetFile in %s, around line %d\n", filePath.c_str(), lineNumber);
-        LogToConsole(2048, "Exception: %s\n", e.what());
+        LogToConsole("[ERROR] FAILED to ProcessOSCWidgetFile in %s, around line %d\n", filePath.c_str(), lineNumber);
+        LogToConsole("Exception: %s\n", e.what());
     }
 }
 
@@ -1170,7 +1170,7 @@ void CSurfIntegrator::Init()
     
     if ( ! filesystem::exists(CSIFolderPath))
     {
-        LogToConsole(MEDBUF, __LOCALIZE_VERFMT("[ERROR] Missing CSI Folder. Please check your installation, cannot find %s\n", "csi_mbox"), CSIFolderPath.c_str());
+        LogToConsole("[ERROR] Missing CSI Folder. Please check your installation, cannot find %s\n", CSIFolderPath.c_str());
         return;
     }
     
@@ -1178,7 +1178,7 @@ void CSurfIntegrator::Init()
     
     if ( ! filesystem::exists(iniFilePath))
     {
-        LogToConsole(MEDBUF, __LOCALIZE_VERFMT("[ERROR] Missing CSI.ini. Please check your installation, cannot find %s\n", "csi_mbox"), iniFilePath.c_str());
+        LogToConsole("[ERROR] Missing CSI.ini. Please check your installation, cannot find %s\n", iniFilePath.c_str());
         return;
     }
 
@@ -1204,7 +1204,7 @@ void CSurfIntegrator::Init()
                 if (versionProp)
                 {
                     if (!IsSameString(versionProp, s_MajorVersionToken)) {
-                        LogToConsole(MEDBUF, __LOCALIZE_VERFMT("[ERROR] CSI.ini version mismatch. -- Your CSI.ini file is not %s.\n", "csi_mbox"), s_MajorVersionToken);
+                        LogToConsole("[ERROR] CSI.ini version mismatch. -- Your CSI.ini file is not %s.\n", s_MajorVersionToken);
                         //FIXME: so what? make backup and generate new, or at least prompt to confirm
                         iniFile.close();
                         return;
@@ -1217,7 +1217,7 @@ void CSurfIntegrator::Init()
                 }
                 else
                 {
-                    LogToConsole(MEDBUF, __LOCALIZE_VERFMT("[ERROR] CSI.ini has no version.\n", "csi_mbox"));
+                    LogToConsole("[ERROR] CSI.ini has no version.\n");
                     //FIXME: so what? generate new, or at least prompt to confirm
                     iniFile.close();
                     return;
@@ -1362,7 +1362,7 @@ void CSurfIntegrator::Init()
                                      
                                 if ( ! filesystem::exists(baseDir))
                                 {
-                                    LogToConsole(MEDBUF, __LOCALIZE_VERFMT("[ERROR] Missing Surfaces Folder %s\n", "csi_mbox"), baseDir.c_str());
+                                    LogToConsole("[ERROR] Missing Surfaces Folder %s\n", baseDir.c_str());
 
                                     return;
                                 }
@@ -1371,7 +1371,7 @@ void CSurfIntegrator::Init()
                                 
                                 if ( ! filesystem::exists(surfaceFile))
                                 {
-                                    LogToConsole(MEDBUF, __LOCALIZE_VERFMT("[ERROR] Missing Surfaces File %s\n", "csi_mbox"), surfaceFile.c_str());
+                                    LogToConsole("[ERROR] Missing Surfaces File %s\n", surfaceFile.c_str());
                                 }
                                 
                                 string zoneFolder = baseDir + surfaceFolderProp + "/Zones";
@@ -1380,7 +1380,7 @@ void CSurfIntegrator::Init()
                                 
                                 if ( ! filesystem::exists(zoneFolder))
                                 {
-                                    LogToConsole(MEDBUF, __LOCALIZE_VERFMT("[ERROR] Missing Zone Folder %s\n", "csi_mbox"), zoneFolder.c_str());
+                                    LogToConsole("[ERROR] Missing Zone Folder %s\n", zoneFolder.c_str());
                                 }
                                 
                                 string fxZoneFolder = baseDir + surfaceFolderProp + "/FXZones";
@@ -1395,8 +1395,8 @@ void CSurfIntegrator::Init()
                                     }
                                     catch (const std::exception& e)
                                     {
-                                        LogToConsole(256, "[ERROR] FAILED to Init. Unable to create folder %s\n", fxZoneFolder.c_str());
-                                        LogToConsole(2048, "Exception: %s\n", e.what());
+                                        LogToConsole("[ERROR] FAILED to Init. Unable to create folder %s\n", fxZoneFolder.c_str());
+                                        LogToConsole("Exception: %s\n", e.what());
 
                                         return;
                                     }
@@ -1438,8 +1438,8 @@ void CSurfIntegrator::Init()
     }
     catch (const std::exception& e)
     {
-        LogToConsole(256, "[ERROR] FAILED to Init in %s, around line %d\n", iniFilePath.c_str(), lineNumber);
-        LogToConsole(2048, "Exception: %s\n", e.what());
+        LogToConsole("[ERROR] FAILED to Init in %s, around line %d\n", iniFilePath.c_str(), lineNumber);
+        LogToConsole("Exception: %s\n", e.what());
     }
     
     if (pages_.size() == 0)
@@ -1608,7 +1608,7 @@ ActionContext::ActionContext(CSurfIntegrator *const csi, Action *action, Widget 
         int feedbackState = GetToggleCommandState(commandId_);
         if (feedbackState == -1) {
             provideFeedback_ = false;
-            if (g_debugLevel >= DEBUG_LEVEL_NOTICE) LogToConsole(256, "[NOTICE] @%s/{%s}: [%s] %s(%s) # action '%s' (%d) does not provide feedback\n"
+            if (g_debugLevel >= DEBUG_LEVEL_NOTICE) LogToConsole("[NOTICE] @%s/{%s}: [%s] %s(%s) # action '%s' (%d) does not provide feedback\n"
                 ,this->GetSurface()->GetName()
                 ,this->GetZone()->GetName()
                 ,this->GetWidget()->GetName()
@@ -1796,7 +1796,7 @@ void ActionContext::LogAction(double value)
     if (holdRepeatIntervalMs_ > 0) oss << " HoldRepeatInterval=" << holdRepeatIntervalMs_;
     if (runCount_ > 1) oss << " RunCount=" << runCount_;
 
-    LogToConsole(512, "[INFO] @%s/%s: [%s] %s(%s)%s # %s; val:%0.2f ctx:%s\n"
+    LogToConsole("[INFO] @%s/%s: [%s] %s(%s)%s # %s; val:%0.2f ctx:%s\n"
         ,this->GetSurface()->GetName()
         ,this->GetZone()->GetName()
         ,this->GetWidget()->GetName()
@@ -1858,7 +1858,7 @@ void ActionContext::RunDeferredActions()
         && lastHoldStartTs_ > 0
         && GetTickCount() > (lastHoldStartTs_ + holdDelayMs)
     ) {
-        if (g_debugLevel >= DEBUG_LEVEL_DEBUG) LogToConsole(256, "[DEBUG] HOLD [%s] %d ms\n", GetWidget()->GetName(), GetTickCount() - lastHoldStartTs_);
+        if (g_debugLevel >= DEBUG_LEVEL_DEBUG) LogToConsole("[DEBUG] HOLD [%s] %d ms\n", GetWidget()->GetName(), GetTickCount() - lastHoldStartTs_);
         PerformAction(deferredValue_);
         holdActive_ = false; // to mark that this action with it's defined hold delay was performed and separate it from repeated action trigger
         if (holdRepeatIntervalMs_ > 0) {
@@ -1871,7 +1871,7 @@ void ActionContext::RunDeferredActions()
         && lastHoldRepeatTs_ > 0
         && GetTickCount() > (lastHoldRepeatTs_ + holdRepeatIntervalMs_)
     ) {
-        if (g_debugLevel >= DEBUG_LEVEL_DEBUG) LogToConsole(256, "[DEBUG] REPEAT [%s] %d ms\n", GetWidget()->GetName(), GetTickCount() - lastHoldRepeatTs_);
+        if (g_debugLevel >= DEBUG_LEVEL_DEBUG) LogToConsole("[DEBUG] REPEAT [%s] %d ms\n", GetWidget()->GetName(), GetTickCount() - lastHoldRepeatTs_);
         lastHoldRepeatTs_ = GetTickCount();
         PerformAction(deferredValue_);
     }
@@ -2532,7 +2532,7 @@ void Zone::UpdateCurrentActionContextModifier(Widget *widget)
 ActionContext *Zone::AddActionContext(Widget *widget, int modifier, Zone *zone, const char *actionName, vector<string> &params)
 {
     const auto& action = csi_->GetAction(actionName);
-    if (!IsSameString(action->GetName(), actionName) && IsSameString(action->GetName(), "InvalidAction")) LogToConsole(256, "[ERROR] @%s/{%s} [%s] InvalidAction: '%s'.\n"
+    if (!IsSameString(action->GetName(), actionName) && IsSameString(action->GetName(), "InvalidAction")) LogToConsole("[ERROR] @%s/{%s} [%s] InvalidAction: '%s'.\n"
         ,widget->GetSurface()->GetName()
         ,zone->GetName()
         ,widget->GetName()
@@ -2633,7 +2633,7 @@ void  Widget::ForceClear()
 
 void Widget::LogInput(double value)
 {
-    if (g_surfaceInDisplay) LogToConsole(256, "IN <- %s %s %f\n", GetSurface()->GetName(), GetName(), value);
+    if (g_surfaceInDisplay) LogToConsole("IN <- %s %s %f\n", GetSurface()->GetName(), GetName(), value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2665,7 +2665,7 @@ void Midi_FeedbackProcessor::ForceMidiMessage(int first, int second, int third)
 
 void Midi_FeedbackProcessor::LogMessage(char* value)
 {
-    if (g_surfaceOutDisplay) LogToConsole(512, "@S:'%s' [W:'%s'] MIDI: %s\n", surface_->GetName(), widget_->GetName(), value);
+    if (g_surfaceOutDisplay) LogToConsole("@S:'%s' [W:'%s'] MIDI: %s\n", surface_->GetName(), widget_->GetName(), value);
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // OSC_FeedbackProcessor
@@ -2734,7 +2734,7 @@ void ZoneManager::Initialize()
     PreProcessZones();
 
     if (zoneInfo_.find("Home") == zoneInfo_.end())
-        return LogToConsole(MEDBUF, __LOCALIZE_VERFMT("[ERROR] Missing Home Zone for %s\n", "csi_mbox"), surface_->GetName());
+        return LogToConsole("[ERROR] Missing Home Zone for %s\n", surface_->GetName());
 
     homeZone_ = make_unique<Zone>(csi_, this, GetSelectedTrackNavigator(), 0, "Home", "Home", zoneInfo_["Home"].filePath);
     LoadZoneFile(homeZone_.get(), "");
@@ -2762,7 +2762,7 @@ void ZoneManager::PreProcessZoneFile(const string &filePath)
         CSIZoneInfo info;
         info.filePath = filePath;
 
-        if (g_debugLevel >= DEBUG_LEVEL_DEBUG) LogToConsole(2048, "[DEBUG] PreProcessZoneFile: %s\n", GetRelativePath(filePath.c_str()));
+        if (g_debugLevel >= DEBUG_LEVEL_DEBUG) LogToConsole("[DEBUG] PreProcessZoneFile: %s\n", GetRelativePath(filePath.c_str()));
         for (string line; getline(file, line) ; )
         {
             TrimLine(line);
@@ -2784,8 +2784,8 @@ void ZoneManager::PreProcessZoneFile(const string &filePath)
     }
     catch (const std::exception& e)
     {
-        LogToConsole(256, "[ERROR] FAILED to PreProcessZoneFile in %s\n", filePath.c_str());
-        LogToConsole(2048, "Exception: %s\n", e.what());
+        LogToConsole("[ERROR] FAILED to PreProcessZoneFile in %s\n", filePath.c_str());
+        LogToConsole("Exception: %s\n", e.what());
     }
 }
 
@@ -2918,7 +2918,7 @@ void ZoneManager::LoadZoneFile(Zone *zone, const char *filePath, const char *wid
     {
         ifstream file(filePath);
         
-        if (g_debugLevel >= DEBUG_LEVEL_DEBUG) LogToConsole(2048, "[DEBUG] {%s} # LoadZoneFile: %s\n", zone->GetName(), GetRelativePath(filePath));
+        if (g_debugLevel >= DEBUG_LEVEL_DEBUG) LogToConsole("[DEBUG] {%s} # LoadZoneFile: %s\n", zone->GetName(), GetRelativePath(filePath));
         
         for (string line; getline(file, line);) {
             TrimLine(line);
@@ -2957,7 +2957,7 @@ void ZoneManager::LoadZoneFile(Zone *zone, const char *filePath, const char *wid
                 try {
                     LoadZones(zone->GetIncludedZones(), includedZonesList);  //FIXME prevent recursion
                 } catch (const std::exception& e) {
-                    LogToConsole(256, "[ERROR] %s in IncludedZones section in file %s\n", e.what(), GetRelativePath(zone->GetSourceFilePath()));
+                    LogToConsole("[ERROR] %s in IncludedZones section in file %s\n", e.what(), GetRelativePath(zone->GetSourceFilePath()));
                 }
             }
             else if (isInIncludedZonesSection)
@@ -3028,8 +3028,8 @@ void ZoneManager::LoadZoneFile(Zone *zone, const char *filePath, const char *wid
     }
     catch (const std::exception& e)
     {
-        LogToConsole(256, "[ERROR] FAILED to LoadZoneFile in %s, around line %d\n", zone->GetSourceFilePath(), lineNumber);
-        LogToConsole(2048, "Exception: %s\n", e.what());
+        LogToConsole("[ERROR] FAILED to LoadZoneFile in %s, around line %d\n", zone->GetSourceFilePath(), lineNumber);
+        LogToConsole("Exception: %s\n", e.what());
     }
 }
 
@@ -3190,13 +3190,13 @@ void ZoneManager::UpdateCurrentActionContextModifiers()
 void ZoneManager::PreProcessZones()
 {
     if (zoneFolder_[0] == 0)
-        return LogToConsole(MEDBUF, __LOCALIZE_VERFMT("[ERROR] Please check your CSI.ini, cannot find Zone folder for %s in: %s/CSI/Zones/","csi_mbox"), GetSurface()->GetName(), GetResourcePath());
+        return LogToConsole("[ERROR] Please check your CSI.ini, cannot find Zone folder for %s in: %s/CSI/Zones/", GetSurface()->GetName(), GetResourcePath());
 
     vector<string>  zoneFilesToProcess;
     collectFilesOfType(".zon", zoneFolder_, zoneFilesToProcess);
 
     if (zoneFilesToProcess.size() == 0)
-        return LogToConsole(MEDBUF, __LOCALIZE_VERFMT("[ERROR] Cannot find Zone files for %s in: %s","csi_mbox"), GetSurface()->GetName(), zoneFolder_.c_str());
+        return LogToConsole("[ERROR] Cannot find Zone files for %s in: %s", GetSurface()->GetName(), zoneFolder_.c_str());
     
     collectFilesOfType(".zon", fxZoneFolder_, zoneFilesToProcess);
 
@@ -3467,7 +3467,7 @@ void ModifierManager::SetLatchModifier(bool value, Modifiers modifier, int latch
         if (heldTime >= (DWORD) latchTime) {
             if (modifiers_[modifier].isLocked == true) {
                 modifiers_[modifier].isLocked = false;
-                if (g_debugLevel >= DEBUG_LEVEL_DEBUG) LogToConsole(256, "[DEBUG] [%s] UNLOCK\n", modifierName);
+                if (g_debugLevel >= DEBUG_LEVEL_DEBUG) LogToConsole("[DEBUG] [%s] UNLOCK\n", modifierName);
                 char tmp[256];
                 snprintf(tmp, sizeof(tmp), "%s Unlock", modifierName);
                 csi_->Speak(tmp);
@@ -3475,7 +3475,7 @@ void ModifierManager::SetLatchModifier(bool value, Modifiers modifier, int latch
             modifiers_[modifier].isEngaged = false;
         } else {
             auto modifierName = stringFromModifier(modifier);
-            if (g_debugLevel >= DEBUG_LEVEL_DEBUG) LogToConsole(256, "[DEBUG] [%s] [LOCK]\n", modifierName);
+            if (g_debugLevel >= DEBUG_LEVEL_DEBUG) LogToConsole("[DEBUG] [%s] [LOCK]\n", modifierName);
             char tmp[256];
             snprintf(tmp, sizeof(tmp), "%s Lock", modifierName);
             csi_->Speak(tmp);
@@ -4091,7 +4091,7 @@ void Midi_ControlSurface::ProcessMidiMessage(const MIDI_event_ex_t *evt)
 {
     if (g_surfaceRawInDisplay)
     {
-        LogToConsole(256, "IN <- %s %02x %02x %02x \n", name_.c_str(), evt->midi_message[0], evt->midi_message[1], evt->midi_message[2]);
+        LogToConsole("IN <- %s %02x %02x %02x \n", name_.c_str(), evt->midi_message[0], evt->midi_message[1], evt->midi_message[2]);
         // LogStackTraceToConsole();
     }
 
@@ -4136,7 +4136,7 @@ void Midi_ControlSurface::SendMidiMessage(int first, int second, int third)
 {
     surfaceIO_->SendMidiMessage(first, second, third);
     
-    if (g_surfaceOutDisplay) LogToConsole(256, "%s %02x %02x %02x # Midi_ControlSurface::SendMidiMessage\n", ("OUT->" + name_).c_str(), first, second, third);
+    if (g_surfaceOutDisplay) LogToConsole("%s %02x %02x %02x # Midi_ControlSurface::SendMidiMessage\n", ("OUT->" + name_).c_str(), first, second, third);
 }
 
  ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -4296,7 +4296,7 @@ void OSC_ControlSurface::ProcessOSCMessage(const char *message, double value)
     if (CSIMessageGeneratorsByMessage_.find(message) != CSIMessageGeneratorsByMessage_.end())
         CSIMessageGeneratorsByMessage_[message]->ProcessMessage(value);
     
-    if (g_surfaceInDisplay) LogToConsole(MEDBUF, "IN <- %s %s %f\n", name_.c_str(), message, value);
+    if (g_surfaceInDisplay) LogToConsole("IN <- %s %s %f\n", name_.c_str(), message, value);
 }
 
 void OSC_ControlSurface::SendOSCMessage(const char *zoneName)
@@ -4307,49 +4307,49 @@ void OSC_ControlSurface::SendOSCMessage(const char *zoneName)
 
     surfaceIO_->SendOSCMessage(oscAddress.c_str());
         
-    if (g_surfaceOutDisplay) LogToConsole(MEDBUF, "->LoadingZone---->%s\n", name_.c_str());
+    if (g_surfaceOutDisplay) LogToConsole("->LoadingZone---->%s\n", name_.c_str());
 }
 
 void OSC_ControlSurface::SendOSCMessage(const char *oscAddress, int value)
 {
     surfaceIO_->SendOSCMessage(oscAddress, value);
         
-    if (g_surfaceOutDisplay) LogToConsole(MEDBUF, "OUT->%s %s %d # Surface::SendOSCMessage 1\n", name_.c_str(), oscAddress, value);
+    if (g_surfaceOutDisplay) LogToConsole("OUT->%s %s %d # Surface::SendOSCMessage 1\n", name_.c_str(), oscAddress, value);
 }
 
 void OSC_ControlSurface::SendOSCMessage(const char *oscAddress, double value)
 {
     surfaceIO_->SendOSCMessage(oscAddress, value);
         
-    if (g_surfaceOutDisplay) LogToConsole(MEDBUF, "OUT->%s %s %f # Surface::SendOSCMessage 2\n", name_.c_str(), oscAddress, value);
+    if (g_surfaceOutDisplay) LogToConsole("OUT->%s %s %f # Surface::SendOSCMessage 2\n", name_.c_str(), oscAddress, value);
 }
 
 void OSC_ControlSurface::SendOSCMessage(const char *oscAddress, const char *value)
 {
     surfaceIO_->SendOSCMessage(oscAddress, value);
         
-    if (g_surfaceOutDisplay) LogToConsole(MEDBUF, "OUT->%s %s %s # Surface::SendOSCMessage 3\n", name_.c_str(), oscAddress, value);
+    if (g_surfaceOutDisplay) LogToConsole("OUT->%s %s %s # Surface::SendOSCMessage 3\n", name_.c_str(), oscAddress, value);
 }
 
 void OSC_ControlSurface::SendOSCMessage(OSC_FeedbackProcessor *feedbackProcessor, const char *oscAddress, double value)
 {
     surfaceIO_->SendOSCMessage(oscAddress, value);
     
-    if (g_surfaceOutDisplay) LogToConsole(MEDBUF, "OUT->%s %s %f # Surface::SendOSCMessage 4\n", feedbackProcessor->GetWidget()->GetName(), oscAddress, value);
+    if (g_surfaceOutDisplay) LogToConsole("OUT->%s %s %f # Surface::SendOSCMessage 4\n", feedbackProcessor->GetWidget()->GetName(), oscAddress, value);
 }
 
 void OSC_ControlSurface::SendOSCMessage(OSC_FeedbackProcessor *feedbackProcessor, const char *oscAddress, int value)
 {
     surfaceIO_->SendOSCMessage(oscAddress, value);
 
-    if (g_surfaceOutDisplay) LogToConsole(MEDBUF, "OUT->%s %s %s %d # Surface::SendOSCMessage 5\n", name_.c_str(), feedbackProcessor->GetWidget()->GetName(), oscAddress, value);
+    if (g_surfaceOutDisplay) LogToConsole("OUT->%s %s %s %d # Surface::SendOSCMessage 5\n", name_.c_str(), feedbackProcessor->GetWidget()->GetName(), oscAddress, value);
 }
 
 void OSC_ControlSurface::SendOSCMessage(OSC_FeedbackProcessor *feedbackProcessor, const char *oscAddress, const char *value)
 {
     surfaceIO_->SendOSCMessage(oscAddress, value);
 
-    if (g_surfaceOutDisplay) LogToConsole(MEDBUF, "OUT->%s %s %s %s # Surface::SendOSCMessage 6\n", name_.c_str(), feedbackProcessor->GetWidget()->GetName(), oscAddress, value);
+    if (g_surfaceOutDisplay) LogToConsole("OUT->%s %s %s %s # Surface::SendOSCMessage 6\n", name_.c_str(), feedbackProcessor->GetWidget()->GetName(), oscAddress, value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -1175,7 +1175,7 @@ private:
         {
             ifstream file(filePath);
             
-            if (g_debugLevel >= DEBUG_LEVEL_DEBUG) LogToConsole(2048, "[DEBUG] LoadZoneMetadata: %s\n", GetRelativePath(filePath));
+            if (g_debugLevel >= DEBUG_LEVEL_DEBUG) LogToConsole("[DEBUG] LoadZoneMetadata: %s\n", GetRelativePath(filePath));
             for (string line; getline(file, line) ; )
             {
                 TrimLine(line);
@@ -1196,8 +1196,8 @@ private:
         }
         catch (const std::exception& e)
         {
-            LogToConsole(256, "[ERROR] FAILED to LoadZoneMetadata in %s, around line %d\n", filePath, lineNumber);
-            LogToConsole(2048, "Exception: %s\n", e.what());
+            LogToConsole("[ERROR] FAILED to LoadZoneMetadata in %s, around line %d\n", filePath, lineNumber);
+            LogToConsole("Exception: %s\n", e.what());
         }
     }
     
@@ -1880,8 +1880,6 @@ private:
     CSurfIntegrator *const csi_;
     Page *page_;
     ControlSurface *surface_;
-    
-    int latchTime_ = 100;
     
     enum Modifiers
     {
@@ -4108,19 +4106,19 @@ public:
                 ShowDuration(surfaces_[i]->GetName(), "Request Update", duration);
             }
             
-            LogToConsole(256, "Total duration = %d\n\n\n", totalDuration);
+            LogToConsole("Total duration = %d\n\n\n", totalDuration);
         }
     }
     
     
     void ShowDuration(string item, int duration)
     {
-        LogToConsole(256, "%s - %d microseconds\n", item.c_str(), duration);
+        LogToConsole("%s - %d microseconds\n", item.c_str(), duration);
     }
     
     void ShowDuration(string surface, string item, int duration)
     {
-        LogToConsole(256, "%s - %s - %d microseconds\n", surface.c_str(), item.c_str(), duration);
+        LogToConsole("%s - %s - %d microseconds\n", surface.c_str(), item.c_str(), duration);
     }
    */
 
@@ -4270,11 +4268,11 @@ public:
         if (commandId == 0) {
             commandId = AddRemoveReaScript(true, 0, scriptsPath.c_str(), true);
             if (commandId == 0) {
-                LogToConsole(256, "[ERROR] FAILED to OpenOSDPanel. AddRemoveReaScript failed for '%s'\n", REASCRIPT_PATH__CSI_OSD);
+                LogToConsole("[ERROR] FAILED to OpenOSDPanel. AddRemoveReaScript failed for '%s'\n", REASCRIPT_PATH__CSI_OSD);
                 return;
             }
             commandId = NamedCommandLookup(REASCRIPT_HASH__CSI_OSD);
-            LogToConsole(256, "[NOTICE] ReaScript %s was loaded: %s (%d)\n", REASCRIPT_PATH__CSI_OSD, REASCRIPT_HASH__CSI_OSD, commandId);
+            LogToConsole("[NOTICE] ReaScript %s was loaded: %s (%d)\n", REASCRIPT_PATH__CSI_OSD, REASCRIPT_HASH__CSI_OSD, commandId);
         }
         int runningState;
         for (int attempt = 1; attempt <= 2; ++attempt) {
@@ -4283,17 +4281,17 @@ public:
             if (attempt == 2) {
                 commandId = AddRemoveReaScript(true, 0, scriptsPath.c_str(), true);
                 if (commandId == 0) {
-                    LogToConsole(256, "[ERROR] FAILED to OpenOSDPanel. AddRemoveReaScript failed for '%s'\n", REASCRIPT_PATH__CSI_OSD);
+                    LogToConsole("[ERROR] FAILED to OpenOSDPanel. AddRemoveReaScript failed for '%s'\n", REASCRIPT_PATH__CSI_OSD);
                     return;
                 }
                 const char* commandHash = ReverseNamedCommandLookup(commandId);
                 if (!IsSameString(REASCRIPT_HASH__CSI_OSD + 1, commandHash))
-                    LogToConsole(256, "[ERROR] Command ID changed for '%s': '%s' >>> '_%s'\n", REASCRIPT_PATH__CSI_OSD, REASCRIPT_HASH__CSI_OSD, commandHash);
+                    LogToConsole("[ERROR] Command ID changed for '%s': '%s' >>> '_%s'\n", REASCRIPT_PATH__CSI_OSD, REASCRIPT_HASH__CSI_OSD, commandHash);
             }
             DAW::SendCommandMessage(commandId);
         }
         runningState = GetToggleCommandState(commandId);
-        LogToConsole(256, "[ERROR] FAILED to OpenOSDPanel. ReaScript: '%s' command ID: %s (%d) state: %d\n", 
+        LogToConsole("[ERROR] FAILED to OpenOSDPanel. ReaScript: '%s' command ID: %s (%d) state: %d\n", 
             REASCRIPT_PATH__CSI_OSD, REASCRIPT_HASH__CSI_OSD, commandId, runningState);
     }
 
@@ -4486,7 +4484,7 @@ public:
         
         if (shouldRun_ && pages_.size() > currentPageIndex_ && pages_[currentPageIndex_]) {
             if (!QueuedOSD.isEmpty() && !QueuedOSD.IsAwaitFeedback()) {
-                if (g_debugLevel >= DEBUG_LEVEL_DEBUG) LogToConsole(256, "[DEBUG] OSD: %s\n", QueuedOSD.toString().c_str());
+                if (g_debugLevel >= DEBUG_LEVEL_DEBUG) LogToConsole("[DEBUG] OSD: %s\n", QueuedOSD.toString().c_str());
                 OpenOSDPanel();
                 DAW::ShowOSD(QueuedOSD);
                 QueuedOSD = osd_data();
@@ -4494,12 +4492,12 @@ public:
             try {
                 pages_[currentPageIndex_]->Run();
             } catch (const ReloadPluginException& e) {
-                if (g_debugLevel >= DEBUG_LEVEL_NOTICE) LogToConsole(256, "[NOTICE] RELOADING: %s\n", e.what());
+                if (g_debugLevel >= DEBUG_LEVEL_NOTICE) LogToConsole("[NOTICE] RELOADING: %s\n", e.what());
                 ResetWidgets();
                 ShutdownLearn();
                 CloseAllDialogs();
             } catch (const std::exception& e) {
-                LogToConsole(256, "[ERROR] # CSurfIntegrator::RUN: %s\n", e.what());
+                LogToConsole("[ERROR] # CSurfIntegrator::RUN: %s\n", e.what());
                 LogStackTraceToConsole();
             }
         }
@@ -4514,7 +4512,7 @@ public:
          
          int duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count() - start;
          
-         LogToConsole(256, "%d microseconds\n", duration);
+         LogToConsole("%d microseconds\n", duration);
          }
         */
     }
@@ -4535,7 +4533,7 @@ public:
  
  int duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count() - start;
  
- LogToConsole(256, "%d microseconds\n", duration);
+ LogToConsole("%d microseconds\n", duration);
  
  */
 

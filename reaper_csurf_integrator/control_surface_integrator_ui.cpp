@@ -163,7 +163,7 @@ struct FXCell
     
     void SetNameWidget(Widget *widget, const char *displayWidgetName, const char *paramName)
     {
-        if (g_debugLevel >= DEBUG_LEVEL_DEBUG) LogToConsole(256, "[DEBUG] SetNameWidget %s %s %s\n", widget->GetName(), displayWidgetName, paramName);
+        if (g_debugLevel >= DEBUG_LEVEL_DEBUG) LogToConsole("[DEBUG] SetNameWidget %s %s %s\n", widget->GetName(), displayWidgetName, paramName);
         for (auto displayWidget : displayWidgets)
         {
             if(IsSameString(displayWidget->GetName(), displayWidgetName))
@@ -553,8 +553,8 @@ static void LoadTemplates(SurfaceFXTemplate *fxTemplate)
     }
     catch (const std::exception& e)
     {
-        LogToConsole(256, "[ERROR] FAILED to LoadTemplates in %s\n", zoneInfo["FXRowLayout"].filePath.c_str());
-        LogToConsole(2048, "Exception: %s\n", e.what());
+        LogToConsole("[ERROR] FAILED to LoadTemplates in %s\n", zoneInfo["FXRowLayout"].filePath.c_str());
+        LogToConsole("Exception: %s\n", e.what());
     }
 
     try
@@ -619,8 +619,8 @@ static void LoadTemplates(SurfaceFXTemplate *fxTemplate)
     }
     catch (const std::exception& e)
     {
-        LogToConsole(256, "[ERROR] FAILED to LoadTemplates in %s\n", zoneInfo["FXWidgetLayout"].filePath.c_str());
-        LogToConsole(2048, "Exception: %s\n", e.what());
+        LogToConsole("[ERROR] FAILED to LoadTemplates in %s\n", zoneInfo["FXWidgetLayout"].filePath.c_str());
+        LogToConsole("Exception: %s\n", e.what());
     }
 }
 
@@ -649,8 +649,8 @@ static void WriteBoilerPlate(FILE *fxFile, string &fxBoilerplatePath)
     }
     catch (const std::exception& e)
     {
-        LogToConsole(256, "[ERROR] FAILED to WriteBoilerPlate in %s, around line %d\n", fxBoilerplatePath.c_str(), lineNumber);
-        LogToConsole(2048, "Exception: %s\n", e.what());
+        LogToConsole("[ERROR] FAILED to WriteBoilerPlate in %s, around line %d\n", fxBoilerplatePath.c_str(), lineNumber);
+        LogToConsole("Exception: %s\n", e.what());
     }
 }
 
@@ -866,8 +866,8 @@ static void SaveZone(SurfaceFXTemplate *t)
     }
     catch (const std::exception& e)
     {
-        LogToConsole(256, "[ERROR] FAILED to SaveZone %s\n", path);
-        LogToConsole(2048, "Exception: %s\n", e.what());
+        LogToConsole("[ERROR] FAILED to SaveZone %s\n", path);
+        LogToConsole("Exception: %s\n", e.what());
     }
 }
 
@@ -3685,7 +3685,7 @@ WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                     if (versionProp)
                     {
                         if (!IsSameString(versionProp, s_MajorVersionToken)) {
-                            LogToConsole(MEDBUF, __LOCALIZE_VERFMT("[ERROR] CSI.ini version mismatch. -- Your CSI.ini file is not %s.\n", "csi_mbox"), s_MajorVersionToken);
+                            LogToConsole("[ERROR] CSI.ini version mismatch. -- Your CSI.ini file is not %s.\n", s_MajorVersionToken);
                             //FIXME: so what? make backup and generate new, or at least prompt to confirm
                             iniFile.close();
                             break;

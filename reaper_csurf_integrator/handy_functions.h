@@ -68,25 +68,35 @@ enum DebugLevel {
     DEBUG_LEVEL_DEBUG   = 4
 };
 
-template <typename... Args>
-static void LogToConsole(int size, const char* format, Args... args)
-{
-    vector<char> buffer(size);
-    snprintf(buffer.data(), buffer.size(), format, args...);
-    ShowConsoleMsg(buffer.data());
-#ifdef _DEBUG
+static void LogMessage(const char* msg) {
     ofstream logFile(string(GetResourcePath()) + "/CSI/CSI.log", ios::app);
-    if (logFile.is_open())
-    {
+    if (logFile.is_open()) {
         char timeStr[32];
         time_t rawtime;
         time(&rawtime);
         struct tm* timeinfo = localtime(&rawtime);
         strftime(timeStr, sizeof(timeStr), "[%y-%m-%d %H:%M:%S] ", timeinfo);
 
-        logFile << timeStr << buffer.data();
+        logFile << timeStr << msg;
     }
-#endif
+}
+
+template <size_t N, typename... Args>
+static void LogToConsole(const char (&format)[N], Args&&... args) {
+    std::vector<char> buffer(2048);
+    std::snprintf(buffer.data(), buffer.size(), format, std::forward<Args>(args)...);
+    ShowConsoleMsg(buffer.data());
+    // #ifdef _DEBUG
+        LogMessage(buffer.data());
+    // #endif
+}
+
+// For literal-only messages with no formatting
+static void LogToConsole(const char* message) {
+    ShowConsoleMsg(message);
+    // #ifdef _DEBUG
+        LogMessage(message);
+    // #endif
 }
 
 static void LogStackTraceToConsole() {
@@ -104,7 +114,7 @@ static void LogStackTraceToConsole() {
 #ifdef _DEBUG
   #if defined(__cpp_lib_stacktrace)
     auto trace = stacktrace::current();
-    LogToConsole(256, "===== Stack Trace Start =====\n");
+    LogToConsole("===== Stack Trace Start =====\n");
     for (const auto& frame : trace) {
         stringstream ss;
         ss << frame;
@@ -119,12 +129,12 @@ static void LogStackTraceToConsole() {
             if (pos != string::npos)
                 line = line.substr(0, pos);
 
-            LogToConsole(1024, "%s\n", line.c_str());
+            LogToConsole("%s\n", line.c_str());
         }
     }
-    LogToConsole(256, "===== Stack Trace End =====\n");
+    LogToConsole("===== Stack Trace End =====\n");
   #else
-    LogToConsole(256, "LogStackTraceToConsole not supported on this compiler. Refer to reaper_csurf_integrator/handy_functions.h LogStackTraceToConsole() on how to enable it.\n");
+    LogToConsole("LogStackTraceToConsole not supported on this compiler. Refer to reaper_csurf_integrator/handy_functions.h LogStackTraceToConsole() on how to enable it.\n");
   #endif
 #endif
 }

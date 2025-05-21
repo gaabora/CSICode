@@ -362,7 +362,7 @@ public:
         SendMidiMessage(0x93, midiFeedbackMessage1_.midi_message[1],  color.b);
 
         if (g_debugLevel >= DEBUG_LEVEL_DEBUG) {
-            LogToConsole(256, "[DEBUG] [%s] ForceColorValue %d %d %d\n", widget_->GetName(), color.r, color.g, color.b);
+            LogToConsole("[DEBUG] [%s] ForceColorValue %d %d %d\n", widget_->GetName(), color.r, color.g, color.b);
         }
     }
 };
@@ -968,7 +968,7 @@ public:
         
         SendMidiSysExMessage(&midiSysExData.evt);
         if (g_debugLevel >= DEBUG_LEVEL_DEBUG) {
-            LogToConsole(256, "[DEBUG] [%s] ForceColorValue %d %d %d\n", widget_->GetName(), color.r, color.g, color.b);
+            LogToConsole("[DEBUG] [%s] ForceColorValue %d %d %d\n", widget_->GetName(), color.r, color.g, color.b);
         }
     }
 };
@@ -1004,7 +1004,7 @@ public:
         SendMidiMessage(0x92, midiFeedbackMessage1_.midi_message[1], color.g / 2);
         SendMidiMessage(0x93, midiFeedbackMessage1_.midi_message[1], color.b / 2);
         if (g_debugLevel >= DEBUG_LEVEL_DEBUG) {
-            LogToConsole(256, "[DEBUG] [%s] ForceColorValue %d %d %d\n", widget_->GetName(), color.r, color.g, color.b);
+            LogToConsole("[DEBUG] [%s] ForceColorValue %d %d %d\n", widget_->GetName(), color.r, color.g, color.b);
         }
     }
 };
@@ -1045,7 +1045,7 @@ public:
         SendMidiMessage(0x92, midiFeedbackMessage1_.midi_message[1], color.g / 2);
         SendMidiMessage(0x93, midiFeedbackMessage1_.midi_message[1], color.b / 2);
         if (g_debugLevel >= DEBUG_LEVEL_DEBUG) {
-            LogToConsole(256, "[DEBUG] [%s] ForceColorValue %d %d %d\n", widget_->GetName(), color.r, color.g, color.b);
+            LogToConsole("[DEBUG] [%s] ForceColorValue %d %d %d\n", widget_->GetName(), color.r, color.g, color.b);
         }
     }
     
@@ -2754,7 +2754,7 @@ public:
     // Commenting out the code so that LED is not forced off on load.
     virtual void ForceClear() override
     {
-        if (g_debugLevel >= DEBUG_LEVEL_NOTICE) LogToConsole(2048, "[NOTICE] # ForceClear do not force LED off\n");
+        if (g_debugLevel >= DEBUG_LEVEL_NOTICE) LogToConsole("[NOTICE] # ForceClear do not force LED off\n");
         // rgba_color color;
         // ForceColorValue(color);
     }
@@ -2778,7 +2778,7 @@ public:
             // Commenting this out prevents turning off the LED.
             if (colorInt == 0)
             {
-                if (g_debugLevel >= DEBUG_LEVEL_NOTICE) LogToConsole(2048, "[NOTICE] ForceColorValue ignores color=0, do not force LED off\n");
+                if (g_debugLevel >= DEBUG_LEVEL_NOTICE) LogToConsole("[NOTICE] ForceColorValue ignores color=0, do not force LED off\n");
                 // SendMidiMessage(midiFeedbackMessage1_.midi_message[0] + 1, midiFeedbackMessage1_.midi_message[1], 17); // turn off led
             }
             else
@@ -2788,7 +2788,7 @@ public:
             }
         }
         if (g_debugLevel >= DEBUG_LEVEL_DEBUG) {
-            LogToConsole(256, "[DEBUG] [%s] ForceColorValue %d %d %d\n", widget_->GetName(), color.r, color.g, color.b);
+            LogToConsole("[DEBUG] [%s] ForceColorValue %d %d %d\n", widget_->GetName(), color.r, color.g, color.b);
         }
     }
 };
