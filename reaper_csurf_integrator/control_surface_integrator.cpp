@@ -1599,9 +1599,10 @@ ActionContext::ActionContext(CSurfIntegrator *const csi, Action *action, Widget 
 
         commandText_ = DAW::GetCommandName(commandId_);
 
-        for (size_t i = 0; i < sizeof(ReloadingCommands); ++i) {
-            if (ReloadingCommands[i] == commandId_) {
+        for (int id : GetCSI()->GetReloadingCommandIds()) {
+            if (id == commandId_) {
                 needsReloadAfterRun_ = true;
+                break;
             }
         }
 
@@ -2991,8 +2992,18 @@ void ZoneManager::LoadZoneFile(Zone *zone, const char *filePath, const char *wid
                 // For legacy .zon definitions
                 if (tokens[1] == "NullDisplay")
                     continue;
-                
-                ActionContext *context = zone->AddActionContext(widget, modifier, zone, tokens[1].c_str(), memberParams);
+
+                ActionContext *context;
+                try {
+                    context = zone->AddActionContext(widget, modifier, zone, tokens[1].c_str(), memberParams);
+                } catch (const std::exception& e) {
+                    LogToConsole("[ERROR] FAILED to AddActionContext for line '%s': %s\n", line.c_str(), e.what());
+                    continue;
+                }
+
+                if (context == NULL)
+                    continue;
+
 
                 if (isValueInverted)
                     context->SetIsValueInverted();

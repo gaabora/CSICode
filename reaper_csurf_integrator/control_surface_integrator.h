@@ -769,14 +769,6 @@ public:
 
     const char* GetActionTitle();
 
-    inline static const int ReloadingCommands[] = {
-        REAPER__CONTROL_SURFACE_REFRESH_ALL_SURFACES
-       ,REAPER__RESET_ALL_MIDI_CONTROL_SURFACE_DEVICES
-       ,REAPER__FILE_NEW_PROJECT
-       ,REAPER__FILE_OPEN_PROJECT
-       ,REAPER__CLOSE_CURRENT_PROJECT_TAB
-       ,REAPER__TRACK_INSERT_TRACK_FROM_TEMPLATE
-   };
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -3115,10 +3107,11 @@ protected:
             // Check if the selected track is in the current folder
             MediaTrack* parentTrack = GetParentTrack(selectedTrack);
             int parentTrackId = parentTrack ? GetIdFromTrack(parentTrack) : 0;
-            if (currentFolderTrackID_ = parentTrackId)
+
+            if (currentFolderTrackID_ != parentTrackId)
             {
                 // If not, chenge the current folder to the selected track's parent
-                currentFolderTrackID_ = parentTrack ? GetIdFromTrack(parentTrack) : 0;
+                currentFolderTrackID_ = parentTrackId;
                 RebuildTracks();
             }
 
@@ -4182,6 +4175,14 @@ private:
         
         return strtod (tmp, NULL);
     }
+    inline static std::vector<int> reloadingCommandIds_ = {
+        REAPER__CONTROL_SURFACE_REFRESH_ALL_SURFACES,
+        REAPER__RESET_ALL_MIDI_CONTROL_SURFACE_DEVICES,
+        REAPER__FILE_NEW_PROJECT,
+        REAPER__FILE_OPEN_PROJECT,
+        REAPER__CLOSE_CURRENT_PROJECT_TAB,
+        REAPER__TRACK_INSERT_TRACK_FROM_TEMPLATE
+    };
 
 public:
     CSurfIntegrator();
@@ -4457,8 +4458,16 @@ public:
         TrackFX_GetParamName(track, fxIndex, paramIndex, buf, bufsz);
         return buf;
     }
-        
-    //int repeats = 0;
+
+    void AddReloadingCommandId(int commandId) {
+        if (std::find(reloadingCommandIds_.begin(), reloadingCommandIds_.end(), commandId) == reloadingCommandIds_.end()) {
+            reloadingCommandIds_.push_back(commandId);
+        }
+    }
+
+    const std::vector<int>& GetReloadingCommandIds() {
+        return reloadingCommandIds_;
+    }
     
     void ShowErrorOSD(string text) {
         ForceOSD(text, osd_data::COLOR_ERROR);
