@@ -208,6 +208,7 @@ enum PropertyType {
   D(SurfaceFolder) \
   D(ZoneFolder) \
   D(FXZoneFolder) \
+  D(NavType) \
 
   PropertyType_Unknown = 0, // in this case, string is type=value pair
 #define DEFPT(x) PropertyType_##x ,
@@ -426,6 +427,14 @@ public:
     
     void SetIsPanRightTouched(bool isPanRightTouched) { isPanRightTouched_ = isPanRightTouched; }
     bool GetIsPanRightTouched() { return isPanRightTouched_;  }
+
+    inline static const vector<string> NAVIGATOR_TYPES = {
+         "Track"
+        ,"FixedTrack"
+        ,"MasterTrack"
+        ,"SelectedTrack"
+        ,"FocusedFX"
+    };
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1210,8 +1219,13 @@ void GetPropertiesFromTokens(int start, int finish, const vector<string> &tokens
 struct CSIZoneInfo
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-    string filePath;
+    bool isLoaded = false;
+    bool isReferenced = false;
+    bool isSubZone = false;
+    bool isFxZone = false;
+    string navigator;
     string alias;
+    string filePath;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1495,6 +1509,8 @@ public:
 
         zoneInfo_.clear();
     }
+
+    inline static const char* PIPE_CHARACTER = "|";
     
     void Initialize();
     
@@ -1884,6 +1900,10 @@ public:
             zoneInfo_[name] = zoneInfo;
         } else {
             CSIZoneInfo &info = zoneInfo_[name];
+            if (!IsSameString(GetRelativePath(zoneInfo.filePath.c_str()), GetRelativePath(zoneInfo_[name].filePath.c_str()))) {
+                if (g_debugLevel >= DEBUG_LEVEL_WARNING) LogToConsole("[WARNING] Skipping file '%s': A zone named '%s' has already been loaded. Duplicate zones are not allowed.\n", GetRelativePath(zoneInfo_[name].filePath.c_str()), name.c_str());
+                return;
+            }
             info.alias = zoneInfo.alias;
         }
     }

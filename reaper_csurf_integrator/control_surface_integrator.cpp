@@ -1519,7 +1519,6 @@ ActionContext::ActionContext(CSurfIntegrator *const csi, Action *action, Widget 
     }
     GetPropertiesFromTokens(0, (int)(paramsAndProperties).size(), paramsAndProperties, widgetProperties_);
 
-    
     const char* feedback = widgetProperties_.get_prop(PropertyType_Feedback);
     if (feedback && IsSameString(feedback, "No"))
         provideFeedback_ = false;
@@ -1674,6 +1673,10 @@ void ActionContext::ProcessActionTitle(string origName)
     const char* actionName = this->GetAction()->GetName();
     const char* stringParam = this->GetStringParam();
     
+    // switch (expression) {
+    // case constant1:
+    //     // code to execute if expression == constant1
+    //     break;
     if (IsSameString(actionName, "TrackAutoMode"))
         actionTitle_ = string("Automation: ") + TrackNavigationManager::GetAutoModeDisplayNameNoOverride(atoi(stringParam));
     else if (IsSameString(stringParam, "{")|| IsSameString(stringParam, "["))
@@ -2323,7 +2326,7 @@ void Zone::Activate()
 
 void Zone::Deactivate()
 {
-    if (! isActive_)
+    if (!isActive_)
         return;
     for (auto &widget : widgets_)
     {
@@ -2617,7 +2620,7 @@ void  Widget::ForceClear()
 
 void Widget::LogInput(double value)
 {
-    if (g_surfaceInDisplay) LogToConsole("IN <- %s %s %f\n", GetSurface()->GetName(), GetName(), value);
+    if (g_surfaceInDisplay) LogToConsole("wIN <- %s %s %f\n", GetSurface()->GetName(), GetName(), value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2722,33 +2725,65 @@ void ZoneManager::Initialize()
 
     homeZone_ = make_unique<Zone>(csi_, this, GetSelectedTrackNavigator(), 0, "Home", "Home", zoneInfo_["Home"].filePath);
     LoadZoneFile(homeZone_.get(), "");
+    zoneInfo_["Home"].isLoaded = true;
+    zoneInfo_["Home"].isReferenced = true;
     
-    vector<string> zoneList;
-    if (zoneInfo_.find("GoZones") != zoneInfo_.end())
-        LoadZoneMetadata(zoneInfo_["GoZones"].filePath.c_str(), zoneList);
-    LoadZones(goZones_, zoneList);
-    
-    if (zoneInfo_.find("LastTouchedFXParam") != zoneInfo_.end())
-    {
+    if (zoneInfo_.find("LastTouchedFXParam") != zoneInfo_.end()) {
         lastTouchedFXParamZone_ = make_shared<Zone>(csi_, this, GetFocusedFXNavigator(), 0, "LastTouchedFXParam", "LastTouchedFXParam", zoneInfo_["LastTouchedFXParam"].filePath);
         LoadZoneFile(lastTouchedFXParamZone_.get(), "");
+        zoneInfo_["LastTouchedFXParam"].isLoaded = true;
     }
-        
+
+    vector<string> zoneList;
+
+    if (zoneInfo_.find("GoZones") != zoneInfo_.end()) {
+        if (g_debugLevel >= DEBUG_LEVEL_NOTICE) LogToConsole("[NOTICE] GoZones.zon is DEPRICATED and support of file will be removed in future.\n");
+        LoadZoneMetadata(zoneInfo_["GoZones"].filePath.c_str(), zoneList);
+
+        try {
+            LoadZones(goZones_, zoneList);
+        } catch (const std::exception& e) {
+            LogToConsole("[ERROR] %s in GoZones section in file %s\n", e.what(), GetRelativePath(zoneInfo_["GoZones"].filePath.c_str()));
+        }
+    } else {
+        for (const auto& entry : zoneInfo_) {
+            if (IsSameString(entry.first, "FXEpilogue")
+             || IsSameString(entry.first, "FXPrologue")
+             || IsSameString(entry.first, "FXRowLayout")
+             || IsSameString(entry.first, "FXWidgetLayout")
+             || IsSameString(entry.first, "GoZones")
+            ) continue;
+            if (!entry.second.isLoaded ){//&& !entry.second.isFxZone) {
+                zoneList.push_back(entry.first);
+            }
+        }
+        LoadZones(goZones_, zoneList);
+    
+        for (const auto& entry : zoneInfo_) {
+            CSIZoneInfo zoneInfo = entry.second;
+            if (zoneInfo.isLoaded && !zoneInfo.isReferenced)
+                if (g_debugLevel >= DEBUG_LEVEL_WARNING) LogToConsole("[WARNING] Zone '%s' was loaded but never referenced! (%s)\n", entry.first.c_str(), GetRelativePath(zoneInfo.filePath.c_str()));
+            if (!zoneInfo.isLoaded && zoneInfo.isReferenced)
+                LogToConsole("[ERROR] Zone '%s' was referenced but not loaded! (%s)\n", entry.first.c_str(), GetRelativePath(zoneInfo.filePath.c_str()));
+        }
+    }
+
     homeZone_->Activate();
 }
 
 void ZoneManager::PreProcessZoneFile(const string &filePath)
 {
-    try
-    {
+    try {
         ifstream file(filePath);
         
         CSIZoneInfo info;
         info.filePath = filePath;
 
         if (g_debugLevel >= DEBUG_LEVEL_DEBUG) LogToConsole("[DEBUG] PreProcessZoneFile: %s\n", GetRelativePath(filePath.c_str()));
-        for (string line; getline(file, line) ; )
-        {
+
+        info.isFxZone = 0 == strncmp(fxZoneFolder_.c_str(), filePath.c_str(), fxZoneFolder_.length());
+
+        for (string line; getline(file, line);) {
             TrimLine(line);
             
             if (IsCommentedOrEmpty(line))
@@ -2757,9 +2792,27 @@ void ZoneManager::PreProcessZoneFile(const string &filePath)
             vector<string> tokens;
             GetTokens(tokens, line);
 
-            if (tokens[0] == "Zone" && tokens.size() > 1)
-            {
+            PropertyList pList;
+            GetPropertiesFromTokens(0, (int) tokens.size(), tokens, pList);
+// "AU:", "AUi:", "VST:", "VST3:", "VST3i:", "VSTi:", "JS:", "Rewire:", "CLAP:", "CLAPi:", 
+            if (tokens[0] == "Zone" && tokens.size() > 1) {
                 info.alias = tokens.size() > 2 ? tokens[2] : tokens[1];
+
+                if (const char *propValue =  pList.get_prop(PropertyType_NavType)) {
+                    for (size_t i = 0; i < Navigator::NAVIGATOR_TYPES.size(); ++i) {
+                        if (Navigator::NAVIGATOR_TYPES[i] == propValue) {
+                            info.navigator = propValue;
+                            break;
+                        }
+                    }
+                    if (info.navigator.empty()) LogToConsole("[ERROR] Invalid value for property NavType=%s (supported: %s) in file %s\n"
+                        ,propValue
+                        ,JoinStringVector(Navigator::NAVIGATOR_TYPES, ", ").c_str()
+                        ,GetRelativePath(filePath.c_str())
+                    );
+                }
+                //TODO: GoSubZone LeaveSubZone GoZone GoHome validity check
+
                 AddZoneFilePath(tokens[1], info);
             }
 
@@ -2844,45 +2897,52 @@ void ZoneManager::GetNavigatorsForZone(const char *zoneName, const char *navigat
         navigators.push_back(GetSelectedTrackNavigator());
 }
 
-void ZoneManager::LoadZones(vector<unique_ptr<Zone>> &zones, vector<string> &zoneList)
-{
-    for (int i = 0; i < zoneList.size(); ++i)
-    {
+void ZoneManager::LoadZones(vector<unique_ptr<Zone>>& zones, vector<string>& zoneList) {
+    string missingZoneNames;
+
+    for (const string& line : zoneList) {
         vector<string> tokens;
-        GetTokens(tokens, zoneList[i]);
-        
-        char zoneName[MEDBUF];
-        snprintf(zoneName, sizeof(zoneName), "%s", tokens[0].c_str());
-        
-        char navigatorName[MEDBUF];
-        navigatorName[0] = 0;
-        if(tokens.size() > 1)
-            snprintf(navigatorName, sizeof(navigatorName), "%s", tokens[1].c_str());
-    
-        if (zoneInfo_.find(zoneName) != zoneInfo_.end())
-        {
-            vector<Navigator *> navigators;
-            GetNavigatorsForZone(zoneName, navigatorName, navigators);
-            
-            if (navigators.size() == 1)
-            {
-                zones.push_back(make_unique<Zone>(csi_, this, navigators[0], 0, string(zoneName), zoneInfo_[zoneName].alias, zoneInfo_[zoneName].filePath));
-                LoadZoneFile(zones.back().get(), "");
-            }
-            else if (navigators.size() > 1)
-            {
-                for (int j = 0; j < navigators.size(); ++j)
-                {
-                    char buf[MEDBUF];
-                    snprintf(buf, sizeof(buf), "%s%d", string(zoneName).c_str(), j + 1);
-                    
-                    zones.push_back(make_unique<Zone>(csi_, this, navigators[j], j, string(zoneName), string(buf), zoneInfo_[zoneName].filePath));
-                    snprintf(buf, sizeof(buf), "%d", j + 1);
-                    LoadZoneFile(zones.back().get(), buf);
+        GetTokens(tokens, line);
+
+        if (tokens.empty()) continue;
+
+        const string& zoneName = tokens[0];
+        string navigatorName = tokens.size() > 1 ? tokens[1] : "";
+
+        const auto& zoneInfoPair = zoneInfo_.find(zoneName);
+        if (zoneInfoPair == zoneInfo_.end()) {
+            missingZoneNames += " " + zoneName;
+            continue;
+        }
+
+        CSIZoneInfo& zoneInfo = zoneInfoPair->second;
+        vector<Navigator*> navigators;
+        GetNavigatorsForZone(zoneName.c_str(), navigatorName.c_str(), navigators);
+
+        if (navigators.empty()) continue;
+        for (int j = 0; j < navigators.size(); ++j) {
+            string alias = (navigators.size() == 1) ? zoneInfo.alias : zoneInfo.alias + to_string(j + 1);
+            string indexSuffix = (navigators.size() == 1) ? "" : to_string(j + 1);
+
+            bool alreadyLoaded = false;
+            for (int i = 0; i < zones.size(); ++i) {
+                if (zones[i]->GetName() == zoneName && zones[i]->GetNavigator()->GetName() == navigators[j]->GetName()) {
+                    alreadyLoaded = true;
+                    break;
                 }
             }
+            if (alreadyLoaded)
+                continue;
+
+            auto zone = make_unique<Zone>(csi_, this, navigators[j], j, zoneName, alias, zoneInfo.filePath);
+            LoadZoneFile(zone.get(), indexSuffix.c_str());
+            zones.push_back(std::move(zone));
+            zoneInfo.isLoaded = true;
         }
     }
+
+    if (!missingZoneNames.empty())
+        LogToConsole("No .zon files found for zones: %s\n", missingZoneNames.c_str());
 }
 
 void ZoneManager::LoadZoneFile(Zone *zone, const char *widgetSuffix)
@@ -2915,8 +2975,11 @@ void ZoneManager::LoadZoneFile(Zone *zone, const char *filePath, const char *wid
             if (line == s_BeginAutoSection || line == s_EndAutoSection)
                 continue;
             
-            ReplaceAllWith(line, "|", widgetSuffix);
-            
+            ReplaceAllWith(line, ZoneManager::PIPE_CHARACTER, widgetSuffix); //TODO: VALIDATION for PIPE_CHARACTER missuze
+// only be used in contexts where CSI dynamically generates multiple Zones:
+//   Track (expands to Track1, Track2, etc.), SelectedTracks, TrackFXMenu/SelectedTrackFXMenu, TrackSend/SelectedTrackSend, TrackReceive/SelectedTrackReceive, Folder/VCA
+// NOT to use in SelectedTrack, FX zones. In these cases, each widget should be explicitly defined.
+
             vector<string> tokens;
             GetTokens(tokens, line);
             
@@ -2949,6 +3012,10 @@ void ZoneManager::LoadZoneFile(Zone *zone, const char *filePath, const char *wid
             
             else if (tokens.size() > 1)
             {
+                if (tokens.size() < 2) {
+                    LogToConsole("[ERROR] Not enough params at line %d in %s\n", lineNumber, GetRelativePath(filePath));
+                    continue;
+                }
                 string widgetName;
                 int modifier = 0;
                 bool isValueInverted = false;
@@ -2987,6 +3054,17 @@ void ZoneManager::LoadZoneFile(Zone *zone, const char *filePath, const char *wid
                 if (context == NULL)
                     continue;
 
+                if (IsSameString(tokens[1], "GoZone") || IsSameString(tokens[1], "GoSubZone")) {
+                    string zoneName = context->GetStringParam();
+                    if (zoneInfo_.find(zoneName) != zoneInfo_.end()) {
+                        zoneInfo_[zoneName].isReferenced = true;
+                    }
+                }
+                if (IsSameString(tokens[1], "LastTouchedFXParam")) {
+                    if (zoneInfo_.find("LastTouchedFXParam") != zoneInfo_.end()) {
+                        zoneInfo_["LastTouchedFXParam"].isReferenced = true;
+                    }
+                }
 
                 if (isValueInverted)
                     context->SetIsValueInverted();
@@ -3018,6 +3096,10 @@ void ZoneManager::LoadZoneFile(Zone *zone, const char *filePath, const char *wid
                     context->SetRange(range);
                 }
             }
+        }
+
+        if (zoneInfo_.find(zone->GetName()) != zoneInfo_.end()) {
+            zoneInfo_[zone->GetName()].isLoaded = true;
         }
     }
     catch (const std::exception& e)
