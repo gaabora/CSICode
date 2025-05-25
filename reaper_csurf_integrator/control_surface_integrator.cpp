@@ -2897,6 +2897,7 @@ void ZoneManager::GetNavigatorsForZone(const char *zoneName, const char *navigat
         navigators.push_back(GetSelectedTrackNavigator());
 }
 
+
 void ZoneManager::LoadZones(vector<unique_ptr<Zone>>& zones, vector<string>& zoneList) {
     string missingZoneNames;
 
@@ -2921,21 +2922,26 @@ void ZoneManager::LoadZones(vector<unique_ptr<Zone>>& zones, vector<string>& zon
 
         if (navigators.empty()) continue;
         for (int j = 0; j < navigators.size(); ++j) {
-            string alias = (navigators.size() == 1) ? zoneInfo.alias : zoneInfo.alias + to_string(j + 1);
-            string indexSuffix = (navigators.size() == 1) ? "" : to_string(j + 1);
+            string alias = zoneInfo.alias;
+            string widgetSuffix = "";
 
-            bool alreadyLoaded = false;
-            for (int i = 0; i < zones.size(); ++i) {
-                if (zones[i]->GetName() == zoneName && zones[i]->GetNavigator()->GetName() == navigators[j]->GetName()) {
-                    alreadyLoaded = true;
-                    break;
+            if (navigators.size() == 1) {
+                bool alreadyLoaded = false;
+                for (int i = 0; i < zones.size(); ++i) {
+                    if (zones[i]->GetName() == zoneName && zones[i]->GetNavigator()->GetName() == navigators[j]->GetName()) {
+                        alreadyLoaded = true;
+                        break;
+                    }
                 }
+                if (alreadyLoaded)
+                    continue;
+            } else {
+                alias += to_string(j + 1);
+                widgetSuffix = to_string(j + 1);
             }
-            if (alreadyLoaded)
-                continue;
 
             auto zone = make_unique<Zone>(csi_, this, navigators[j], j, zoneName, alias, zoneInfo.filePath);
-            LoadZoneFile(zone.get(), indexSuffix.c_str());
+            LoadZoneFile(zone.get(), widgetSuffix.c_str());
             zones.push_back(std::move(zone));
             zoneInfo.isLoaded = true;
         }
