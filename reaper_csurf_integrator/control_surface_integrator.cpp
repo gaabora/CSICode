@@ -2799,17 +2799,17 @@ void ZoneManager::PreProcessZoneFile(const string &filePath)
                 info.alias = tokens.size() > 2 ? tokens[2] : tokens[1];
 
                 if (const char *propValue =  pList.get_prop(PropertyType_NavType)) {
-                    for (size_t i = 0; i < Navigator::NAVIGATOR_TYPES.size(); ++i) {
-                        if (Navigator::NAVIGATOR_TYPES[i] == propValue) {
-                            info.navigator = propValue;
-                            break;
-                        }
+                    NavigatorType type = Navigator::NameToType(propValue);
+
+                    if (type != NavigatorType::Invalid) {
+                        info.navigator = propValue;
+                    } else {
+                        LogToConsole("[ERROR] Invalid value for property NavType=%s (supported: %s) in file %s\n"
+                            ,propValue
+                            ,JoinStringVector(Navigator::GetSupportedNames(), ", ").c_str()
+                            ,GetRelativePath(filePath.c_str())
+                        );
                     }
-                    if (info.navigator.empty()) LogToConsole("[ERROR] Invalid value for property NavType=%s (supported: %s) in file %s\n"
-                        ,propValue
-                        ,JoinStringVector(Navigator::NAVIGATOR_TYPES, ", ").c_str()
-                        ,GetRelativePath(filePath.c_str())
-                    );
                 }
                 //TODO: GoSubZone LeaveSubZone GoZone GoHome validity check
 
