@@ -1092,9 +1092,10 @@ public:
         int fxParamNum;
         if (GetLastTouchedFX(&trackNum, &fxSlotNum, &fxParamNum)) {
             if (lastTrackNum_ != trackNum || fxSlotNum_ != fxSlotNum || fxParamNum_ != fxParamNum ) {
-                track_ = DAW::GetTrack(lastTrackNum_);
+                track_ = DAW::GetTrack(trackNum);
                 if (track_) {
                     trackName_ = DAW::GetTrackName(track_);
+                    lastTrackNum_ = trackNum;
                     fxSlotNum_ = fxSlotNum;
                     fxParamNum_ = fxParamNum;
                     fxParamDescription_ = DAW::GetFxParamDescription(track_, fxSlotNum_, fxParamNum_);
