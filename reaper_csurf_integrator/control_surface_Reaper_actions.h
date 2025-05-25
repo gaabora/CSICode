@@ -14,7 +14,7 @@ class FXParam : public FXAction
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char* GetName() override { return "FXParam"; }
+    ActionType GetType() const override { return ActionType::FXParam; }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -22,7 +22,7 @@ class JSFXParam : public FXAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char* GetName() override { return "JSFXParam"; }
+    ActionType GetType() const override { return ActionType::JSFXParam; }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -30,7 +30,7 @@ class TCPFXParam : public FXAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char* GetName() override { return "TCPFXParam"; }
+    ActionType GetType() const override { return ActionType::TCPFXParam; }
 
     virtual bool CheckCurrentContext(ActionContext *context) {
         return context->CheckCurrentTcpFxContext();
@@ -42,7 +42,7 @@ class LastTouchedFXParam : public FXAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char* GetName() override { return "LastTouchedFXParam"; }
+    ActionType GetType() const override { return ActionType::LastTouchedFXParam; }
 
     bool CheckCurrentContext(ActionContext* context) {
         return context->CheckLastTouchedFxContext();
@@ -54,7 +54,7 @@ class ToggleFXBypass : public FXAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "ToggleFXBypass"; }
+    ActionType GetType() const override { return ActionType::ToggleFXBypass; }
    
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -91,7 +91,7 @@ class FXBypassDisplay : public DisplayAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "FXBypassDisplay"; }
+    ActionType GetType() const override { return ActionType::FXBypassDisplay; }
    
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -120,7 +120,7 @@ class ToggleFXOffline : public FXAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "ToggleFXOffline"; }
+    ActionType GetType() const override { return ActionType::ToggleFXOffline; }
    
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -154,7 +154,7 @@ class FXOfflineDisplay : public DisplayAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "FXOfflineDisplay"; }
+    ActionType GetType() const override { return ActionType::FXOfflineDisplay; }
    
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -180,7 +180,7 @@ class TrackVolume : public VolumeAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackVolume"; }
+    ActionType GetType() const override { return ActionType::TrackVolume; }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -188,7 +188,7 @@ class SoftTakeover7BitTrackVolume : public VolumeAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "SoftTakeover7BitTrackVolume"; }
+    ActionType GetType() const override { return ActionType::SoftTakeover7BitTrackVolume; }
     
     virtual void Do(ActionContext *context, double value) override
     {
@@ -214,7 +214,7 @@ class SoftTakeover14BitTrackVolume : public VolumeAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "SoftTakeover14BitTrackVolume"; }
+    ActionType GetType() const override { return ActionType::SoftTakeover14BitTrackVolume; }
     
     virtual void Do(ActionContext *context, double value) override
     {
@@ -240,7 +240,7 @@ class TrackVolumeDB : public VolumeAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackVolumeDB"; }
+    ActionType GetType() const override { return ActionType::TrackVolumeDB; }
     
     virtual double GetCurrentDBValue(ActionContext *context) override
     {
@@ -281,7 +281,7 @@ class TrackPan : public PanAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackPan"; }
+    ActionType GetType() const override { return ActionType::TrackPan; }
     
     virtual double GetCurrentNormalizedValue(ActionContext *context) override
     {
@@ -331,7 +331,7 @@ class TrackPanPercent : public PanAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackPanPercent"; }
+    ActionType GetType() const override { return ActionType::TrackPanPercent; }
 
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -375,7 +375,7 @@ class TrackPanWidth : public PanAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackPanWidth"; }
+    ActionType GetType() const override { return ActionType::TrackPanWidth; }
 
     virtual double GetCurrentNormalizedValue(ActionContext *context) override
     {
@@ -417,7 +417,7 @@ class TrackPanWidthPercent : public PanAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackPanWidthPercent"; }
+    ActionType GetType() const override { return ActionType::TrackPanWidthPercent; }
 
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -453,7 +453,7 @@ class TrackPanL : public PanAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackPanL"; }
+    ActionType GetType() const override { return ActionType::TrackPanL; }
     
     virtual double GetCurrentNormalizedValue(ActionContext *context) override
     {
@@ -497,7 +497,7 @@ class TrackPanLPercent : public PanAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackPanLPercent"; }
+    ActionType GetType() const override { return ActionType::TrackPanLPercent; }
     
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -541,7 +541,7 @@ class TrackPanR : public PanAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackPanR"; }
+    ActionType GetType() const override { return ActionType::TrackPanR; }
     
     virtual double GetCurrentNormalizedValue(ActionContext *context) override
     {
@@ -585,7 +585,7 @@ class TrackPanRPercent : public PanAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackPanRPercent"; }
+    ActionType GetType() const override { return ActionType::TrackPanRPercent; }
     
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -629,7 +629,7 @@ class TrackPanAutoLeft : public PanAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackPanAutoLeft"; }
+    ActionType GetType() const override { return ActionType::TrackPanAutoLeft; }
     
     virtual double GetCurrentNormalizedValue(ActionContext *context) override
     {
@@ -695,7 +695,7 @@ class TrackPanAutoRight : public PanAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackPanAutoRight"; }
+    ActionType GetType() const override { return ActionType::TrackPanAutoRight; }
     
     virtual double GetCurrentNormalizedValue(ActionContext *context) override
     {
@@ -758,7 +758,7 @@ class TrackRecordArm : public SwitchAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackRecordArm"; }
+    ActionType GetType() const override { return ActionType::TrackRecordArm; }
 
     virtual double GetCurrentNormalizedValue(ActionContext *context) override
     {
@@ -792,7 +792,7 @@ class TrackRecordArmDisplay : public DisplayAction
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char* GetName() override { return "TrackRecordArmDisplay"; }
+    ActionType GetType() const override { return ActionType::TrackRecordArmDisplay; }
 
     virtual void RequestUpdate(ActionContext* context) override
     {
@@ -815,7 +815,7 @@ class TrackMute : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackMute"; }
+    ActionType GetType() const override { return ActionType::TrackMute; }
 
     virtual double GetCurrentNormalizedValue(ActionContext *context) override
     {
@@ -855,7 +855,7 @@ class TrackSolo : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackSolo"; }
+    ActionType GetType() const override { return ActionType::TrackSolo; }
     
     virtual double GetCurrentNormalizedValue(ActionContext *context) override
     {
@@ -900,7 +900,7 @@ class TrackInvertPolarity : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackInvertPolarity"; }
+    ActionType GetType() const override { return ActionType::TrackInvertPolarity; }
     
     virtual double GetCurrentNormalizedValue(ActionContext *context) override
     {
@@ -936,7 +936,7 @@ class TrackSelect : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackSelect"; }
+    ActionType GetType() const override { return ActionType::TrackSelect; }
 
     virtual double GetCurrentNormalizedValue(ActionContext *context) override
     {
@@ -971,7 +971,7 @@ class TrackUniqueSelect : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackUniqueSelect"; }
+    ActionType GetType() const override { return ActionType::TrackUniqueSelect; }
 
     virtual double GetCurrentNormalizedValue(ActionContext *context) override
     {
@@ -1006,7 +1006,7 @@ class TrackRangeSelect : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackRangeSelect"; }
+    ActionType GetType() const override { return ActionType::TrackRangeSelect; }
 
     virtual double GetCurrentNormalizedValue(ActionContext *context) override
     {
@@ -1079,7 +1079,7 @@ class TrackSendVolume : public VolumeAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackSendVolume"; }
+    ActionType GetType() const override { return ActionType::TrackSendVolume; }
     
     virtual double GetCurrentNormalizedValue(ActionContext *context) override
     {
@@ -1132,7 +1132,7 @@ class TrackSendVolumeDB : public VolumeAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackSendVolumeDB"; }
+    ActionType GetType() const override { return ActionType::TrackSendVolumeDB; }
     
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -1178,7 +1178,7 @@ class TrackSendPan : public PanAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackSendPan"; }
+    ActionType GetType() const override { return ActionType::TrackSendPan; }
     
     virtual double GetCurrentNormalizedValue(ActionContext *context) override
     {
@@ -1231,7 +1231,7 @@ class TrackSendPanPercent : public PanAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackSendPanPercent"; }
+    ActionType GetType() const override { return ActionType::TrackSendPanPercent; }
     
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -1276,7 +1276,7 @@ class TrackSendMute : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackSendMute"; }
+    ActionType GetType() const override { return ActionType::TrackSendMute; }
     
     virtual double GetCurrentNormalizedValue(ActionContext *context) override
     {
@@ -1313,7 +1313,7 @@ class TrackSendInvertPolarity : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackSendInvertPolarity"; }
+    ActionType GetType() const override { return ActionType::TrackSendInvertPolarity; }
     
     virtual double GetCurrentNormalizedValue(ActionContext *context) override
     {
@@ -1349,7 +1349,7 @@ class TrackSendStereoMonoToggle : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackSendStereoMonoToggle"; }
+    ActionType GetType() const override { return ActionType::TrackSendStereoMonoToggle; }
     
     virtual double GetCurrentNormalizedValue(ActionContext *context) override
     {
@@ -1385,7 +1385,7 @@ class TrackSendPrePost : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackSendPrePost"; }
+    ActionType GetType() const override { return ActionType::TrackSendPrePost; }
        
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -1417,7 +1417,7 @@ class TrackReceiveVolume : public VolumeAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackReceiveVolume"; }
+    ActionType GetType() const override { return ActionType::TrackReceiveVolume; }
     
     virtual double GetCurrentNormalizedValue(ActionContext *context) override
     {
@@ -1465,7 +1465,7 @@ class TrackReceiveVolumeDB : public VolumeAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackReceiveVolumeDB"; }
+    ActionType GetType() const override { return ActionType::TrackReceiveVolumeDB; }
     
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -1508,7 +1508,7 @@ class TrackReceivePan : public PanAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackReceivePan"; }
+    ActionType GetType() const override { return ActionType::TrackReceivePan; }
     
     virtual double GetCurrentNormalizedValue(ActionContext *context) override
     {
@@ -1556,7 +1556,7 @@ class TrackReceivePanPercent : public PanAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackReceivePanPercent"; }
+    ActionType GetType() const override { return ActionType::TrackReceivePanPercent; }
     
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -1596,7 +1596,7 @@ class TrackReceiveMute : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackReceivMute"; }
+    ActionType GetType() const override { return ActionType::TrackReceivMute; }
     
     virtual double GetCurrentNormalizedValue(ActionContext *context) override
     {
@@ -1636,7 +1636,7 @@ class TrackReceiveInvertPolarity : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackReceiveInvertPolarity"; }
+    ActionType GetType() const override { return ActionType::TrackReceiveInvertPolarity; }
     
     virtual double GetCurrentNormalizedValue(ActionContext *context) override
     {
@@ -1672,7 +1672,7 @@ class TrackReceiveStereoMonoToggle : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackReceiveStereoMonoToggle"; }
+    ActionType GetType() const override { return ActionType::TrackReceiveStereoMonoToggle; }
     
     virtual double GetCurrentNormalizedValue(ActionContext *context) override
     {
@@ -1708,7 +1708,7 @@ class TrackReceivePrePost : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackReceivePrePost"; }
+    ActionType GetType() const override { return ActionType::TrackReceivePrePost; }
         
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -1740,7 +1740,7 @@ class FXNameDisplay : public DisplayAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "FXNameDisplay"; }
+    ActionType GetType() const override { return ActionType::FXNameDisplay; }
     
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -1756,7 +1756,7 @@ class FXMenuNameDisplay : public DisplayAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "FXMenuNameDisplay"; }
+    ActionType GetType() const override { return ActionType::FXMenuNameDisplay; }
     
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -1783,7 +1783,7 @@ class SpeakFXMenuName : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "SpeakFXMenuName"; }
+    ActionType GetType() const override { return ActionType::SpeakFXMenuName; }
     
     virtual void Do(ActionContext *context, double value) override
     {
@@ -1808,7 +1808,7 @@ class FXParamNameDisplay : public DisplayAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "FXParamNameDisplay"; }
+    ActionType GetType() const override { return ActionType::FXParamNameDisplay; }
 
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -1833,7 +1833,7 @@ class TCPFXParamNameDisplay : public DisplayAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TCPFXParamNameDisplay"; }
+    ActionType GetType() const override { return ActionType::TCPFXParamNameDisplay; }
 
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -1865,7 +1865,7 @@ class FXParamValueDisplay : public DisplayAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "FXParamValueDisplay"; }
+    ActionType GetType() const override { return ActionType::FXParamValueDisplay; }
 
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -1885,7 +1885,7 @@ class TCPFXParamValueDisplay : public DisplayAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TCPFXParamValueDisplay"; }
+    ActionType GetType() const override { return ActionType::TCPFXParamValueDisplay; }
 
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -1920,7 +1920,7 @@ class LastTouchedFXParamNameDisplay : public DisplayAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "LastTouchedFXParamNameDisplay"; }
+    ActionType GetType() const override { return ActionType::LastTouchedFXParamNameDisplay; }
     
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -1947,7 +1947,7 @@ class LastTouchedFXParamValueDisplay : public DisplayAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "LastTouchedFXParamValueDisplay"; }
+    ActionType GetType() const override { return ActionType::LastTouchedFXParamValueDisplay; }
     
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -1974,7 +1974,7 @@ class TrackSendNameDisplay : public DisplayAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackSendNameDisplay"; }
+    ActionType GetType() const override { return ActionType::TrackSendNameDisplay; }
     
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -1996,7 +1996,7 @@ class SpeakTrackSendDestination : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "SpeakTrackSendDestination"; }
+    ActionType GetType() const override { return ActionType::SpeakTrackSendDestination; }
     
     virtual void Do(ActionContext *context, double value) override
     {
@@ -2026,7 +2026,7 @@ class TrackSendVolumeDisplay : public DisplayAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackSendVolumeDisplay"; }
+    ActionType GetType() const override { return ActionType::TrackSendVolumeDisplay; }
     virtual bool IsVolumeRelated() { return true; }
 
     virtual void RequestUpdate(ActionContext *context) override
@@ -2057,7 +2057,7 @@ class TrackSendPanDisplay : public DisplayAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackSendPanDisplay"; }
+    ActionType GetType() const override { return ActionType::TrackSendPanDisplay; }
     virtual bool IsPanRelated() { return true; }
     
     virtual void RequestUpdate(ActionContext *context) override
@@ -2087,7 +2087,7 @@ class TrackSendStereoMonoDisplay : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackSendStereoMonoDisplay"; }
+    ActionType GetType() const override { return ActionType::TrackSendStereoMonoDisplay; }
     
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -2114,7 +2114,7 @@ class TrackSendPrePostDisplay : public DisplayAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackSendPrePostDisplay"; }
+    ActionType GetType() const override { return ActionType::TrackSendPrePostDisplay; }
     
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -2151,7 +2151,7 @@ class TrackReceiveNameDisplay : public DisplayAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackReceiveNameDisplay"; }
+    ActionType GetType() const override { return ActionType::TrackReceiveNameDisplay; }
     
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -2176,7 +2176,7 @@ class SpeakTrackReceiveSource : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "SpeakTrackReceiveSource"; }
+    ActionType GetType() const override { return ActionType::SpeakTrackReceiveSource; }
     
     virtual void Do(ActionContext *context, double value) override
     {
@@ -2205,7 +2205,7 @@ class TrackReceiveVolumeDisplay : public DisplayAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackReceiveVolumeDisplay"; }
+    ActionType GetType() const override { return ActionType::TrackReceiveVolumeDisplay; }
     virtual bool IsVolumeRelated() { return true; }
     
     virtual void RequestUpdate(ActionContext *context) override
@@ -2232,7 +2232,7 @@ class TrackReceivePanDisplay : public DisplayAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackReceivePanDisplay"; }
+    ActionType GetType() const override { return ActionType::TrackReceivePanDisplay; }
     virtual bool IsPanRelated() { return true; }
 
     virtual void RequestUpdate(ActionContext *context) override
@@ -2260,7 +2260,7 @@ class TrackReceiveStereoMonoDisplay : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackReceiveStereoMonoDisplay "; }
+    ActionType GetType() const override { return ActionType::TrackReceiveStereoMonoDisplay; }
     
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -2287,7 +2287,7 @@ class TrackReceivePrePostDisplay : public DisplayAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackReceivePrePostDisplay"; }
+    ActionType GetType() const override { return ActionType::TrackReceivePrePostDisplay; }
     
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -2324,7 +2324,7 @@ class FixedTextDisplay : public DisplayAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "FixedTextDisplay"; }
+    ActionType GetType() const override { return ActionType::FixedTextDisplay; }
 
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -2337,7 +2337,7 @@ class FixedRGBColorDisplay : public DisplayAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "FixedRGBColorDisplay"; }
+    ActionType GetType() const override { return ActionType::FixedRGBColorDisplay; }
 
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -2350,7 +2350,7 @@ class TrackNameDisplay : public DisplayAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackNameDisplay"; }
+    ActionType GetType() const override { return ActionType::TrackNameDisplay; }
 
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -2372,7 +2372,7 @@ class TrackNumberDisplay : public DisplayAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackNumberDisplay"; }
+    ActionType GetType() const override { return ActionType::TrackNumberDisplay; }
 
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -2394,7 +2394,7 @@ class TrackRecordInputDisplay : public DisplayAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackRecordInputDisplay"; }
+    ActionType GetType() const override { return ActionType::TrackRecordInputDisplay; }
 
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -2450,7 +2450,7 @@ class TrackInvertPolarityDisplay : public DisplayAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackInvertPolarityDisplay"; }
+    ActionType GetType() const override { return ActionType::TrackInvertPolarityDisplay; }
 
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -2471,7 +2471,7 @@ class TrackVolumeDisplay : public DisplayAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackVolumeDisplay"; }
+    ActionType GetType() const override { return ActionType::TrackVolumeDisplay; }
     virtual bool IsVolumeRelated() { return true; }
 
     virtual void RequestUpdate(ActionContext *context) override
@@ -2495,7 +2495,7 @@ class TrackPanDisplay : public DisplayAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackPanDisplay"; }
+    ActionType GetType() const override { return ActionType::TrackPanDisplay; }
     virtual bool IsPanRelated() { return true; }
 
     virtual void RequestUpdate(ActionContext *context) override
@@ -2518,7 +2518,7 @@ class TrackPanWidthDisplay : public DisplayAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackPanWidthDisplay"; }
+    ActionType GetType() const override { return ActionType::TrackPanWidthDisplay; }
     virtual bool IsPanRelated() { return true; }
 
     virtual void RequestUpdate(ActionContext *context) override
@@ -2540,7 +2540,7 @@ class TrackPanLeftDisplay : public DisplayAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackPanLeftDisplay"; }
+    ActionType GetType() const override { return ActionType::TrackPanLeftDisplay; }
     virtual bool IsPanRelated() { return true; }
     
     virtual void RequestUpdate(ActionContext *context) override
@@ -2562,7 +2562,7 @@ class TrackPanRightDisplay : public DisplayAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackPanRightDisplay"; }
+    ActionType GetType() const override { return ActionType::TrackPanRightDisplay; }
     virtual bool IsPanRelated() { return true; }
     
     virtual void RequestUpdate(ActionContext *context) override
@@ -2584,7 +2584,7 @@ class TrackPanAutoLeftDisplay : public DisplayAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackPanAutoLeftDisplay"; }
+    ActionType GetType() const override { return ActionType::TrackPanAutoLeftDisplay; }
     virtual bool IsPanRelated() { return true; }
     
     virtual void RequestUpdate(ActionContext *context) override
@@ -2614,7 +2614,7 @@ class TrackPanAutoRightDisplay : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackPanAutoRightDisplay"; }
+    ActionType GetType() const override { return ActionType::TrackPanAutoRightDisplay; }
     virtual bool IsPanRelated() { return true; }
 
     virtual void RequestUpdate(ActionContext *context) override
@@ -2643,7 +2643,7 @@ class Rewind : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "Rewind"; }
+    ActionType GetType() const override { return ActionType::Rewind; }
     
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -2666,7 +2666,7 @@ class MoveCursor : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "MoveCursor"; }
+    ActionType GetType() const override { return ActionType::MoveCursor; }
 
     virtual double GetCurrentNormalizedValue(ActionContext *context) override
     {
@@ -2709,7 +2709,7 @@ class FastForward : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "FastForward"; }
+    ActionType GetType() const override { return ActionType::FastForward; }
 
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -2732,7 +2732,7 @@ class Play : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "Play"; }
+    ActionType GetType() const override { return ActionType::Play; }
 
     virtual double GetCurrentNormalizedValue(ActionContext *context) override
     {
@@ -2765,7 +2765,7 @@ class Stop : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "Stop"; }
+    ActionType GetType() const override { return ActionType::Stop; }
 
     virtual double GetCurrentNormalizedValue(ActionContext *context) override
     {
@@ -2798,7 +2798,7 @@ class Record : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "Record"; }
+    ActionType GetType() const override { return ActionType::Record; }
 
     virtual double GetCurrentNormalizedValue(ActionContext *context) override
     {
@@ -2831,7 +2831,7 @@ class TrackToggleVCASpill : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackToggleVCASpill"; }
+    ActionType GetType() const override { return ActionType::TrackToggleVCASpill; }
 
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -2856,7 +2856,7 @@ class TrackToggleFolderSpill : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackToggleFolderSpill"; }
+    ActionType GetType() const override { return ActionType::TrackToggleFolderSpill; }
 
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -2881,7 +2881,7 @@ class ClearAllSolo : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "ClearAllSolo"; }
+    ActionType GetType() const override { return ActionType::ClearAllSolo; }
 
     virtual double GetCurrentNormalizedValue(ActionContext *context) override
     {
@@ -2906,7 +2906,7 @@ class GlobalAutoMode : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "GlobalAutoMode"; }
+    ActionType GetType() const override { return ActionType::GlobalAutoMode; }
 
     virtual double GetCurrentNormalizedValue(ActionContext *context) override
     {
@@ -2934,7 +2934,7 @@ class TrackAutoMode : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackAutoMode"; }
+    ActionType GetType() const override { return ActionType::TrackAutoMode; }
 
     virtual double GetCurrentNormalizedValue(ActionContext *context) override
     {
@@ -2979,7 +2979,7 @@ class CycleTrackAutoMode : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "CycleTrackAutoMode"; }
+    ActionType GetType() const override { return ActionType::CycleTrackAutoMode; }
 
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -3014,7 +3014,7 @@ class CycleTimeline : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "CycleTimeline"; }
+    ActionType GetType() const override { return ActionType::CycleTimeline; }
 
     virtual double GetCurrentNormalizedValue(ActionContext *context) override
     {
@@ -3039,7 +3039,7 @@ class CycleTrackInputMonitor : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "CycleTrackInputMonitor"; }
+    ActionType GetType() const override { return ActionType::CycleTrackInputMonitor; }
 
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -3060,7 +3060,7 @@ class TrackAutoModeDisplay : public DisplayAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackAutoModeDisplay"; }
+    ActionType GetType() const override { return ActionType::TrackAutoModeDisplay; }
     
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -3074,7 +3074,7 @@ class TrackVCALeaderDisplay : public DisplayAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackVCALeaderDisplay"; }
+    ActionType GetType() const override { return ActionType::TrackVCALeaderDisplay; }
     
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -3095,7 +3095,7 @@ class TrackFolderParentDisplay : public DisplayAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackFolderParentDisplay"; }
+    ActionType GetType() const override { return ActionType::TrackFolderParentDisplay; }
     
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -3116,7 +3116,7 @@ class ToggleFolderView : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "ToggleFolderView"; }
+    ActionType GetType() const override { return ActionType::ToggleFolderView; }
     
     virtual void RequestUpdate(ActionContext* context) override
     {
@@ -3139,7 +3139,7 @@ class TrackEnterFolder : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char* GetName() override { return "TrackEnterFolder"; }
+    ActionType GetType() const override { return ActionType::TrackEnterFolder; }
 
     virtual void RequestUpdate(ActionContext* context) override
     {
@@ -3167,7 +3167,7 @@ class ExitCurrentFolder : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char* GetName() override { return "ExitCurrentFolder"; }
+    ActionType GetType() const override { return ActionType::ExitCurrentFolder; }
 
     virtual void RequestUpdate(ActionContext* context) override
     {
@@ -3197,7 +3197,7 @@ class GlobalAutoModeDisplay : public DisplayAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "GlobalAutoModeDisplay"; }
+    ActionType GetType() const override { return ActionType::GlobalAutoModeDisplay; }
     
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -3211,7 +3211,7 @@ class TrackInputMonitorDisplay : public DisplayAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackInputMonitorDisplay"; }
+    ActionType GetType() const override { return ActionType::TrackInputMonitorDisplay; }
     
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -3225,7 +3225,7 @@ class MCUTimeDisplay : public DisplayAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "MCUTimeDisplay"; }
+    ActionType GetType() const override { return ActionType::MCUTimeDisplay; }
 
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -3238,7 +3238,7 @@ class OSCTimeDisplay : public DisplayAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "OSCTimeDisplay"; }
+    ActionType GetType() const override { return ActionType::OSCTimeDisplay; }
 
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -3316,7 +3316,7 @@ class TrackOutputMeter : public MeterAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackOutputMeter"; }
+    ActionType GetType() const override { return ActionType::TrackOutputMeter; }
 
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -3337,7 +3337,7 @@ class TrackOutputMeterAverageLR : public MeterAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackOutputMeterAverageLR"; }
+    ActionType GetType() const override { return ActionType::TrackOutputMeterAverageLR; }
 
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -3360,7 +3360,7 @@ class TrackVolumeWithMeterAverageLR : public MeterAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackVolumeWithMeterAverageLR"; }
+    ActionType GetType() const override { return ActionType::TrackVolumeWithMeterAverageLR; }
     
     virtual double GetCurrentNormalizedValue(ActionContext *context) override
     {
@@ -3420,7 +3420,7 @@ class TrackOutputMeterMaxPeakLR : public MeterAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackOutputMeterMaxPeakLR"; }
+    ActionType GetType() const override { return ActionType::TrackOutputMeterMaxPeakLR; }
 
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -3446,7 +3446,7 @@ class TrackVolumeWithMeterMaxPeakLR : public MeterAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "TrackVolumeWithMeterMaxPeakLR"; }
+    ActionType GetType() const override { return ActionType::TrackVolumeWithMeterMaxPeakLR; }
     
     virtual double GetCurrentNormalizedValue(ActionContext *context) override
     {
@@ -3509,7 +3509,7 @@ class FXGainReductionMeter : public MeterAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "FXGainReductionMeter"; }
+    ActionType GetType() const override { return ActionType::FXGainReductionMeter; }
 
     virtual void RequestUpdate(ActionContext *context) override
     {

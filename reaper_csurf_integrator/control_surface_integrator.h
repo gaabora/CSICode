@@ -357,14 +357,223 @@ class ActionContext;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+
+#define ACTION_TYPE_LIST(X) \
+X(AllSurfacesGoHome, "AllSurfacesGoHome") \
+X(Bank, "Bank") \
+X(ClearAllSolo, "ClearAllSolo") \
+X(ClearFocusedFX, "ClearFocusedFX") \
+X(ClearFXSlot, "ClearFXSlot") \
+X(ClearLastTouchedFXParam, "ClearLastTouchedFXParam") \
+X(ClearModifier, "ClearModifier") \
+X(ClearModifiers, "ClearModifiers") \
+X(ClearSelectedTrackFX, "ClearSelectedTrackFX") \
+X(CSINameDisplay, "CSINameDisplay") \
+X(CSIVersionDisplay, "CSIVersionDisplay") \
+X(CycleTimeDisplayModes, "CycleTimeDisplayModes") \
+X(CycleTimeline, "CycleTimeline") \
+X(CycleTrackAutoMode, "CycleTrackAutoMode") \
+X(CycleTrackInputMonitor, "CycleTrackInputMonitor") \
+X(DisableFocusedFXMapping, "DisableFocusedFXMapping") \
+X(DisableLastTouchedFXParamMapping, "DisableLastTouchedFXParamMapping") \
+X(EnableOSD, "EnableOSD") \
+X(ExitCurrentFolder, "ExitCurrentFolder") \
+X(FastForward, "FastForward") \
+X(FixedRGBColorDisplay, "FixedRGBColorDisplay") \
+X(FixedTextDisplay, "FixedTextDisplay") \
+X(FXBypassDisplay, "FXBypassDisplay") \
+X(FXGainReductionMeter, "FXGainReductionMeter") \
+X(FXMenuNameDisplay, "FXMenuNameDisplay") \
+X(FXNameDisplay, "FXNameDisplay") \
+X(FXOfflineDisplay, "FXOfflineDisplay") \
+X(FXParam, "FXParam") \
+X(FXParamNameDisplay, "FXParamNameDisplay") \
+X(FXParamValueDisplay, "FXParamValueDisplay") \
+X(GlobalAutoMode, "GlobalAutoMode") \
+X(GlobalAutoModeDisplay, "GlobalAutoModeDisplay") \
+X(GlobalModeDisplay, "GlobalModeDisplay") \
+X(GoFXSlot, "GoFXSlot") \
+X(GoHome, "GoHome") \
+X(GoNextPage, "GoNextPage") \
+X(GoPage, "GoPage") \
+X(GoSubZone, "GoSubZone") \
+X(GoZone, "GoZone") \
+X(HideFXSlot, "HideFXSlot") \
+X(InvalidAction, "InvalidAction") \
+X(JSFXParam, "JSFXParam") \
+X(LastTouchedFXParam, "LastTouchedFXParam") \
+X(LastTouchedFXParamNameDisplay, "LastTouchedFXParamNameDisplay") \
+X(LastTouchedFXParamValueDisplay, "LastTouchedFXParamValueDisplay") \
+X(LearnFocusedFX, "LearnFocusedFX") \
+X(LeaveSubZone, "LeaveSubZone") \
+X(MCUTimeDisplay, "MCUTimeDisplay") \
+X(MoveCursor, "MoveCursor") \
+X(NoAction, "NoAction") \
+X(OSCTimeDisplay, "OSCTimeDisplay") \
+X(PageNameDisplay, "PageNameDisplay") \
+X(Play, "Play") \
+X(ReaperAction, "ReaperAction") \
+X(Record, "Record") \
+X(Redo, "Redo") \
+X(RestoreXTouchDisplayColors, "RestoreXTouchDisplayColors") \
+X(Rewind, "Rewind") \
+X(SaveProject, "SaveProject") \
+X(SendMIDIMessage, "SendMIDIMessage") \
+X(SendOSCMessage, "SendOSCMessage") \
+X(SetAlt, "SetAlt") \
+X(SetControl, "SetControl") \
+X(SetDoublePressTime, "SetDoublePressTime") \
+X(SetFlip, "SetFlip") \
+X(SetGlobal, "SetGlobal") \
+X(SetHoldTime, "SetHoldTime") \
+X(SetLatchTime, "SetLatchTime") \
+X(SetMarker, "SetMarker") \
+X(SetNudge, "SetNudge") \
+X(SetOption, "SetOption") \
+X(SetOSDTime, "SetOSDTime") \
+X(SetScrub, "SetScrub") \
+X(SetShift, "SetShift") \
+X(SetToggleChannel, "SetToggleChannel") \
+X(SetXTouchDisplayColors, "SetXTouchDisplayColors") \
+X(SetZoom, "SetZoom") \
+X(ShowFXSlot, "ShowFXSlot") \
+X(SoftTakeover14BitTrackVolume, "SoftTakeover14BitTrackVolume") \
+X(SoftTakeover7BitTrackVolume, "SoftTakeover7BitTrackVolume") \
+X(SpeakFXMenuName, "SpeakFXMenuName") \
+X(SpeakOSARAMessage, "SpeakOSARAMessage") \
+X(SpeakTrackReceiveSource, "SpeakTrackReceiveSource") \
+X(SpeakTrackSendDestination, "SpeakTrackSendDestination") \
+X(Stop, "Stop") \
+X(TCPFXParam, "TCPFXParam") \
+X(TCPFXParamNameDisplay, "TCPFXParamNameDisplay") \
+X(TCPFXParamValueDisplay, "TCPFXParamValueDisplay") \
+X(ToggleEnableFocusedFXMapping, "ToggleEnableFocusedFXMapping") \
+X(ToggleEnableLastTouchedFXParamMapping, "ToggleEnableLastTouchedFXParamMapping") \
+X(ToggleFolderView, "ToggleFolderView") \
+X(ToggleFollowMCP, "ToggleFollowMCP") \
+X(ToggleFXBypass, "ToggleFXBypass") \
+X(ToggleFXOffline, "ToggleFXOffline") \
+X(ToggleRestrictTextLength, "ToggleRestrictTextLength") \
+X(ToggleScrollLink, "ToggleScrollLink") \
+X(ToggleSynchPageBanking, "ToggleSynchPageBanking") \
+X(ToggleUseLocalFXSlot, "ToggleUseLocalFXSlot") \
+X(ToggleUseLocalModifiers, "ToggleUseLocalModifiers") \
+X(TrackAutoMode, "TrackAutoMode") \
+X(TrackAutoModeDisplay, "TrackAutoModeDisplay") \
+X(TrackEnterFolder, "TrackEnterFolder") \
+X(TrackFolderParentDisplay, "TrackFolderParentDisplay") \
+X(TrackInputMonitorDisplay, "TrackInputMonitorDisplay") \
+X(TrackInvertPolarity, "TrackInvertPolarity") \
+X(TrackInvertPolarityDisplay, "TrackInvertPolarityDisplay") \
+X(TrackMute, "TrackMute") \
+X(TrackNameDisplay, "TrackNameDisplay") \
+X(TrackNumberDisplay, "TrackNumberDisplay") \
+X(TrackOutputMeter, "TrackOutputMeter") \
+X(TrackOutputMeterAverageLR, "TrackOutputMeterAverageLR") \
+X(TrackOutputMeterMaxPeakLR, "TrackOutputMeterMaxPeakLR") \
+X(TrackPan, "TrackPan") \
+X(TrackPanAutoLeft, "TrackPanAutoLeft") \
+X(TrackPanAutoLeftDisplay, "TrackPanAutoLeftDisplay") \
+X(TrackPanAutoRight, "TrackPanAutoRight") \
+X(TrackPanAutoRightDisplay, "TrackPanAutoRightDisplay") \
+X(TrackPanDisplay, "TrackPanDisplay") \
+X(TrackPanL, "TrackPanL") \
+X(TrackPanLeftDisplay, "TrackPanLeftDisplay") \
+X(TrackPanLPercent, "TrackPanLPercent") \
+X(TrackPanPercent, "TrackPanPercent") \
+X(TrackPanR, "TrackPanR") \
+X(TrackPanRightDisplay, "TrackPanRightDisplay") \
+X(TrackPanRPercent, "TrackPanRPercent") \
+X(TrackPanWidth, "TrackPanWidth") \
+X(TrackPanWidthDisplay, "TrackPanWidthDisplay") \
+X(TrackPanWidthPercent, "TrackPanWidthPercent") \
+X(TrackRangeSelect, "TrackRangeSelect") \
+X(TrackReceiveInvertPolarity, "TrackReceiveInvertPolarity") \
+X(TrackReceiveNameDisplay, "TrackReceiveNameDisplay") \
+X(TrackReceivePan, "TrackReceivePan") \
+X(TrackReceivePanDisplay, "TrackReceivePanDisplay") \
+X(TrackReceivePanPercent, "TrackReceivePanPercent") \
+X(TrackReceivePrePost, "TrackReceivePrePost") \
+X(TrackReceivePrePostDisplay, "TrackReceivePrePostDisplay") \
+X(TrackReceiveStereoMonoDisplay, "TrackReceiveStereoMonoDisplay") \
+X(TrackReceiveStereoMonoToggle, "TrackReceiveStereoMonoToggle") \
+X(TrackReceiveVolume, "TrackReceiveVolume") \
+X(TrackReceiveVolumeDB, "TrackReceiveVolumeDB") \
+X(TrackReceiveVolumeDisplay, "TrackReceiveVolumeDisplay") \
+X(TrackReceivMute, "TrackReceivMute") \
+X(TrackRecordArm, "TrackRecordArm") \
+X(TrackRecordArmDisplay, "TrackRecordArmDisplay") \
+X(TrackRecordInputDisplay, "TrackRecordInputDisplay") \
+X(TrackSelect, "TrackSelect") \
+X(TrackSendInvertPolarity, "TrackSendInvertPolarity") \
+X(TrackSendMute, "TrackSendMute") \
+X(TrackSendNameDisplay, "TrackSendNameDisplay") \
+X(TrackSendPan, "TrackSendPan") \
+X(TrackSendPanDisplay, "TrackSendPanDisplay") \
+X(TrackSendPanPercent, "TrackSendPanPercent") \
+X(TrackSendPrePost, "TrackSendPrePost") \
+X(TrackSendPrePostDisplay, "TrackSendPrePostDisplay") \
+X(TrackSendStereoMonoDisplay, "TrackSendStereoMonoDisplay") \
+X(TrackSendStereoMonoToggle, "TrackSendStereoMonoToggle") \
+X(TrackSendVolume, "TrackSendVolume") \
+X(TrackSendVolumeDB, "TrackSendVolumeDB") \
+X(TrackSendVolumeDisplay, "TrackSendVolumeDisplay") \
+X(TrackSolo, "TrackSolo") \
+X(TrackToggleFolderSpill, "TrackToggleFolderSpill") \
+X(TrackToggleVCASpill, "TrackToggleVCASpill") \
+X(TrackUniqueSelect, "TrackUniqueSelect") \
+X(TrackVCALeaderDisplay, "TrackVCALeaderDisplay") \
+X(TrackVolume, "TrackVolume") \
+X(TrackVolumeDB, "TrackVolumeDB") \
+X(TrackVolumeDisplay, "TrackVolumeDisplay") \
+X(TrackVolumeWithMeterAverageLR, "TrackVolumeWithMeterAverageLR") \
+X(TrackVolumeWithMeterMaxPeakLR, "TrackVolumeWithMeterMaxPeakLR") \
+X(Undo, "Undo")
+
+
+enum class ActionType {
+#define X(enumName, strName) enumName,
+    ACTION_TYPE_LIST(X)
+#undef X
+    Abstract,
+    Invalid
+};
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
     virtual ~Action() {}
+
+    virtual const char* GetName() const { return TypeToName(GetType()); }
+    virtual ActionType GetType() const { return ActionType::Abstract; }
+
+    static const char* TypeToName(ActionType type) {
+        switch (type) {
+          #define X(enumName, strName) case ActionType::enumName: return strName;
+            ACTION_TYPE_LIST(X)
+          #undef X
+            default: return "Unknown";
+        }
+    }
     
-    virtual const char *GetName() { return "Action"; }
+    static ActionType NameToType(const std::string& name) {
+      #define X(enumName, strName) if (name == strName) return ActionType::enumName;
+        ACTION_TYPE_LIST(X)
+      #undef X
+        return ActionType::Invalid;
+    }
+
+    static std::vector<std::string> GetSupportedNames() {
+        std::vector<std::string> names;
+      #define X(enumName, strName) names.push_back(strName);
+        ACTION_TYPE_LIST(X)
+      #undef X
+        return names;
+    }
+
     virtual bool IsModifier() { return false; }
     virtual bool IsSwitch() { return false; }
     virtual bool IsDisplayRelated() { return false; }
@@ -388,6 +597,22 @@ public:
     }
 };
 
+#define NAVIGATOR_TYPE_LIST(X) \
+    X(TrackNavigator, "Track") \
+    X(FixedTrackNavigator,"FixedTrack") \
+    X(MasterTrackNavigator,"MasterTrack") \
+    X(SelectedTrackNavigator,"SelectedTrack") \
+    X(FocusedFXNavigator, "FocusedFX")
+
+
+enum class NavigatorType {
+#define X(enumName, strName) enumName,
+    NAVIGATOR_TYPE_LIST(X)
+#undef X
+    Abstract,
+    Invalid
+};
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Navigator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -406,7 +631,34 @@ protected:
 
 public:
     virtual ~Navigator() {}
+
+    virtual const char* GetName() const { return TypeToName(GetType()); }
+    virtual NavigatorType GetType() const { return NavigatorType::Abstract; }
+
+    static const char* TypeToName(NavigatorType type) {
+        switch (type) {
+          #define X(enumName, strName) case NavigatorType::enumName: return strName;
+            NAVIGATOR_TYPE_LIST(X)
+          #undef X
+            default: return "Unknown";
+        }
+    }
     
+    static NavigatorType NameToType(const std::string& name) {
+      #define X(enumName, strName) if (name == strName) return NavigatorType::enumName;
+        NAVIGATOR_TYPE_LIST(X)
+      #undef X
+        return NavigatorType::Invalid;
+    }
+
+    static std::vector<std::string> GetSupportedNames() {
+        std::vector<std::string> names;
+      #define X(enumName, strName) names.push_back(strName);
+        NAVIGATOR_TYPE_LIST(X)
+      #undef X
+        return names;
+    }
+
     virtual const char *GetName() { return "Navigator"; }
     virtual MediaTrack *GetTrack() { return NULL; }
     virtual int GetChannelNum() { return 0; }
@@ -427,14 +679,6 @@ public:
     
     void SetIsPanRightTouched(bool isPanRightTouched) { isPanRightTouched_ = isPanRightTouched; }
     bool GetIsPanRightTouched() { return isPanRightTouched_;  }
-
-    inline static const vector<string> NAVIGATOR_TYPES = {
-         "Track"
-        ,"FixedTrack"
-        ,"MasterTrack"
-        ,"SelectedTrack"
-        ,"FocusedFX"
-    };
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -451,7 +695,7 @@ public:
     TrackNavigator(CSurfIntegrator *const csi, Page *page, TrackNavigationManager *trackNavigationManager, int channelNum) : Navigator(csi, page), trackNavigationManager_(trackNavigationManager), channelNum_(channelNum) {}
     virtual ~TrackNavigator() {}
     
-    virtual const char *GetName() override { return "TrackNavigator"; }
+    NavigatorType GetType() const override { return NavigatorType::TrackNavigator; }
    
     virtual MediaTrack *GetTrack() override;
     
@@ -470,7 +714,7 @@ public:
     FixedTrackNavigator(CSurfIntegrator *const csi, Page *page, MediaTrack *const track) : Navigator(csi, page), track_(track) {}
     virtual ~FixedTrackNavigator() {}
     
-    virtual const char *GetName() override { return "FixedTrackNavigator"; }
+    NavigatorType GetType() const override { return NavigatorType::FixedTrackNavigator; }
    
     virtual MediaTrack *GetTrack() override { return track_; }
 };
@@ -483,7 +727,7 @@ public:
     MasterTrackNavigator(CSurfIntegrator *const csi, Page * page) : Navigator(csi, page) {}
     virtual ~MasterTrackNavigator() {}
     
-    virtual const char *GetName() override { return "MasterTrackNavigator"; }
+    NavigatorType GetType() const override { return NavigatorType::MasterTrackNavigator; }
     
     virtual MediaTrack *GetTrack() override;
 };
@@ -496,7 +740,7 @@ public:
     SelectedTrackNavigator(CSurfIntegrator *const csi, Page * page) : Navigator(csi, page) {}
     virtual ~SelectedTrackNavigator() {}
     
-    virtual const char *GetName() override { return "SelectedTrackNavigator"; }
+    NavigatorType GetType() const override { return NavigatorType::SelectedTrackNavigator; }
     
     virtual MediaTrack *GetTrack() override;
 };
@@ -509,7 +753,7 @@ public:
     FocusedFXNavigator(CSurfIntegrator *const csi, Page * page) : Navigator(csi, page) {}
     virtual ~FocusedFXNavigator() {}
     
-    virtual const char *GetName() override { return "FocusedFXNavigator"; }
+    NavigatorType GetType() const override { return NavigatorType::FocusedFXNavigator; }
     
     virtual MediaTrack *GetTrack() override;
 };

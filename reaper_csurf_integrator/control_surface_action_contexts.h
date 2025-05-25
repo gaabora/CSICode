@@ -12,7 +12,7 @@ class NoAction : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "NoAction"; }
+    ActionType GetType() const override { return ActionType::NoAction; }
     
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -26,7 +26,7 @@ class InvalidAction : public NoAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "InvalidAction"; }
+    ActionType GetType() const override { return ActionType::InvalidAction; }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -34,7 +34,7 @@ class ReaperAction : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "ReaperAction"; }
+    ActionType GetType() const override { return ActionType::ReaperAction; }
    
     virtual void RequestUpdate(ActionContext *context) override
     {
@@ -70,7 +70,7 @@ class FXAction : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() override { return "FXAction"; }
+    ActionType GetType() const override { return ActionType::Abstract; }
     virtual bool IsFxRelated() { return true; }
 
     virtual bool CheckCurrentContext(ActionContext *context) {
@@ -122,7 +122,7 @@ class SwitchAction : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() { return "SwitchAction"; }
+    ActionType GetType() const override { return ActionType::Abstract; }
     virtual bool IsSwitch() { return true; }
 };
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -130,7 +130,7 @@ class ModifierAction : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() { return "ModifierAction"; }
+    ActionType GetType() const override { return ActionType::Abstract; }
     virtual bool IsModifier() { return true; }
 };
 
@@ -139,7 +139,7 @@ class DisplayAction : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() { return "DisplayAction"; }
+    ActionType GetType() const override { return ActionType::Abstract; }
     virtual bool IsDisplayRelated() { return true; }
 };
 
@@ -148,7 +148,7 @@ class MeterAction : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() { return "MeterAction"; }
+    ActionType GetType() const override { return ActionType::Abstract; }
     virtual bool IsDisplayRelated() { return true; }
 };
 
@@ -157,7 +157,7 @@ class VolumeAction : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() { return "VolumeAction"; }
+    ActionType GetType() const override { return ActionType::Abstract; }
     virtual bool IsVolumeRelated() { return true; }
     
     virtual bool CheckCurrentContext(ActionContext *context) {
@@ -205,7 +205,7 @@ class PanAction : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual const char *GetName() { return "PanAction"; }
+    ActionType GetType() const override { return ActionType::Abstract; }
     virtual bool IsPanRelated() { return true; }
 };
 
