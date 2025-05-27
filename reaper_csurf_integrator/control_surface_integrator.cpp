@@ -967,197 +967,12 @@ void OSC_ControlSurface::ProcessOSCWidgetFile(const string &filePath)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // CSurfIntegrator
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-void CSurfIntegrator::InitActionsDictionary()
-{
-//// Transport and Timeline ////
-actions_.insert(make_pair("MoveEditCursor", make_unique<MoveCursor>()));
-actions_.insert(make_pair("Rewind", make_unique<Rewind>()));
-actions_.insert(make_pair("FastForward", make_unique<FastForward>()));
-actions_.insert(make_pair("Play", make_unique<Play>()));
-actions_.insert(make_pair("Stop", make_unique<Stop>()));
-actions_.insert(make_pair("Record", make_unique<Record>()));
-actions_.insert(make_pair("CycleTimeline", make_unique<CycleTimeline>()));
-actions_.insert(make_pair("MCUTimeDisplay", make_unique<MCUTimeDisplay>()));
-actions_.insert(make_pair("OSCTimeDisplay", make_unique<OSCTimeDisplay>()));
-actions_.insert(make_pair("CycleTimeDisplayModes", make_unique<CycleTimeDisplayModes>()));
-//// Tracks ////
-actions_.insert(make_pair("TrackVolume", make_unique<TrackVolume>()));
-actions_.insert(make_pair("SoftTakeover7BitTrackVolume", make_unique<SoftTakeover7BitTrackVolume>()));
-actions_.insert(make_pair("SoftTakeover14BitTrackVolume", make_unique<SoftTakeover14BitTrackVolume>()));
-actions_.insert(make_pair("TrackPanAutoLeft", make_unique<TrackPanAutoLeft>()));
-actions_.insert(make_pair("TrackPanAutoRight", make_unique<TrackPanAutoRight>()));
-actions_.insert(make_pair("TrackPan", make_unique<TrackPan>()));
-actions_.insert(make_pair("TrackPanWidth", make_unique<TrackPanWidth>()));
-actions_.insert(make_pair("TrackPanL", make_unique<TrackPanL>()));
-actions_.insert(make_pair("TrackPanR", make_unique<TrackPanR>()));
-actions_.insert(make_pair("TrackSelect", make_unique<TrackSelect>()));
-actions_.insert(make_pair("TrackUniqueSelect", make_unique<TrackUniqueSelect>()));
-actions_.insert(make_pair("TrackRangeSelect", make_unique<TrackRangeSelect>()));
-actions_.insert(make_pair("TrackSolo", make_unique<TrackSolo>()));
-actions_.insert(make_pair("TrackMute", make_unique<TrackMute>()));
-actions_.insert(make_pair("TrackRecordArm", make_unique<TrackRecordArm>()));
-actions_.insert(make_pair("TrackRecordArmDisplay", make_unique<TrackRecordArmDisplay>()));
-actions_.insert(make_pair("TrackInvertPolarity", make_unique<TrackInvertPolarity>()));
-actions_.insert(make_pair("TrackInvertPolarityDisplay", make_unique<TrackInvertPolarityDisplay>()));
-actions_.insert(make_pair("CycleTrackInputMonitor", make_unique<CycleTrackInputMonitor>()));
-actions_.insert(make_pair("TrackInputMonitorDisplay", make_unique<TrackInputMonitorDisplay>()));
-actions_.insert(make_pair("TrackNameDisplay", make_unique<TrackNameDisplay>()));
-actions_.insert(make_pair("TrackNumberDisplay", make_unique<TrackNumberDisplay>()));
-actions_.insert(make_pair("TrackVolumeDisplay", make_unique<TrackVolumeDisplay>()));
-actions_.insert(make_pair("TrackPanAutoLeftDisplay", make_unique<TrackPanAutoLeftDisplay>()));
-actions_.insert(make_pair("TrackPanAutoRightDisplay", make_unique<TrackPanAutoRightDisplay>()));
-actions_.insert(make_pair("TrackPanDisplay", make_unique<TrackPanDisplay>()));
-actions_.insert(make_pair("TrackPanWidthDisplay", make_unique<TrackPanWidthDisplay>()));
-actions_.insert(make_pair("TrackPanLeftDisplay", make_unique<TrackPanLeftDisplay>()));
-actions_.insert(make_pair("TrackPanRightDisplay", make_unique<TrackPanRightDisplay>()));
-actions_.insert(make_pair("TrackOutputMeter", make_unique<TrackOutputMeter>()));
-actions_.insert(make_pair("TrackOutputMeterAverageLR", make_unique<TrackOutputMeterAverageLR>()));
-actions_.insert(make_pair("TrackOutputMeterMaxPeakLR", make_unique<TrackOutputMeterMaxPeakLR>()));
-actions_.insert(make_pair("TrackRecordInputDisplay", make_unique<TrackRecordInputDisplay>()));
-actions_.insert(make_pair("TrackVolumeDB", make_unique<TrackVolumeDB>()));
-actions_.insert(make_pair("TrackPanPercent", make_unique<TrackPanPercent>()));
-actions_.insert(make_pair("TrackPanWidthPercent", make_unique<TrackPanWidthPercent>()));
-actions_.insert(make_pair("TrackPanLPercent", make_unique<TrackPanLPercent>()));
-actions_.insert(make_pair("TrackPanRPercent", make_unique<TrackPanRPercent>()));
-actions_.insert(make_pair("TrackVolumeWithMeterAverageLR", make_unique<TrackVolumeWithMeterAverageLR>()));
-actions_.insert(make_pair("TrackVolumeWithMeterMaxPeakLR", make_unique<TrackVolumeWithMeterMaxPeakLR>()));
-//// Track Sends ////
-actions_.insert(make_pair("TrackSendNameDisplay", make_unique<TrackSendNameDisplay>()));
-actions_.insert(make_pair("TrackSendVolume", make_unique<TrackSendVolume>()));
-actions_.insert(make_pair("TrackSendVolumeDisplay", make_unique<TrackSendVolumeDisplay>()));
-actions_.insert(make_pair("TrackSendPan", make_unique<TrackSendPan>()));
-actions_.insert(make_pair("TrackSendPanDisplay", make_unique<TrackSendPanDisplay>()));
-actions_.insert(make_pair("TrackSendPrePost", make_unique<TrackSendPrePost>()));
-actions_.insert(make_pair("TrackSendPrePostDisplay", make_unique<TrackSendPrePostDisplay>()));
-actions_.insert(make_pair("TrackSendMute", make_unique<TrackSendMute>()));
-actions_.insert(make_pair("TrackSendStereoMonoDisplay", make_unique<TrackSendStereoMonoDisplay>()));
-actions_.insert(make_pair("TrackSendStereoMonoToggle", make_unique<TrackSendStereoMonoToggle>()));
-actions_.insert(make_pair("TrackSendInvertPolarity", make_unique<TrackSendInvertPolarity>()));
-actions_.insert(make_pair("TrackSendVolumeDB", make_unique<TrackSendVolumeDB>()));
-actions_.insert(make_pair("TrackSendPanPercent", make_unique<TrackSendPanPercent>()));
-//// Track Receives ////
-actions_.insert(make_pair("TrackReceiveNameDisplay", make_unique<TrackReceiveNameDisplay>()));
-actions_.insert(make_pair("TrackReceiveVolume", make_unique<TrackReceiveVolume>()));
-actions_.insert(make_pair("TrackReceiveVolumeDisplay", make_unique<TrackReceiveVolumeDisplay>()));
-actions_.insert(make_pair("TrackReceivePan", make_unique<TrackReceivePan>()));
-actions_.insert(make_pair("TrackReceivePanDisplay", make_unique<TrackReceivePanDisplay>()));
-actions_.insert(make_pair("TrackReceivePrePost", make_unique<TrackReceivePrePost>()));
-actions_.insert(make_pair("TrackReceivePrePostDisplay", make_unique<TrackReceivePrePostDisplay>()));
-actions_.insert(make_pair("TrackReceiveMute", make_unique<TrackReceiveMute>()));
-actions_.insert(make_pair("TrackReceiveStereoMonoToggle", make_unique<TrackReceiveStereoMonoToggle>()));
-actions_.insert(make_pair("TrackReceiveStereoMonoDisplay", make_unique<TrackReceiveStereoMonoDisplay>()));
-actions_.insert(make_pair("TrackReceiveInvertPolarity", make_unique<TrackReceiveInvertPolarity>()));
-actions_.insert(make_pair("TrackReceiveVolumeDB", make_unique<TrackReceiveVolumeDB>()));
-actions_.insert(make_pair("TrackReceivePanPercent", make_unique<TrackReceivePanPercent>()));
-//// FX ////
-actions_.insert(make_pair("FXParam", make_unique<FXParam>()));
-actions_.insert(make_pair("FXNameDisplay", make_unique<FXNameDisplay>()));
-actions_.insert(make_pair("FXParamNameDisplay", make_unique<FXParamNameDisplay>()));
-actions_.insert(make_pair("FXParamValueDisplay", make_unique<FXParamValueDisplay>()));
-actions_.insert(make_pair("FXMenuNameDisplay", make_unique<FXMenuNameDisplay>()));
-actions_.insert(make_pair("ToggleEnableFocusedFXMapping", make_unique<ToggleEnableFocusedFXMapping>()));
-actions_.insert(make_pair("ToggleFXBypass", make_unique<ToggleFXBypass>()));
-actions_.insert(make_pair("FXBypassDisplay", make_unique<FXBypassDisplay>()));
-actions_.insert(make_pair("ToggleFXOffline", make_unique<ToggleFXOffline>()));
-actions_.insert(make_pair("FXOfflineDisplay", make_unique<FXOfflineDisplay>()));
-actions_.insert(make_pair("FXGainReductionMeter", make_unique<FXGainReductionMeter>()));
-actions_.insert(make_pair("GoFXSlot", make_unique<GoFXSlot>()));
-actions_.insert(make_pair("ShowFXSlot", make_unique<ShowFXSlot>()));
-actions_.insert(make_pair("HideFXSlot", make_unique<HideFXSlot>()));
-actions_.insert(make_pair("TCPFXParam", make_unique<TCPFXParam>()));
-actions_.insert(make_pair("TCPFXParamNameDisplay", make_unique<TCPFXParamNameDisplay>()));
-actions_.insert(make_pair("TCPFXParamValueDisplay", make_unique<TCPFXParamValueDisplay>()));
-actions_.insert(make_pair("JSFXParam", make_unique<JSFXParam>()));
-
-actions_.insert(make_pair("LearnFocusedFX", make_unique<LearnFocusedFX>()));
-actions_.insert(make_pair("LastTouchedFXParam", make_unique<LastTouchedFXParam>()));
-actions_.insert(make_pair("LastTouchedFXParamNameDisplay", make_unique<LastTouchedFXParamNameDisplay>()));
-actions_.insert(make_pair("LastTouchedFXParamValueDisplay", make_unique<LastTouchedFXParamValueDisplay>()));
-actions_.insert(make_pair("ClearLastTouchedFXParam", make_unique<ClearLastTouchedFXParam>()));
-actions_.insert(make_pair("DisableFocusedFXMapping", make_unique<DisableFocusedFXMapping>()));
-actions_.insert(make_pair("DisableLastTouchedFXParamMapping", make_unique<DisableLastTouchedFXParamMapping>()));
-actions_.insert(make_pair("ToggleEnableLastTouchedFXParamMapping", make_unique<ToggleEnableLastTouchedFXParamMapping>()));
-actions_.insert(make_pair("ToggleUseLocalFXSlot", make_unique<ToggleUseLocalFXSlot>()));
-//// Navigation ////
-actions_.insert(make_pair("Bank", make_unique<Bank>()));
-actions_.insert(make_pair("GoHome", make_unique<GoHome>()));
-actions_.insert(make_pair("AllSurfacesGoHome", make_unique<AllSurfacesGoHome>()));
-actions_.insert(make_pair("GoZone", make_unique<GoZone>()));
-actions_.insert(make_pair("GoSubZone", make_unique<GoSubZone>()));
-actions_.insert(make_pair("LeaveSubZone", make_unique<LeaveSubZone>()));
-actions_.insert(make_pair("GoPage", make_unique<GoPage>()));
-actions_.insert(make_pair("NextPage", make_unique<GoNextPage>()));
-actions_.insert(make_pair("PageNameDisplay", make_unique<PageNameDisplay>()));
-actions_.insert(make_pair("ToggleSynchPageBanking", make_unique<ToggleSynchPageBanking>()));
-actions_.insert(make_pair("ToggleScrollLink", make_unique<ToggleScrollLink>()));
-actions_.insert(make_pair("ToggleFollowMCP", make_unique<ToggleFollowMCP>()));
-actions_.insert(make_pair("ClearFXSlot", make_unique<ClearFXSlot>()));
-actions_.insert(make_pair("ClearFocusedFX", make_unique<ClearFocusedFX>()));
-actions_.insert(make_pair("ClearSelectedTrackFX", make_unique<ClearSelectedTrackFX>()));
-
-actions_.insert(make_pair("ToggleFolderView", make_unique<ToggleFolderView>()));
-actions_.insert(make_pair("TrackEnterFolder", make_unique<TrackEnterFolder>()));
-actions_.insert(make_pair("ExitCurrentFolder", make_unique<ExitCurrentFolder>()));
-
-//// Project Actions ////
-actions_.insert(make_pair("SaveProject", make_unique<SaveProject>()));
-actions_.insert(make_pair("Undo", make_unique<Undo>()));
-actions_.insert(make_pair("Redo", make_unique<Redo>()));
-//// VCA and Folder ////
-actions_.insert(make_pair("TrackToggleVCASpill", make_unique<TrackToggleVCASpill>()));
-actions_.insert(make_pair("TrackVCALeaderDisplay", make_unique<TrackVCALeaderDisplay>()));
-actions_.insert(make_pair("TrackToggleFolderSpill", make_unique<TrackToggleFolderSpill>()));
-actions_.insert(make_pair("TrackFolderParentDisplay", make_unique<TrackFolderParentDisplay>()));
-//// Automation ////
-actions_.insert(make_pair("TrackAutoMode", make_unique<TrackAutoMode>()));
-actions_.insert(make_pair("TrackAutoModeDisplay", make_unique<TrackAutoModeDisplay>()));
-actions_.insert(make_pair("GlobalAutoMode", make_unique<GlobalAutoMode>()));
-actions_.insert(make_pair("GlobalAutoModeDisplay", make_unique<GlobalAutoModeDisplay>()));
-actions_.insert(make_pair("CycleTrackAutoMode", make_unique<CycleTrackAutoMode>()));
-//// Other ////
-actions_.insert(make_pair("Reaper", make_unique<ReaperAction>()));
-actions_.insert(make_pair("NoAction", make_unique<NoAction>()));
-actions_.insert(make_pair("InvalidAction", make_unique<InvalidAction>()));
-actions_.insert(make_pair("FixedTextDisplay", make_unique<FixedTextDisplay>()));
-actions_.insert(make_pair("FixedRGBColorDisplay", make_unique<FixedRGBColorDisplay>()));
-actions_.insert(make_pair("ClearAllSolo", make_unique<ClearAllSolo>()));
-actions_.insert(make_pair("ToggleChannel", make_unique<SetToggleChannel>()));
-actions_.insert(make_pair("SendMIDIMessage", make_unique<SendMIDIMessage>()));
-actions_.insert(make_pair("SendOSCMessage", make_unique<SendOSCMessage>()));
-actions_.insert(make_pair("SetXTouchDisplayColors", make_unique<SetXTouchDisplayColors>()));
-actions_.insert(make_pair("RestoreXTouchDisplayColors", make_unique<RestoreXTouchDisplayColors>()));
-actions_.insert(make_pair("Speak", make_unique<SpeakOSARAMessage>()));
-actions_.insert(make_pair("SpeakFXMenuName", make_unique<SpeakFXMenuName>()));
-actions_.insert(make_pair("SpeakTrackSendDestination", make_unique<SpeakTrackSendDestination>()));
-actions_.insert(make_pair("SpeakTrackReceiveSource", make_unique<SpeakTrackReceiveSource>()));
-actions_.insert(make_pair("ToggleRestrictTextLength", make_unique<ToggleRestrictTextLength>()));
-actions_.insert(make_pair("ToggleUseLocalModifiers", make_unique<ToggleUseLocalModifiers>()));
-actions_.insert(make_pair("CSINameDisplay", make_unique<CSINameDisplay>()));
-actions_.insert(make_pair("CSIVersionDisplay", make_unique<CSIVersionDisplay>()));
-//// Modifiers ////
-actions_.insert(make_pair("Shift", make_unique<SetShift>()));
-actions_.insert(make_pair("Option", make_unique<SetOption>()));
-actions_.insert(make_pair("Control", make_unique<SetControl>()));
-actions_.insert(make_pair("Alt", make_unique<SetAlt>()));
-actions_.insert(make_pair("Flip", make_unique<SetFlip>()));
-actions_.insert(make_pair("Marker", make_unique<SetMarker>()));
-actions_.insert(make_pair("Nudge", make_unique<SetNudge>()));
-actions_.insert(make_pair("Scrub", make_unique<SetScrub>()));
-actions_.insert(make_pair("Zoom", make_unique<SetZoom>()));
-actions_.insert(make_pair("Global", make_unique<SetGlobal>()));
-actions_.insert(make_pair("GlobalModeDisplay", make_unique<GlobalModeDisplay>()));
-actions_.insert(make_pair("ClearModifier", make_unique<ClearModifier>()));
-actions_.insert(make_pair("ClearModifiers", make_unique<ClearModifiers>()));
-// Invert, Hold, DoublePress - are pseudo modifiers
-//// Global settings ////
-actions_.insert(make_pair("EnableOSD", make_unique<EnableOSD>()));
-actions_.insert(make_pair("SetOSDTime", make_unique<SetOSDTime>()));
-actions_.insert(make_pair("SetLatchTime", make_unique<SetLatchTime>()));
-actions_.insert(make_pair("SetHoldTime", make_unique<SetHoldTime>()));
-actions_.insert(make_pair("SetDoublePressTime", make_unique<SetDoublePressTime>()));
+////////////////////////////////////////////////////////////////////////////////////////////////////////    void InitActionsDictionary() {
+void CSurfIntegrator::InitActionsDictionary() {
+  #define X(className, strName) actions_.insert({strName, std::make_unique<className>()});
+    ACTION_TYPE_LIST(X)
+  #undef X
 }
-
 void CSurfIntegrator::Init()
 {
     pages_.clear();
@@ -1670,21 +1485,24 @@ void ActionContext::ProcessActionTitle(string origName)
         actionTitle_ = DAW::GetCommandName(commandId_);
         return;
     }
+    const ActionType actionType = this->GetAction()->GetType();
     const char* actionName = this->GetAction()->GetName();
     const char* stringParam = this->GetStringParam();
     
-    // switch (expression) {
-    // case constant1:
-    //     // code to execute if expression == constant1
-    //     break;
-    if (IsSameString(actionName, "TrackAutoMode"))
-        actionTitle_ = string("Automation: ") + TrackNavigationManager::GetAutoModeDisplayNameNoOverride(atoi(stringParam));
-    else if (IsSameString(stringParam, "{")|| IsSameString(stringParam, "["))
-        actionTitle_ = actionName; //TODO: fix parser?
-    else if (IsSameString(actionName, "InvalidAction"))
-        actionTitle_ = "InvalidAction: " + origName;
-    else
-        actionTitle_ = (stringParam && !stringParam[0]) ? string(actionName) + " " + stringParam : actionName;
+    switch (actionType) {
+        case ActionType::InvalidAction:
+            actionTitle_ = "InvalidAction: " + origName;
+            break;
+        case ActionType::TrackAutoMode:
+            actionTitle_ = string("Automation: ") + TrackNavigationManager::GetAutoModeDisplayNameNoOverride(atoi(stringParam));
+            break;
+        default:
+            if (IsSameString(stringParam, "{")|| IsSameString(stringParam, "["))
+                actionTitle_ = actionName; //TODO: fix parser?
+            else
+                actionTitle_ = (stringParam && stringParam[0] != '\0') ? string(actionName) + " " + stringParam : actionName;
+            break;
+    }
 }
 
 Page *ActionContext::GetPage()
@@ -1992,49 +1810,47 @@ void ActionContext::ProcessOSD(double value, bool fromFeedback)
 }
 
 bool ActionContext::OsdIgnoresButtonRelease() {
-    const char* name = this->GetAction()->GetName();
-    if (!name) return true;
-    //FIXME: make adequate comparison, not by the name string
-    if (IsSameString(name, "Bank")
-     || IsSameString(name, "SetShift")
-     || IsSameString(name, "SetOption")
-     || IsSameString(name, "SetControl")
-     || IsSameString(name, "SetAlt")
-     || IsSameString(name, "SetFlip")
-     || IsSameString(name, "SetGlobal")
-     || IsSameString(name, "SetMarker")
-     || IsSameString(name, "SetNudge")
-     || IsSameString(name, "SetZoom")
-     || IsSameString(name, "SetScrub")
-     || IsSameString(name, "FXParam")
-     || IsSameString(name, "JSFXParam")
-     || IsSameString(name, "TCPFXParam")
-     || IsSameString(name, "LastTouchedFXParam")
-     || IsSameString(name, "TrackVolume")
-     || IsSameString(name, "SoftTakeover7BitTrackVolume")
-     || IsSameString(name, "SoftTakeover14BitTrackVolume")
-     || IsSameString(name, "TrackVolumeDB")
-     || IsSameString(name, "TrackPan")
-     || IsSameString(name, "TrackPanPercent")
-     || IsSameString(name, "TrackPanWidth")
-     || IsSameString(name, "TrackPanWidthPercent")
-     || IsSameString(name, "TrackPanL")
-     || IsSameString(name, "TrackPanLPercent")
-     || IsSameString(name, "TrackPanR")
-     || IsSameString(name, "TrackPanRPercent")
-     || IsSameString(name, "TrackPanAutoLeft")
-     || IsSameString(name, "TrackPanAutoRight")
-     || IsSameString(name, "TrackSendVolume")
-     || IsSameString(name, "TrackSendVolumeDB")
-     || IsSameString(name, "TrackSendPan")
-     || IsSameString(name, "TrackSendPanPercent")
-     || IsSameString(name, "TrackReceiveVolume")
-     || IsSameString(name, "TrackReceiveVolumeDB")
-     || IsSameString(name, "TrackReceivePan")
-     || IsSameString(name, "TrackReceivePanPercent")
-     || IsSameString(name, "MoveCursor")
-     || IsSameString(name, "TrackVolumeWithMeterAverageLR")
-     || IsSameString(name, "TrackVolumeWithMeterMaxPeakLR")
+    const ActionType actionType = this->GetAction()->GetType();
+    if (actionType == ActionType::Bank
+     || actionType == ActionType::SetShift
+     || actionType == ActionType::SetOption
+     || actionType == ActionType::SetControl
+     || actionType == ActionType::SetAlt
+     || actionType == ActionType::SetFlip
+     || actionType == ActionType::SetGlobal
+     || actionType == ActionType::SetMarker
+     || actionType == ActionType::SetNudge
+     || actionType == ActionType::SetZoom
+     || actionType == ActionType::SetScrub
+     || actionType == ActionType::FXParam
+     || actionType == ActionType::JSFXParam
+     || actionType == ActionType::TCPFXParam
+     || actionType == ActionType::LastTouchedFXParam
+     || actionType == ActionType::TrackVolume
+     || actionType == ActionType::SoftTakeover7BitTrackVolume
+     || actionType == ActionType::SoftTakeover14BitTrackVolume
+     || actionType == ActionType::TrackVolumeDB
+     || actionType == ActionType::TrackPan
+     || actionType == ActionType::TrackPanPercent
+     || actionType == ActionType::TrackPanWidth
+     || actionType == ActionType::TrackPanWidthPercent
+     || actionType == ActionType::TrackPanL
+     || actionType == ActionType::TrackPanLPercent
+     || actionType == ActionType::TrackPanR
+     || actionType == ActionType::TrackPanRPercent
+     || actionType == ActionType::TrackPanAutoLeft
+     || actionType == ActionType::TrackPanAutoRight
+     || actionType == ActionType::TrackSendVolume
+     || actionType == ActionType::TrackSendVolumeDB
+     || actionType == ActionType::TrackSendPan
+     || actionType == ActionType::TrackSendPanPercent
+     || actionType == ActionType::TrackReceiveVolume
+     || actionType == ActionType::TrackReceiveVolumeDB
+     || actionType == ActionType::TrackReceivePan
+     || actionType == ActionType::TrackReceivePanPercent
+     || actionType == ActionType::MoveCursor
+     || actionType == ActionType::TrackVolumeWithMeterAverageLR
+     || actionType == ActionType::TrackVolumeWithMeterMaxPeakLR
     ) {
         return false;
     }

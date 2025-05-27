@@ -1596,7 +1596,7 @@ class TrackReceiveMute : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    ActionType GetType() const override { return ActionType::TrackReceivMute; }
+    ActionType GetType() const override { return ActionType::TrackReceiveMute; }
     
     virtual double GetCurrentNormalizedValue(ActionContext *context) override
     {

@@ -357,179 +357,193 @@ class ActionContext;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-
 #define ACTION_TYPE_LIST(X) \
-X(AllSurfacesGoHome, "AllSurfacesGoHome") \
-X(Bank, "Bank") \
-X(ClearAllSolo, "ClearAllSolo") \
-X(ClearFocusedFX, "ClearFocusedFX") \
-X(ClearFXSlot, "ClearFXSlot") \
-X(ClearLastTouchedFXParam, "ClearLastTouchedFXParam") \
-X(ClearModifier, "ClearModifier") \
-X(ClearModifiers, "ClearModifiers") \
-X(ClearSelectedTrackFX, "ClearSelectedTrackFX") \
-X(CSINameDisplay, "CSINameDisplay") \
-X(CSIVersionDisplay, "CSIVersionDisplay") \
-X(CycleTimeDisplayModes, "CycleTimeDisplayModes") \
-X(CycleTimeline, "CycleTimeline") \
-X(CycleTrackAutoMode, "CycleTrackAutoMode") \
-X(CycleTrackInputMonitor, "CycleTrackInputMonitor") \
-X(DisableFocusedFXMapping, "DisableFocusedFXMapping") \
-X(DisableLastTouchedFXParamMapping, "DisableLastTouchedFXParamMapping") \
-X(EnableOSD, "EnableOSD") \
-X(ExitCurrentFolder, "ExitCurrentFolder") \
-X(FastForward, "FastForward") \
-X(FixedRGBColorDisplay, "FixedRGBColorDisplay") \
-X(FixedTextDisplay, "FixedTextDisplay") \
-X(FXBypassDisplay, "FXBypassDisplay") \
-X(FXGainReductionMeter, "FXGainReductionMeter") \
-X(FXMenuNameDisplay, "FXMenuNameDisplay") \
-X(FXNameDisplay, "FXNameDisplay") \
-X(FXOfflineDisplay, "FXOfflineDisplay") \
-X(FXParam, "FXParam") \
-X(FXParamNameDisplay, "FXParamNameDisplay") \
-X(FXParamValueDisplay, "FXParamValueDisplay") \
-X(GlobalAutoMode, "GlobalAutoMode") \
-X(GlobalAutoModeDisplay, "GlobalAutoModeDisplay") \
-X(GlobalModeDisplay, "GlobalModeDisplay") \
-X(GoFXSlot, "GoFXSlot") \
-X(GoHome, "GoHome") \
-X(GoNextPage, "GoNextPage") \
-X(GoPage, "GoPage") \
-X(GoSubZone, "GoSubZone") \
-X(GoZone, "GoZone") \
-X(HideFXSlot, "HideFXSlot") \
-X(InvalidAction, "InvalidAction") \
-X(JSFXParam, "JSFXParam") \
-X(LastTouchedFXParam, "LastTouchedFXParam") \
-X(LastTouchedFXParamNameDisplay, "LastTouchedFXParamNameDisplay") \
-X(LastTouchedFXParamValueDisplay, "LastTouchedFXParamValueDisplay") \
-X(LearnFocusedFX, "LearnFocusedFX") \
-X(LeaveSubZone, "LeaveSubZone") \
-X(MCUTimeDisplay, "MCUTimeDisplay") \
-X(MoveCursor, "MoveCursor") \
-X(NoAction, "NoAction") \
-X(OSCTimeDisplay, "OSCTimeDisplay") \
-X(PageNameDisplay, "PageNameDisplay") \
-X(Play, "Play") \
-X(ReaperAction, "ReaperAction") \
-X(Record, "Record") \
-X(Redo, "Redo") \
-X(RestoreXTouchDisplayColors, "RestoreXTouchDisplayColors") \
+/* Transport and Timeline */ \
+ X(MoveCursor, "MoveEditCursor") \
 X(Rewind, "Rewind") \
-X(SaveProject, "SaveProject") \
-X(SendMIDIMessage, "SendMIDIMessage") \
-X(SendOSCMessage, "SendOSCMessage") \
-X(SetAlt, "SetAlt") \
-X(SetControl, "SetControl") \
-X(SetDoublePressTime, "SetDoublePressTime") \
-X(SetFlip, "SetFlip") \
-X(SetGlobal, "SetGlobal") \
-X(SetHoldTime, "SetHoldTime") \
-X(SetLatchTime, "SetLatchTime") \
-X(SetMarker, "SetMarker") \
-X(SetNudge, "SetNudge") \
-X(SetOption, "SetOption") \
-X(SetOSDTime, "SetOSDTime") \
-X(SetScrub, "SetScrub") \
-X(SetShift, "SetShift") \
-X(SetToggleChannel, "SetToggleChannel") \
-X(SetXTouchDisplayColors, "SetXTouchDisplayColors") \
-X(SetZoom, "SetZoom") \
-X(ShowFXSlot, "ShowFXSlot") \
-X(SoftTakeover14BitTrackVolume, "SoftTakeover14BitTrackVolume") \
-X(SoftTakeover7BitTrackVolume, "SoftTakeover7BitTrackVolume") \
-X(SpeakFXMenuName, "SpeakFXMenuName") \
-X(SpeakOSARAMessage, "SpeakOSARAMessage") \
-X(SpeakTrackReceiveSource, "SpeakTrackReceiveSource") \
-X(SpeakTrackSendDestination, "SpeakTrackSendDestination") \
+X(FastForward, "FastForward") \
+X(Play, "Play") \
 X(Stop, "Stop") \
-X(TCPFXParam, "TCPFXParam") \
-X(TCPFXParamNameDisplay, "TCPFXParamNameDisplay") \
-X(TCPFXParamValueDisplay, "TCPFXParamValueDisplay") \
-X(ToggleEnableFocusedFXMapping, "ToggleEnableFocusedFXMapping") \
-X(ToggleEnableLastTouchedFXParamMapping, "ToggleEnableLastTouchedFXParamMapping") \
-X(ToggleFolderView, "ToggleFolderView") \
-X(ToggleFollowMCP, "ToggleFollowMCP") \
-X(ToggleFXBypass, "ToggleFXBypass") \
-X(ToggleFXOffline, "ToggleFXOffline") \
-X(ToggleRestrictTextLength, "ToggleRestrictTextLength") \
-X(ToggleScrollLink, "ToggleScrollLink") \
-X(ToggleSynchPageBanking, "ToggleSynchPageBanking") \
-X(ToggleUseLocalFXSlot, "ToggleUseLocalFXSlot") \
-X(ToggleUseLocalModifiers, "ToggleUseLocalModifiers") \
-X(TrackAutoMode, "TrackAutoMode") \
-X(TrackAutoModeDisplay, "TrackAutoModeDisplay") \
-X(TrackEnterFolder, "TrackEnterFolder") \
-X(TrackFolderParentDisplay, "TrackFolderParentDisplay") \
-X(TrackInputMonitorDisplay, "TrackInputMonitorDisplay") \
+X(Record, "Record") \
+X(CycleTimeline, "CycleTimeline") \
+X(MCUTimeDisplay, "MCUTimeDisplay") \
+X(OSCTimeDisplay, "OSCTimeDisplay") \
+X(CycleTimeDisplayModes, "CycleTimeDisplayModes") \
+/* Tracks */ \
+X(TrackVolume, "TrackVolume") \
+X(SoftTakeover7BitTrackVolume, "SoftTakeover7BitTrackVolume") \
+X(SoftTakeover14BitTrackVolume, "SoftTakeover14BitTrackVolume") \
+X(TrackPanAutoLeft, "TrackPanAutoLeft") \
+X(TrackPanAutoRight, "TrackPanAutoRight") \
+X(TrackPan, "TrackPan") \
+X(TrackPanWidth, "TrackPanWidth") \
+X(TrackPanL, "TrackPanL") \
+X(TrackPanR, "TrackPanR") \
+X(TrackSelect, "TrackSelect") \
+X(TrackUniqueSelect, "TrackUniqueSelect") \
+X(TrackRangeSelect, "TrackRangeSelect") \
+X(TrackSolo, "TrackSolo") \
+X(TrackMute, "TrackMute") \
+X(TrackRecordArm, "TrackRecordArm") \
+X(TrackRecordArmDisplay, "TrackRecordArmDisplay") \
 X(TrackInvertPolarity, "TrackInvertPolarity") \
 X(TrackInvertPolarityDisplay, "TrackInvertPolarityDisplay") \
-X(TrackMute, "TrackMute") \
+X(CycleTrackInputMonitor, "CycleTrackInputMonitor") \
+X(TrackInputMonitorDisplay, "TrackInputMonitorDisplay") \
 X(TrackNameDisplay, "TrackNameDisplay") \
 X(TrackNumberDisplay, "TrackNumberDisplay") \
+X(TrackVolumeDisplay, "TrackVolumeDisplay") \
+X(TrackPanAutoLeftDisplay, "TrackPanAutoLeftDisplay") \
+X(TrackPanAutoRightDisplay, "TrackPanAutoRightDisplay") \
+X(TrackPanDisplay, "TrackPanDisplay") \
+X(TrackPanWidthDisplay, "TrackPanWidthDisplay") \
+X(TrackPanLeftDisplay, "TrackPanLeftDisplay") \
+X(TrackPanRightDisplay, "TrackPanRightDisplay") \
 X(TrackOutputMeter, "TrackOutputMeter") \
 X(TrackOutputMeterAverageLR, "TrackOutputMeterAverageLR") \
 X(TrackOutputMeterMaxPeakLR, "TrackOutputMeterMaxPeakLR") \
-X(TrackPan, "TrackPan") \
-X(TrackPanAutoLeft, "TrackPanAutoLeft") \
-X(TrackPanAutoLeftDisplay, "TrackPanAutoLeftDisplay") \
-X(TrackPanAutoRight, "TrackPanAutoRight") \
-X(TrackPanAutoRightDisplay, "TrackPanAutoRightDisplay") \
-X(TrackPanDisplay, "TrackPanDisplay") \
-X(TrackPanL, "TrackPanL") \
-X(TrackPanLeftDisplay, "TrackPanLeftDisplay") \
-X(TrackPanLPercent, "TrackPanLPercent") \
-X(TrackPanPercent, "TrackPanPercent") \
-X(TrackPanR, "TrackPanR") \
-X(TrackPanRightDisplay, "TrackPanRightDisplay") \
-X(TrackPanRPercent, "TrackPanRPercent") \
-X(TrackPanWidth, "TrackPanWidth") \
-X(TrackPanWidthDisplay, "TrackPanWidthDisplay") \
-X(TrackPanWidthPercent, "TrackPanWidthPercent") \
-X(TrackRangeSelect, "TrackRangeSelect") \
-X(TrackReceiveInvertPolarity, "TrackReceiveInvertPolarity") \
-X(TrackReceiveNameDisplay, "TrackReceiveNameDisplay") \
-X(TrackReceivePan, "TrackReceivePan") \
-X(TrackReceivePanDisplay, "TrackReceivePanDisplay") \
-X(TrackReceivePanPercent, "TrackReceivePanPercent") \
-X(TrackReceivePrePost, "TrackReceivePrePost") \
-X(TrackReceivePrePostDisplay, "TrackReceivePrePostDisplay") \
-X(TrackReceiveStereoMonoDisplay, "TrackReceiveStereoMonoDisplay") \
-X(TrackReceiveStereoMonoToggle, "TrackReceiveStereoMonoToggle") \
-X(TrackReceiveVolume, "TrackReceiveVolume") \
-X(TrackReceiveVolumeDB, "TrackReceiveVolumeDB") \
-X(TrackReceiveVolumeDisplay, "TrackReceiveVolumeDisplay") \
-X(TrackReceivMute, "TrackReceivMute") \
-X(TrackRecordArm, "TrackRecordArm") \
-X(TrackRecordArmDisplay, "TrackRecordArmDisplay") \
 X(TrackRecordInputDisplay, "TrackRecordInputDisplay") \
-X(TrackSelect, "TrackSelect") \
-X(TrackSendInvertPolarity, "TrackSendInvertPolarity") \
-X(TrackSendMute, "TrackSendMute") \
-X(TrackSendNameDisplay, "TrackSendNameDisplay") \
-X(TrackSendPan, "TrackSendPan") \
-X(TrackSendPanDisplay, "TrackSendPanDisplay") \
-X(TrackSendPanPercent, "TrackSendPanPercent") \
-X(TrackSendPrePost, "TrackSendPrePost") \
-X(TrackSendPrePostDisplay, "TrackSendPrePostDisplay") \
-X(TrackSendStereoMonoDisplay, "TrackSendStereoMonoDisplay") \
-X(TrackSendStereoMonoToggle, "TrackSendStereoMonoToggle") \
-X(TrackSendVolume, "TrackSendVolume") \
-X(TrackSendVolumeDB, "TrackSendVolumeDB") \
-X(TrackSendVolumeDisplay, "TrackSendVolumeDisplay") \
-X(TrackSolo, "TrackSolo") \
-X(TrackToggleFolderSpill, "TrackToggleFolderSpill") \
-X(TrackToggleVCASpill, "TrackToggleVCASpill") \
-X(TrackUniqueSelect, "TrackUniqueSelect") \
-X(TrackVCALeaderDisplay, "TrackVCALeaderDisplay") \
-X(TrackVolume, "TrackVolume") \
 X(TrackVolumeDB, "TrackVolumeDB") \
-X(TrackVolumeDisplay, "TrackVolumeDisplay") \
+X(TrackPanPercent, "TrackPanPercent") \
+X(TrackPanWidthPercent, "TrackPanWidthPercent") \
+X(TrackPanLPercent, "TrackPanLPercent") \
+X(TrackPanRPercent, "TrackPanRPercent") \
 X(TrackVolumeWithMeterAverageLR, "TrackVolumeWithMeterAverageLR") \
 X(TrackVolumeWithMeterMaxPeakLR, "TrackVolumeWithMeterMaxPeakLR") \
-X(Undo, "Undo")
+/* Track Sends */ \
+X(TrackSendNameDisplay, "TrackSendNameDisplay") \
+X(TrackSendVolume, "TrackSendVolume") \
+X(TrackSendVolumeDisplay, "TrackSendVolumeDisplay") \
+X(TrackSendPan, "TrackSendPan") \
+X(TrackSendPanDisplay, "TrackSendPanDisplay") \
+X(TrackSendPrePost, "TrackSendPrePost") \
+X(TrackSendPrePostDisplay, "TrackSendPrePostDisplay") \
+X(TrackSendMute, "TrackSendMute") \
+X(TrackSendStereoMonoDisplay, "TrackSendStereoMonoDisplay") \
+X(TrackSendStereoMonoToggle, "TrackSendStereoMonoToggle") \
+X(TrackSendInvertPolarity, "TrackSendInvertPolarity") \
+X(TrackSendVolumeDB, "TrackSendVolumeDB") \
+X(TrackSendPanPercent, "TrackSendPanPercent") \
+/* Track Receives */ \
+X(TrackReceiveNameDisplay, "TrackReceiveNameDisplay") \
+X(TrackReceiveVolume, "TrackReceiveVolume") \
+X(TrackReceiveVolumeDisplay, "TrackReceiveVolumeDisplay") \
+X(TrackReceivePan, "TrackReceivePan") \
+X(TrackReceivePanDisplay, "TrackReceivePanDisplay") \
+X(TrackReceivePrePost, "TrackReceivePrePost") \
+X(TrackReceivePrePostDisplay, "TrackReceivePrePostDisplay") \
+X(TrackReceiveMute, "TrackReceiveMute") \
+X(TrackReceiveStereoMonoToggle, "TrackReceiveStereoMonoToggle") \
+X(TrackReceiveStereoMonoDisplay, "TrackReceiveStereoMonoDisplay") \
+X(TrackReceiveInvertPolarity, "TrackReceiveInvertPolarity") \
+X(TrackReceiveVolumeDB, "TrackReceiveVolumeDB") \
+X(TrackReceivePanPercent, "TrackReceivePanPercent") \
+/* FX */ \
+X(FXParam, "FXParam") \
+X(FXNameDisplay, "FXNameDisplay") \
+X(FXParamNameDisplay, "FXParamNameDisplay") \
+X(FXParamValueDisplay, "FXParamValueDisplay") \
+X(FXMenuNameDisplay, "FXMenuNameDisplay") \
+X(ToggleEnableFocusedFXMapping, "ToggleEnableFocusedFXMapping") \
+X(ToggleFXBypass, "ToggleFXBypass") \
+X(FXBypassDisplay, "FXBypassDisplay") \
+X(ToggleFXOffline, "ToggleFXOffline") \
+X(FXOfflineDisplay, "FXOfflineDisplay") \
+X(FXGainReductionMeter, "FXGainReductionMeter") \
+X(GoFXSlot, "GoFXSlot") \
+X(ShowFXSlot, "ShowFXSlot") \
+X(HideFXSlot, "HideFXSlot") \
+X(TCPFXParam, "TCPFXParam") \
+X(TCPFXParamNameDisplay, "TCPFXParamNameDisplay") \
+X(TCPFXParamValueDisplay, "TCPFXParamValueDisplay") \
+X(JSFXParam, "JSFXParam") \
+\
+X(LearnFocusedFX, "LearnFocusedFX") \
+X(LastTouchedFXParam, "LastTouchedFXParam") \
+X(LastTouchedFXParamNameDisplay, "LastTouchedFXParamNameDisplay") \
+X(LastTouchedFXParamValueDisplay, "LastTouchedFXParamValueDisplay") \
+X(ClearLastTouchedFXParam, "ClearLastTouchedFXParam") \
+X(DisableFocusedFXMapping, "DisableFocusedFXMapping") \
+X(DisableLastTouchedFXParamMapping, "DisableLastTouchedFXParamMapping") \
+X(ToggleEnableLastTouchedFXParamMapping, "ToggleEnableLastTouchedFXParamMapping") \
+X(ToggleUseLocalFXSlot, "ToggleUseLocalFXSlot") \
+/* Navigation */ \
+X(Bank, "Bank") \
+X(GoHome, "GoHome") \
+X(AllSurfacesGoHome, "AllSurfacesGoHome") \
+X(GoZone, "GoZone") \
+X(GoSubZone, "GoSubZone") \
+X(LeaveSubZone, "LeaveSubZone") \
+X(GoPage, "GoPage") \
+ X(GoNextPage, "NextPage") \
+X(PageNameDisplay, "PageNameDisplay") \
+X(ToggleSynchPageBanking, "ToggleSynchPageBanking") \
+X(ToggleScrollLink, "ToggleScrollLink") \
+X(ToggleFollowMCP, "ToggleFollowMCP") \
+X(ClearFXSlot, "ClearFXSlot") \
+X(ClearFocusedFX, "ClearFocusedFX") \
+X(ClearSelectedTrackFX, "ClearSelectedTrackFX") \
+\
+X(ToggleFolderView, "ToggleFolderView") \
+X(TrackEnterFolder, "TrackEnterFolder") \
+X(ExitCurrentFolder, "ExitCurrentFolder") \
+/* Project Actions */ \
+X(SaveProject, "SaveProject") \
+X(Undo, "Undo") \
+X(Redo, "Redo") \
+/* VCA and Folder */ \
+X(TrackToggleVCASpill, "TrackToggleVCASpill") \
+X(TrackVCALeaderDisplay, "TrackVCALeaderDisplay") \
+X(TrackToggleFolderSpill, "TrackToggleFolderSpill") \
+X(TrackFolderParentDisplay, "TrackFolderParentDisplay") \
+/* Automation */ \
+X(TrackAutoMode, "TrackAutoMode") \
+X(TrackAutoModeDisplay, "TrackAutoModeDisplay") \
+X(GlobalAutoMode, "GlobalAutoMode") \
+X(GlobalAutoModeDisplay, "GlobalAutoModeDisplay") \
+X(CycleTrackAutoMode, "CycleTrackAutoMode") \
+/* Other */ \
+X(EnableOSD, "EnableOSD") \
+ X(ReaperAction, "Reaper") \
+X(NoAction, "NoAction") \
+X(InvalidAction, "InvalidAction") \
+X(FixedTextDisplay, "FixedTextDisplay") \
+X(FixedRGBColorDisplay, "FixedRGBColorDisplay") \
+X(ClearAllSolo, "ClearAllSolo") \
+X(SetToggleChannel, "ToggleChannel") \
+X(SendMIDIMessage, "SendMIDIMessage") \
+X(SendOSCMessage, "SendOSCMessage") \
+X(SetXTouchDisplayColors, "SetXTouchDisplayColors") \
+X(RestoreXTouchDisplayColors, "RestoreXTouchDisplayColors") \
+ X(SpeakOSARAMessage, "Speak") \
+X(SpeakFXMenuName, "SpeakFXMenuName") \
+X(SpeakTrackSendDestination, "SpeakTrackSendDestination") \
+X(SpeakTrackReceiveSource, "SpeakTrackReceiveSource") \
+X(ToggleRestrictTextLength, "ToggleRestrictTextLength") \
+X(ToggleUseLocalModifiers, "ToggleUseLocalModifiers") \
+X(CSINameDisplay, "CSINameDisplay") \
+X(CSIVersionDisplay, "CSIVersionDisplay") \
+/* Modifiers */ \
+ X(SetShift, "Shift") \
+ X(SetOption, "Option") \
+ X(SetControl, "Control") \
+ X(SetAlt, "Alt") \
+ X(SetFlip, "Flip") \
+ X(SetMarker, "Marker") \
+ X(SetNudge, "Nudge") \
+ X(SetScrub, "Scrub") \
+ X(SetZoom, "Zoom") \
+ X(SetGlobal, "Global") \
+X(GlobalModeDisplay, "GlobalModeDisplay") \
+X(ClearModifier, "ClearModifier") \
+X(ClearModifiers, "ClearModifiers") \
+/* Global settings */ \
+X(SetDoublePressTime, "SetDoublePressTime") \
+X(SetHoldTime, "SetHoldTime") \
+X(SetLatchTime, "SetLatchTime") \
+X(SetOSDTime, "SetOSDTime")
+/* Invert, Hold, DoublePress - are pseudo modifiers */
+
 
 
 enum class ActionType {

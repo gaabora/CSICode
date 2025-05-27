@@ -92,7 +92,7 @@ struct FXCell
         {
             ActionContext *nameContext = GetFirstContext(zoneManager, displayWidget, modifier);
             
-            if (nameContext != NULL && IsSameString(nameContext->GetAction()->GetName(), "FixedTextDisplay"))
+            if (nameContext != NULL && nameContext->GetAction()->GetType() == ActionType::FixedTextDisplay)
             {
                 ActionContext *paramContext = GetFirstContext(zoneManager, widget, modifier);
 
@@ -113,7 +113,7 @@ struct FXCell
         {
             ActionContext *valueContext = GetFirstContext(zoneManager, displayWidget, modifier);
             
-            if (valueContext != NULL && IsSameString(valueContext->GetAction()->GetName(), "FXParamValueDisplay"))
+            if (valueContext != NULL && valueContext->GetAction()->GetType() == ActionType::FXParamValueDisplay)
             {
                 ActionContext *paramContext = GetFirstContext(zoneManager, widget, modifier);
 
@@ -131,7 +131,7 @@ struct FXCell
         {
             ActionContext *nameContext = GetFirstContext(zoneManager, displayWidget, modifier);
             
-            if (nameContext != NULL && IsSameString(nameContext->GetAction()->GetName(), "FixedTextDisplay"))
+            if (nameContext != NULL && nameContext->GetAction()->GetType() == ActionType::FixedTextDisplay)
             {
                 ActionContext *paramContext = GetFirstContext(zoneManager, widget, modifier);
 
@@ -149,7 +149,7 @@ struct FXCell
         {
             ActionContext *valueContext = GetFirstContext(zoneManager, displayWidget, modifier);
             
-            if (valueContext != NULL && IsSameString(valueContext->GetAction()->GetName(), "FXParamValueDisplay"))
+            if (valueContext != NULL && valueContext->GetAction()->GetType() == ActionType::FXParamValueDisplay)
             {
                 ActionContext *paramContext = GetFirstContext(zoneManager, widget, modifier);
 
@@ -214,7 +214,7 @@ struct FXCell
         {
             ActionContext *nameContext = GetFirstContext(zoneManager, displayWidget, modifier);
             
-            if (nameContext != NULL && nameContext->GetParamIndex() == paramContext->GetParamIndex() && IsSameString(nameContext->GetAction()->GetName(), "FixedTextDisplay"))
+            if (nameContext != NULL && nameContext->GetParamIndex() == paramContext->GetParamIndex() && nameContext->GetAction()->GetType() == ActionType::FixedTextDisplay)
             {
                 nameContext->SetAction(zoneManager->GetCSI()->GetAction("NoAction"));
                 nameContext->SetParamIndex(0);
@@ -235,7 +235,7 @@ struct FXCell
         {
             ActionContext *valueContext = GetFirstContext(zoneManager, displayWidget, modifier);
             
-            if (valueContext != NULL && valueContext->GetParamIndex() == paramContext->GetParamIndex() && IsSameString(valueContext->GetAction()->GetName(), "FXParamValueDisplay"))
+            if (valueContext != NULL && valueContext->GetParamIndex() == paramContext->GetParamIndex() && valueContext->GetAction()->GetType() == ActionType::FXParamValueDisplay)
             {
                 valueContext->SetAction(zoneManager->GetCSI()->GetAction("NoAction"));
                 valueContext->SetParamIndex(0);
@@ -1181,7 +1181,7 @@ static void FillParams(HWND hwndDlg, SurfaceFXTemplate *t, Widget *widget, int m
         return;
     }
     
-    if (IsSameString(paramContext->GetAction()->GetName(), "NoAction"))
+    if (paramContext->GetAction()->GetType() == ActionType::NoAction)
         ClearParams(hwndDlg);
     else
     {
@@ -1266,7 +1266,7 @@ static void HandleAssigment(SurfaceFXTemplate *t, Widget *widget, int modifier, 
         EnableWindow(GetDlgItem(t->hwnd, IDC_Assign), false);
         EnableWindow(GetDlgItem(t->hwnd, IDC_DeepEdit), false);
     }
-    else if (!IsSameString(paramContext->GetAction()->GetName(), "FXParam") && !IsSameString(paramContext->GetAction()->GetName(), "JSFXParam"))
+    else if (paramContext->GetAction()->GetType() != ActionType::FXParam && paramContext->GetAction()->GetType() != ActionType::JSFXParam)
     {
         paramContext->SetAction(zoneManager->GetCSI()->GetFXParamAction(s_fxName));
         paramContext->SetParamIndex(paramIdx);
@@ -2179,7 +2179,7 @@ void WidgetMoved(ZoneManager *zoneManager, Widget *widget, int modifier)
 
     if (ActionContext *context = GetFirstContext(zoneManager, widget, modifier))
     {
-        if (IsSameString(context->GetAction()->GetName(), "NoAction"))
+        if (context->GetAction()->GetType() == ActionType::NoAction)
         {
             SetDlgItemText(t->hwnd, IDC_AssignFXParamDisplay, "");
             EnableWindow(GetDlgItem(t->hwnd, IDC_DeepEdit), false);
