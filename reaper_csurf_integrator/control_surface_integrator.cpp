@@ -2309,11 +2309,11 @@ void Zone::Activate()
     isActive_ = true;
     
     if (IsSameString(GetName(), "VCA"))
-        zoneManager_->GetSurface()->GetPage()->VCAModeActivated();
+        zoneManager_->GetSurface()->GetPage()->ActivateVCAMode();
     else if (IsSameString(GetName(), "Folder"))
-        zoneManager_->GetSurface()->GetPage()->FolderModeActivated();
+        zoneManager_->GetSurface()->GetPage()->ActivateFolderMode();
     else if (IsSameString(GetName(), "SelectedTracks"))
-        zoneManager_->GetSurface()->GetPage()->SelectedTracksModeActivated();
+        zoneManager_->GetSurface()->GetPage()->ActivateSelectedTracksMode();
 
     zoneManager_->GetSurface()->SendOSCMessage(GetName());
 
@@ -2343,11 +2343,11 @@ void Zone::Deactivate()
     isActive_ = false;
     
     if (IsSameString(GetName(), "VCA"))
-        zoneManager_->GetSurface()->GetPage()->VCAModeDeactivated();
+        zoneManager_->GetSurface()->GetPage()->DeactivateVCAMode();
     else if (IsSameString(GetName(), "Folder"))
-        zoneManager_->GetSurface()->GetPage()->FolderModeDeactivated();
+        zoneManager_->GetSurface()->GetPage()->DeactivateFolderMode();
     else if (IsSameString(GetName(), "SelectedTracks"))
-        zoneManager_->GetSurface()->GetPage()->SelectedTracksModeDeactivated();
+        zoneManager_->GetSurface()->GetPage()->DeactivateSelectedTracksMode();
     
     for (auto &includedZone : includedZones_)
         includedZone->Deactivate();
@@ -3676,7 +3676,7 @@ void TrackNavigationManager::RebuildTracks()
 
 void TrackNavigationManager::RebuildSelectedTracks()
 {
-    if (currentTrackVCAFolderMode_ != 3)
+    if (currentTrackVCAFolderMode_ != TrackVCAFolderMode::SelectedTracks)
         return;
 
     int oldTracksSize = (int) selectedTracks_.size();

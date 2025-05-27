@@ -3413,6 +3413,15 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+enum class TrackVCAFolderMode {
+    Track,
+    VCA,
+    Folder,
+    SelectedTracks
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TrackNavigationManager
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -3423,7 +3432,7 @@ protected:
     bool synchPages_;
     bool isScrollLinkEnabled_;
     bool isScrollSynchEnabled_;
-    int currentTrackVCAFolderMode_ = 0;
+    TrackVCAFolderMode currentTrackVCAFolderMode_ = TrackVCAFolderMode::Track;
     int targetScrollLinkChannel_ = 0;
     int trackOffset_ = 0; // Offset in tracks_ of the first channel on the surface
     int vcaTrackOffset_ = 0;
@@ -3561,51 +3570,41 @@ public:
         return isFolderViewActive_;
     }
 
-    void VCAModeActivated()
-    {
-        currentTrackVCAFolderMode_ = 1;
+    void ActivateVCAMode() {
+        currentTrackVCAFolderMode_ = TrackVCAFolderMode::VCA;
     }
-    
-    void FolderModeActivated()
-    {
-        currentTrackVCAFolderMode_ = 2;
+
+    void ActivateFolderMode() {
+        currentTrackVCAFolderMode_ = TrackVCAFolderMode::Folder;
     }
-    
-    void SelectedTracksModeActivated()
-    {
-        currentTrackVCAFolderMode_ = 3;
+
+    void ActivateSelectedTracksMode() {
+        currentTrackVCAFolderMode_ = TrackVCAFolderMode::SelectedTracks;
     }
-    
-    void VCAModeDeactivated()
-    {
-        if (currentTrackVCAFolderMode_ == 1)
-            currentTrackVCAFolderMode_ = 0;
+
+    void DeactivateVCAMode() {
+        if (currentTrackVCAFolderMode_ == TrackVCAFolderMode::VCA)
+            currentTrackVCAFolderMode_ = TrackVCAFolderMode::Track;
     }
-    
-    void FolderModeDeactivated()
-    {
-        if (currentTrackVCAFolderMode_ == 2)
-            currentTrackVCAFolderMode_ = 0;
+
+    void DeactivateFolderMode() {
+        if (currentTrackVCAFolderMode_ == TrackVCAFolderMode::Folder)
+            currentTrackVCAFolderMode_ = TrackVCAFolderMode::Track;
     }
-    
-    void SelectedTracksModeDeactivated()
-    {
-        if (currentTrackVCAFolderMode_ == 3)
-            currentTrackVCAFolderMode_ = 0;
+
+    void DeactivateSelectedTracksMode() {
+        if (currentTrackVCAFolderMode_ == TrackVCAFolderMode::SelectedTracks)
+            currentTrackVCAFolderMode_ = TrackVCAFolderMode::Track;
     }
-    
-    string GetCurrentTrackVCAFolderModeDisplay()
-    {
-        if (currentTrackVCAFolderMode_ == 0)
-            return "Track";
-        else if (currentTrackVCAFolderMode_ == 1)
-            return "VCA";
-        else if (currentTrackVCAFolderMode_ == 2)
-            return "Folder";
-        else if (currentTrackVCAFolderMode_ == 3)
-            return "SelectedTracks";
-        else
-            return "";
+
+    string GetCurrentTrackVCAFolderModeDisplay() const {
+        switch (currentTrackVCAFolderMode_) {
+            case TrackVCAFolderMode::VCA: return "VCA";
+            case TrackVCAFolderMode::Folder: return "Folder";
+            case TrackVCAFolderMode::SelectedTracks: return "SelectedTracks";
+            case TrackVCAFolderMode::Track: return "Track";
+            default: return "";
+        }
     }
     static const char *GetAutoModeDisplayNameNoOverride(int modeIndex)
     {
@@ -3736,7 +3735,7 @@ public:
     
     void AdjustTrackBank(int amount)
     {
-        if (currentTrackVCAFolderMode_ != 0)
+        if (currentTrackVCAFolderMode_ != TrackVCAFolderMode::Track)
             return;
 
         setTrackOffset(trackOffset_ + amount);
@@ -3750,7 +3749,7 @@ public:
     
     void AdjustVCABank(int amount)
     {
-        if (currentTrackVCAFolderMode_ != 1)
+        if (currentTrackVCAFolderMode_ != TrackVCAFolderMode::VCA)
             return;
        
         vcaTrackOffset_ += amount;
@@ -3771,7 +3770,7 @@ public:
     
     void AdjustFolderBank(int amount)
     {
-        if (currentTrackVCAFolderMode_ != 2)
+        if (currentTrackVCAFolderMode_ != TrackVCAFolderMode::Folder)
             return;
                    
         folderTrackOffset_ += amount;
@@ -3792,7 +3791,7 @@ public:
     
     void AdjustSelectedTracksBank(int amount)
     {
-        if (currentTrackVCAFolderMode_ != 3)
+        if (currentTrackVCAFolderMode_ != TrackVCAFolderMode::SelectedTracks)
             return;
         
         selectedTracksOffset_ += amount;
@@ -3830,64 +3829,46 @@ public:
     
     MediaTrack *GetTrackFromChannel(int channelNumber)
     {
-        if (currentTrackVCAFolderMode_ == 0)
-        {
-            channelNumber += trackOffset_;
+         switch (currentTrackVCAFolderMode_) {
+            case TrackVCAFolderMode::Track: {
+                channelNumber += trackOffset_;
+                if (channelNumber < GetNumTracks() && channelNumber < tracks_.size() && DAW::ValidateTrackPtr(tracks_[channelNumber])) {
+                    return tracks_[channelNumber];
+                }
+                break;
+            }
 
-            if (channelNumber < GetNumTracks() && channelNumber < tracks_.size() && DAW::ValidateTrackPtr(tracks_[channelNumber]))
-                return tracks_[channelNumber];
-            else
-                return NULL;
-        }
-        else if (currentTrackVCAFolderMode_ == 1)
-        {
-            channelNumber += vcaTrackOffset_;
+            case TrackVCAFolderMode::VCA: {
+                channelNumber += vcaTrackOffset_;
+                auto& tracks = (vcaLeadTrack_ == nullptr) ? vcaTopLeadTracks_ : vcaSpillTracks_;
+                if (channelNumber < tracks.size() && DAW::ValidateTrackPtr(tracks[channelNumber])) {
+                    return tracks[channelNumber];
+                }
+                break;
+            }
 
-            if (vcaLeadTrack_ == NULL)
-            {
-                if (channelNumber < vcaTopLeadTracks_.size() && DAW::ValidateTrackPtr(vcaTopLeadTracks_[channelNumber]))
-                    return vcaTopLeadTracks_[channelNumber];
-                else
-                    return NULL;
+            case TrackVCAFolderMode::Folder: {
+                channelNumber += folderTrackOffset_;
+                auto& tracks = (folderParentTrack_ == nullptr) ? folderTopParentTracks_ : folderSpillTracks_;
+                if (channelNumber < tracks.size() && DAW::ValidateTrackPtr(tracks[channelNumber])) {
+                    return tracks[channelNumber];
+                }
+                break;
             }
-            else
-            {
-                if (channelNumber < vcaSpillTracks_.size() && DAW::ValidateTrackPtr(vcaSpillTracks_[channelNumber]))
-                    return vcaSpillTracks_[channelNumber];
-                else
-                    return NULL;
-            }
-        }
-        else if (currentTrackVCAFolderMode_ == 2)
-        {
-            channelNumber += folderTrackOffset_;
 
-            if (folderParentTrack_ == NULL)
-            {
-                if (channelNumber < folderTopParentTracks_.size() && DAW::ValidateTrackPtr(folderTopParentTracks_[channelNumber]))
-                    return folderTopParentTracks_[channelNumber];
-                else
-                    return NULL;
+            case TrackVCAFolderMode::SelectedTracks: {
+                channelNumber += selectedTracksOffset_;
+                if (channelNumber < selectedTracks_.size() && DAW::ValidateTrackPtr(selectedTracks_[channelNumber])) {
+                    return selectedTracks_[channelNumber];
+                }
+                break;
             }
-            else
-            {
-                if (channelNumber < folderSpillTracks_.size() && DAW::ValidateTrackPtr(folderSpillTracks_[channelNumber]))
-                    return folderSpillTracks_[channelNumber];
-                else
-                    return NULL;
-            }
+
+            default:
+                break;
         }
-        else if (currentTrackVCAFolderMode_ == 3)
-        {
-            channelNumber += selectedTracksOffset_;
-            
-            if (channelNumber < selectedTracks_.size() && DAW::ValidateTrackPtr(selectedTracks_[channelNumber]))
-                return selectedTracks_[channelNumber];
-            else
-                return NULL;
-        }
-        
-        return NULL;
+
+        return nullptr;
     }
     
     MediaTrack *GetTrackFromId(int trackNumber)
@@ -3958,7 +3939,7 @@ public:
     
     void ToggleVCASpill(MediaTrack *track)
     {
-        if (currentTrackVCAFolderMode_ != 1)
+        if (currentTrackVCAFolderMode_ != TrackVCAFolderMode::VCA)
             return;
         
         if (DAW::GetTrackGroupMembership(track, "VOLUME_VCA_LEAD") == 0 && DAW::GetTrackGroupMembershipHigh(track, "VOLUME_VCA_LEAD") == 0)
@@ -3997,7 +3978,7 @@ public:
 
     void ToggleFolderSpill(MediaTrack *track)
     {
-        if (currentTrackVCAFolderMode_ != 2)
+        if (currentTrackVCAFolderMode_ != TrackVCAFolderMode::Folder)
             return;
         
         if (folderTopParentTracks_.size() == 0)
@@ -4122,7 +4103,7 @@ public:
     
     void RebuildVCASpill()
     {   
-        if (currentTrackVCAFolderMode_ != 1)
+        if (currentTrackVCAFolderMode_ != TrackVCAFolderMode::VCA)
             return;
     
         vcaTopLeadTracks_.clear();
@@ -4170,7 +4151,7 @@ public:
     
     void RebuildFolderTracks()
     {
-        if (currentTrackVCAFolderMode_ != 2)
+        if (currentTrackVCAFolderMode_ != TrackVCAFolderMode::Folder)
             return;
         
         folderTopParentTracks_.clear();
@@ -4409,12 +4390,12 @@ public:
     MediaTrack* SetCurrentFolder(MediaTrack* track) { return trackNavigationManager_->SetCurrentFolder(track); }
     MediaTrack* ExitCurrentFolder() { return trackNavigationManager_->ExitCurrentFolder(); }
     bool IsAtRootFolderLevel() { return trackNavigationManager_->IsAtRootFolderLevel(); }
-    void VCAModeActivated() { trackNavigationManager_->VCAModeActivated(); }
-    void VCAModeDeactivated() { trackNavigationManager_->VCAModeDeactivated(); }
-    void FolderModeActivated() { trackNavigationManager_->FolderModeActivated(); }
-    void FolderModeDeactivated() { trackNavigationManager_->FolderModeDeactivated(); }
-    void SelectedTracksModeActivated() { trackNavigationManager_->SelectedTracksModeActivated(); }
-    void SelectedTracksModeDeactivated() { trackNavigationManager_->SelectedTracksModeDeactivated(); }
+    void ActivateVCAMode() { trackNavigationManager_->ActivateVCAMode(); }
+    void DeactivateVCAMode() { trackNavigationManager_->DeactivateVCAMode(); }
+    void ActivateFolderMode() { trackNavigationManager_->ActivateFolderMode(); }
+    void DeactivateFolderMode() { trackNavigationManager_->DeactivateFolderMode(); }
+    void ActivateSelectedTracksMode() { trackNavigationManager_->ActivateSelectedTracksMode(); }
+    void DeactivateSelectedTracksMode() { trackNavigationManager_->DeactivateSelectedTracksMode(); }
     Navigator * GetNavigatorForTrack(MediaTrack *track) { return trackNavigationManager_->GetNavigatorForTrack(track); }
     Navigator * GetNavigatorForChannel(int channelNum) { return trackNavigationManager_->GetNavigatorForChannel(channelNum); }
     MediaTrack *GetTrackFromId(int trackNumber) { return trackNavigationManager_->GetTrackFromId(trackNumber); }
