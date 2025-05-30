@@ -60,8 +60,7 @@ public:
     {
         if (MediaTrack *track = context->GetTrack())
         {
-            //I_FXEN : fx enabled, 0=bypassed, !0=fx active
-            if (GetMediaTrackInfo_Value(track, "I_FXEN") == 0)
+            if (DAW::IsTrackBypassed(track))
                 context->UpdateWidgetValue(0.0);
             else if (TrackFX_GetCount(track) > context->GetSlotIndex())
             {
@@ -97,8 +96,7 @@ public:
     {
         if (MediaTrack *track = context->GetTrack())
         {
-            //I_FXEN : fx enabled, 0=bypassed, !0=fx active
-            if (GetMediaTrackInfo_Value(track, "I_FXEN") == 0)
+            if (DAW::IsTrackBypassed(track))
                 context->UpdateWidgetValue("Bypassed");
             else if (TrackFX_GetCount(track) > context->GetSlotIndex())
             {
@@ -287,7 +285,7 @@ public:
     {
         if (MediaTrack *track = context->GetTrack())
         {
-            if (GetPanMode(track) != 6)
+            if (GetPanMode(track) != DAW::PANMODE_DUAL)
             {
                 double vol, pan = 0.0;
                 GetTrackUIVolPan(track, &vol, &pan);
@@ -310,7 +308,7 @@ public:
     {
         if (MediaTrack *track = context->GetTrack())
         {
-            if (GetPanMode(track) != 6)
+            if (GetPanMode(track) != DAW::PANMODE_DUAL)
                 CSurf_SetSurfacePan(track, CSurf_OnPanChange(track, normalizedToPan(value), false), NULL);
         }
     }
@@ -320,7 +318,7 @@ public:
         context->GetZone()->GetNavigator()->SetIsPanTouched(value != 0);
         if (MediaTrack *track = context->GetTrack())
         {
-            if (GetPanMode(track) != 6)
+            if (GetPanMode(track) != DAW::PANMODE_DUAL)
                 CSurf_SetSurfacePan(track, CSurf_OnPanChange(track, normalizedToPan(GetCurrentNormalizedValue(context)), false), NULL);
         }
     }
@@ -337,7 +335,7 @@ public:
     {
         if (MediaTrack *track = context->GetTrack())
         {
-            if (GetPanMode(track) != 6)
+            if (GetPanMode(track) != DAW::PANMODE_DUAL)
             {
                 double vol, pan = 0.0;
                 GetTrackUIVolPan(track, &vol, &pan);
@@ -351,7 +349,7 @@ public:
     virtual void Do(ActionContext *context, double value) override
     {
         if (MediaTrack *track = context->GetTrack())
-            if (GetPanMode(track) != 6)
+            if (GetPanMode(track) != DAW::PANMODE_DUAL)
                 CSurf_SetSurfacePan(track, CSurf_OnPanChange(track, value / 100.0, false), NULL);
     }
     
@@ -360,7 +358,7 @@ public:
         context->GetZone()->GetNavigator()->SetIsPanTouched(value != 0);
         if (MediaTrack *track = context->GetTrack())
         {
-            if (GetPanMode(track) != 6)
+            if (GetPanMode(track) != DAW::PANMODE_DUAL)
             {
                 double vol, pan = 0.0;
                 GetTrackUIVolPan(track, &vol, &pan);
@@ -389,7 +387,7 @@ public:
     {
         if (MediaTrack *track = context->GetTrack())
         {
-            if (GetPanMode(track) != 6)
+            if (GetPanMode(track) != DAW::PANMODE_DUAL)
                 context->UpdateWidgetValue(GetCurrentNormalizedValue(context));
         }
         else
@@ -399,7 +397,7 @@ public:
     virtual void Do(ActionContext *context, double value) override
     {
         if (MediaTrack *track = context->GetTrack())
-            if (GetPanMode(track) != 6)
+            if (GetPanMode(track) != DAW::PANMODE_DUAL)
                 CSurf_OnWidthChange(track, normalizedToPan(value), false);
     }
     
@@ -407,7 +405,7 @@ public:
     {
         context->GetZone()->GetNavigator()->SetIsPanWidthTouched(value != 0);
         if (MediaTrack *track = context->GetTrack())
-            if (GetPanMode(track) != 6)
+            if (GetPanMode(track) != DAW::PANMODE_DUAL)
                 CSurf_OnWidthChange(track, normalizedToPan(GetCurrentNormalizedValue(context)), false);
     }
 };
@@ -423,7 +421,7 @@ public:
     {
         if (MediaTrack *track = context->GetTrack())
         {
-            if (GetPanMode(track) != 6)
+            if (GetPanMode(track) != DAW::PANMODE_DUAL)
                 context->UpdateWidgetValue(GetMediaTrackInfo_Value(track, "D_WIDTH")  *100.0);
         }
         else
@@ -433,7 +431,7 @@ public:
     virtual void Do(ActionContext *context, double value) override
     {
         if (MediaTrack *track = context->GetTrack())
-            if (GetPanMode(track) != 6)
+            if (GetPanMode(track) != DAW::PANMODE_DUAL)
                 CSurf_OnWidthChange(track, value / 100.0, false);
     }
     
@@ -442,7 +440,7 @@ public:
         context->GetZone()->GetNavigator()->SetIsPanWidthTouched(value != 0);
         if (MediaTrack *track = context->GetTrack())
         {
-            if (GetPanMode(track) != 6)
+            if (GetPanMode(track) != DAW::PANMODE_DUAL)
                 CSurf_OnWidthChange(track, GetMediaTrackInfo_Value(track, "D_WIDTH"), false);
         }
     }
@@ -467,7 +465,7 @@ public:
     {
         if (MediaTrack *track = context->GetTrack())
         {
-            if (GetPanMode(track) == 6)
+            if (GetPanMode(track) == DAW::PANMODE_DUAL)
                 context->UpdateWidgetValue(GetCurrentNormalizedValue(context));
         }
         else
@@ -478,7 +476,7 @@ public:
     {
         if (MediaTrack *track = context->GetTrack())
         {
-            if (GetPanMode(track) == 6)
+            if (GetPanMode(track) == DAW::PANMODE_DUAL)
             {
                 double pan = normalizedToPan(value);
                 GetSetMediaTrackInfo(track, "D_DUALPANL", &pan);
@@ -503,7 +501,7 @@ public:
     {
         if (MediaTrack *track = context->GetTrack())
         {
-            if (GetPanMode(track) == 6)
+            if (GetPanMode(track) == DAW::PANMODE_DUAL)
                 context->UpdateWidgetValue(GetMediaTrackInfo_Value(track, "D_DUALPANL")  *100.0);
         }
         else
@@ -514,7 +512,7 @@ public:
     {
         if (MediaTrack *track = context->GetTrack())
         {
-            if (GetPanMode(track) == 6)
+            if (GetPanMode(track) == DAW::PANMODE_DUAL)
             {
                 double panFromPercent = value / 100.0;
                 GetSetMediaTrackInfo(track, "D_DUALPANL", &panFromPercent);
@@ -527,7 +525,7 @@ public:
         context->GetZone()->GetNavigator()->SetIsPanLeftTouched(value != 0);
         if (MediaTrack *track = context->GetTrack())
         {
-            if (GetPanMode(track) == 6)
+            if (GetPanMode(track) == DAW::PANMODE_DUAL)
             {
                 double panL = GetMediaTrackInfo_Value(track, "D_DUALPANL");
                 GetSetMediaTrackInfo(track, "D_DUALPANL", &panL);
@@ -555,7 +553,7 @@ public:
     {
         if (MediaTrack *track = context->GetTrack())
         {
-            if (GetPanMode(track) == 6)
+            if (GetPanMode(track) == DAW::PANMODE_DUAL)
                 context->UpdateWidgetValue(GetCurrentNormalizedValue(context));
         }
         else
@@ -566,7 +564,7 @@ public:
     {
         if (MediaTrack *track = context->GetTrack())
         {
-            if (GetPanMode(track) == 6)
+            if (GetPanMode(track) == DAW::PANMODE_DUAL)
             {
                 double pan = normalizedToPan(value);
                 GetSetMediaTrackInfo(track, "D_DUALPANR", &pan);
@@ -591,7 +589,7 @@ public:
     {
         if (MediaTrack *track = context->GetTrack())
         {
-            if (GetPanMode(track) == 6)
+            if (GetPanMode(track) == DAW::PANMODE_DUAL)
                 context->UpdateWidgetValue(GetMediaTrackInfo_Value(track, "D_DUALPANR")  *100.0);
         }
         else
@@ -602,7 +600,7 @@ public:
     {
         if (MediaTrack *track = context->GetTrack())
         {
-            if (GetPanMode(track) == 6)
+            if (GetPanMode(track) == DAW::PANMODE_DUAL)
             {
                 double panFromPercent = value / 100.0;
                 GetSetMediaTrackInfo(track, "D_DUALPANR", &panFromPercent);
@@ -615,7 +613,7 @@ public:
         context->GetZone()->GetNavigator()->SetIsPanRightTouched(value != 0);
         if (MediaTrack *track = context->GetTrack())
         {
-            if (GetPanMode(track) == 6)
+            if (GetPanMode(track) == DAW::PANMODE_DUAL)
             {
                 double panL = GetMediaTrackInfo_Value(track, "D_DUALPANR");
                 GetSetMediaTrackInfo(track, "D_DUALPANR", &panL);
@@ -635,7 +633,7 @@ public:
     {
         if (MediaTrack *track = context->GetTrack())
         {
-            if (GetPanMode(track) == 6)
+            if (GetPanMode(track) == DAW::PANMODE_DUAL)
                 return panToNormalized(GetMediaTrackInfo_Value(track, "D_DUALPANL"));
             else
             {
@@ -652,7 +650,7 @@ public:
     {
         if (MediaTrack *track = context->GetTrack())
         {
-            if (GetPanMode(track) == 6)
+            if (GetPanMode(track) == DAW::PANMODE_DUAL)
                 context->UpdateWidgetValue(panToNormalized(GetMediaTrackInfo_Value(track, "D_DUALPANL")));
             else
                 context->UpdateWidgetValue(GetCurrentNormalizedValue(context));
@@ -665,7 +663,7 @@ public:
     {
         if (MediaTrack *track = context->GetTrack())
         {
-            if (GetPanMode(track) == 6)
+            if (GetPanMode(track) == DAW::PANMODE_DUAL)
             {
                 double pan = normalizedToPan(value);
                 GetSetMediaTrackInfo(track, "D_DUALPANL", &pan);
@@ -679,7 +677,7 @@ public:
     {
         if (MediaTrack *track = context->GetTrack())
         {
-            if (GetPanMode(track) == 6)
+            if (GetPanMode(track) == DAW::PANMODE_DUAL)
                 context->GetZone()->GetNavigator()->SetIsPanLeftTouched(value != 0);
             else
             {
@@ -701,7 +699,7 @@ public:
     {
         if (MediaTrack *track = context->GetTrack())
         {
-            if (GetPanMode(track) == 6)
+            if (GetPanMode(track) == DAW::PANMODE_DUAL)
                 return panToNormalized(GetMediaTrackInfo_Value(track, "D_DUALPANR"));
             else
                 return panToNormalized(GetMediaTrackInfo_Value(track, "D_WIDTH"));
@@ -714,7 +712,7 @@ public:
     {
         if (MediaTrack *track = context->GetTrack())
         {
-            if (GetPanMode(track) == 6)
+            if (GetPanMode(track) == DAW::PANMODE_DUAL)
                 context->UpdateWidgetValue(panToNormalized(GetMediaTrackInfo_Value(track, "D_DUALPANR")));
             else
                 context->UpdateWidgetValue(GetCurrentNormalizedValue(context));
@@ -727,7 +725,7 @@ public:
     {
         if (MediaTrack *track = context->GetTrack())
         {
-            if (GetPanMode(track) == 6)
+            if (GetPanMode(track) == DAW::PANMODE_DUAL)
             {
                 double pan = normalizedToPan(value);
                 GetSetMediaTrackInfo(track, "D_DUALPANR", &pan);
@@ -741,7 +739,7 @@ public:
     {
         if (MediaTrack *track = context->GetTrack())
         {
-            if (GetPanMode(track) == 6)
+            if (GetPanMode(track) == DAW::PANMODE_DUAL)
                 context->GetZone()->GetNavigator()->SetIsPanRightTouched(value != 0);
             else
             {
@@ -2592,7 +2590,7 @@ public:
         if (MediaTrack *track = context->GetTrack())
         {
             char tmp[MEDBUF];
-            if (GetPanMode(track) == 6)
+            if (GetPanMode(track) == DAW::PANMODE_DUAL)
             {
                 double panVal = GetMediaTrackInfo_Value(track, "D_DUALPANL");
                 context->UpdateWidgetValue(context->GetPanValueString(panVal, "L", tmp, sizeof(tmp)));
@@ -2622,7 +2620,7 @@ public:
         if (MediaTrack *track = context->GetTrack())
         {
             char tmp[MEDBUF];
-            if (GetPanMode(track) == 6)
+            if (GetPanMode(track) == DAW::PANMODE_DUAL)
             {
                 double panVal = GetMediaTrackInfo_Value(track, "D_DUALPANR");
                 context->UpdateWidgetValue(context->GetPanValueString(panVal, "R", tmp, sizeof(tmp)));
@@ -2835,7 +2833,6 @@ public:
 
     virtual void RequestUpdate(ActionContext *context) override
     {
-        context->UpdateColorValue(0.0);
         if (MediaTrack *track = context->GetTrack())
             context->UpdateWidgetValue(context->GetPage()->GetIsVCASpilled(track));
         else
@@ -2860,7 +2857,6 @@ public:
 
     virtual void RequestUpdate(ActionContext *context) override
     {
-        context->UpdateColorValue(0.0);
         if (MediaTrack *track = context->GetTrack())
             context->UpdateWidgetValue(context->GetPage()->GetIsFolderSpilled(track));
         else
@@ -3171,8 +3167,6 @@ public:
 
     virtual void RequestUpdate(ActionContext* context) override
     {
-        context->UpdateColorValue(0.0);
-
         if (context->GetPage()->IsAtRootFolderLevel())
             context->UpdateWidgetValue(0.0);
         else

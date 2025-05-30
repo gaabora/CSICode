@@ -132,6 +132,9 @@ class ModifierAction : public Action
 public:
     ActionType GetType() const override { return ActionType::Abstract; }
     virtual bool IsModifier() { return true; }
+    void RequestUpdate(ActionContext *context) override {
+        context->UpdateWidgetValue(GetCurrentNormalizedValue(context));
+    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

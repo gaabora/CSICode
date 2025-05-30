@@ -383,6 +383,7 @@ X(TrackPanR, "TrackPanR") \
 X(TrackSelect, "TrackSelect") \
 X(TrackUniqueSelect, "TrackUniqueSelect") \
 X(TrackRangeSelect, "TrackRangeSelect") \
+X(TrackBypassFX, "TrackBypassFX") \
 X(TrackSolo, "TrackSolo") \
 X(TrackMute, "TrackMute") \
 X(TrackRecordArm, "TrackRecordArm") \
@@ -617,11 +618,11 @@ public:
 };
 
 #define NAVIGATOR_TYPE_LIST(X) \
-    X(TrackNavigator, "Track") \
-    X(FixedTrackNavigator,"FixedTrack") \
-    X(MasterTrackNavigator,"MasterTrack") \
-    X(SelectedTrackNavigator,"SelectedTrack") \
-    X(FocusedFXNavigator, "FocusedFX")
+X(TrackNavigator, "Track") \
+X(FixedTrackNavigator, "FixedTrack") \
+X(MasterTrackNavigator, "MasterTrack") \
+X(SelectedTrackNavigator, "SelectedTrack") \
+X(FocusedFXNavigator, "FocusedFX")
 
 
 enum class NavigatorType {
@@ -817,15 +818,15 @@ private:
     bool isDoublePress_ = false;
     DWORD doublePressStartTs_ = 0;
 
-    int  holdDelayMs_ = 0;
-    int  holdRepeatIntervalMs_ = 0;
-    DWORD  lastHoldRepeatTs_ = 0;
-    DWORD  lastHoldStartTs_ = 0;
+    int holdDelayMs_ = 0;
+    int holdRepeatIntervalMs_ = 0;
+    DWORD lastHoldRepeatTs_ = 0;
+    DWORD lastHoldStartTs_ = 0;
     bool holdActive_= false;
     bool holdRepeatActive_ = false;
     double deferredValue_ = 0.0;
     
-    int  runCount_ = 1;
+    int runCount_ = 1;
     
     bool supportsColor_ = false;
     vector<rgba_color> colorValues_;
@@ -837,7 +838,7 @@ private:
     DWORD lastBlinkTs_ = 0;
 
     bool supportsTrackColor_ = false;
-        
+
     bool provideFeedback_= true;
 
     string m_freeFormText;
@@ -918,7 +919,7 @@ public:
     bool IsDoublePress() { return isDoublePress_; }
 
     void SetHoldDelay(int value) { holdDelayMs_ = value; }
-    int GetHoldDelay() { return holdDelayMs_; }
+    int GetHoldDelay();
 
     void SetAction(Action *action) { action_ = action; RequestUpdate(); }
     void DoAction(double value);
@@ -2625,7 +2626,7 @@ protected:
     int const numChannels_;
     int const channelOffset_;
     
-    int blinkTimeMs_ = 1000;
+    int blinkTimeMs_ = 500;
     int holdTimeMs_ = 1000;
     int osdTimeMs_ = 3000;
 
@@ -2767,13 +2768,13 @@ public:
     bool GetListensToModifiers() { return listensToModifiers_; }
     void SetListensToModifiers() { listensToModifiers_ = true; }
 
-    void SetLatchTime(int latchTime) { latchTime_ = latchTime; }
+    void SetLatchTime(int value) { latchTime_ = value; }
     int GetLatchTime() { return latchTime_; }
     
     void SetHoldTime(int value) { holdTimeMs_ = value; }
     int GetHoldTime() { return holdTimeMs_; }
     
-    void SetDoublePressTime(int doublePressTime) { doublePressTime_ = doublePressTime; }
+    void SetDoublePressTime(int value) { doublePressTime_ = value; }
     int GetDoublePressTime() { return doublePressTime_; }
     
     void SetBlinkTime(int value) { blinkTimeMs_ = value; }

@@ -163,6 +163,17 @@ class DAW
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
+    static int constexpr AUTOMODE_TRIM = 0;
+    static int constexpr AUTOMODE_READ = 1;
+    static int constexpr AUTOMODE_TOUCH = 2;
+    static int constexpr AUTOMODE_WRITE = 3;
+    static int constexpr AUTOMODE_LATCH = 4;
+
+    static int constexpr PANMODE_CLASSIC = 0;
+    static int constexpr PANMODE_BALANCE = 3;
+    static int constexpr PANMODE_STEREO = 5;
+    static int constexpr PANMODE_DUAL = 6;
+
     static int constexpr QUERY_LAST_TOUCHED_PARAMETER = 0;
     static int constexpr QUERY_CURRENTLY_FOCUSED_FX = 1;
     
@@ -435,6 +446,11 @@ public:
         return std::round(value * multiplier) / multiplier;
     }
 
+    static bool IsTrackBypassed(MediaTrack* track) {
+        if (!track)
+            return false;
+        return (GetMediaTrackInfo_Value(track, "I_FXEN") == 0);
+    }
 };
 
 #endif /* control_surface_integrator_Reaper_h */

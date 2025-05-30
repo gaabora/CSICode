@@ -1666,12 +1666,15 @@ int ActionContext::ClampValueWithWarning(int value, int min, int max) {
 int ActionContext::GetBlinkInterval() {
     return blinkIntervalMs_ == INHERIT_VALUE ? this->GetSurface()->GetBlinkTime() : blinkIntervalMs_;
 }
+int ActionContext::GetHoldDelay() {
+    return holdDelayMs_ == INHERIT_VALUE ? this->GetSurface()->GetHoldTime() : holdDelayMs_;
+}
 
 // runs once button pressed/released
 void ActionContext::DoAction(double value)
 {
     DWORD nowTs = GetTickCount();
-    int holdDelayMs = holdDelayMs_ == HOLD_DELAY_INHERIT_VALUE ? this->GetSurface()->GetHoldTime() : holdDelayMs_;
+    int holdDelayMs = this->GetHoldDelay();
     deferredValue_ = value;
 
     if ((isDoublePress_ || GetWidget()->HasDoublePressActions()) && value != ActionContext::BUTTON_RELEASE_MESSAGE_VALUE) {
@@ -1709,7 +1712,7 @@ void ActionContext::DoAction(double value)
 // runs in loop to support button hold/repeat actions
 void ActionContext::RunDeferredActions()
 {
-    int holdDelayMs = holdDelayMs_ == HOLD_DELAY_INHERIT_VALUE ? this->GetSurface()->GetHoldTime() : holdDelayMs_;
+    int holdDelayMs = GetHoldDelay();
 
     if (holdDelayMs > 0
         && holdActive_
@@ -2614,7 +2617,7 @@ void ZoneManager::Initialize()
              || IsSameString(entry.first, "FXWidgetLayout")
              || IsSameString(entry.first, "GoZones")
             ) continue;
-            if (!entry.second.isLoaded ){//&& !entry.second.isFxZone) {
+            if (!entry.second.isLoaded && !entry.second.isFxZone) {
                 zoneList.push_back(entry.first);
             }
         }
@@ -2942,8 +2945,7 @@ void ZoneManager::LoadZoneFile(Zone *zone, const char *filePath, const char *wid
                 if (hasHoldModifier && context->GetHoldDelay() == 0)
                     context->SetHoldDelay(ActionContext::INHERIT_VALUE);
                 
-                if (HasDoublePressPseudoModifier)
-                {
+                if (HasDoublePressPseudoModifier) {
                     context->SetDoublePress();
                     widget->SetHasDoublePressActions();
                 }

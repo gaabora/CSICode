@@ -910,11 +910,6 @@ public:
     {
         return context->GetSurface()->GetShift();
     }
-
-    void RequestUpdate(ActionContext *context) override
-    {
-        context->UpdateWidgetValue(GetCurrentNormalizedValue(context));
-    }
     
     void Do(ActionContext *context, double value) override
     {
@@ -934,11 +929,6 @@ public:
         return context->GetSurface()->GetOption();
     }
     
-    void RequestUpdate(ActionContext *context) override
-    {
-        context->UpdateWidgetValue(GetCurrentNormalizedValue(context));
-    }
-    
     void Do(ActionContext *context, double value) override
     {
         context->GetSurface()->SetOption(value != 0);
@@ -955,11 +945,6 @@ public:
     virtual double GetCurrentNormalizedValue(ActionContext *context) override
     {
         return context->GetSurface()->GetControl();
-    }
-
-    void RequestUpdate(ActionContext *context) override
-    {
-        context->UpdateWidgetValue(GetCurrentNormalizedValue(context));
     }
     
     void Do(ActionContext *context, double value) override
@@ -979,11 +964,6 @@ public:
     {
         return context->GetSurface()->GetAlt();
     }
-
-    void RequestUpdate(ActionContext *context) override
-    {
-        context->UpdateWidgetValue(GetCurrentNormalizedValue(context));
-    }
     
     void Do(ActionContext *context, double value) override
     {
@@ -1001,11 +981,6 @@ public:
     virtual double GetCurrentNormalizedValue(ActionContext *context) override
     {
         return context->GetSurface()->GetFlip();
-    }
-
-    void RequestUpdate(ActionContext *context) override
-    {
-        context->UpdateWidgetValue(GetCurrentNormalizedValue(context));
     }
     
     void Do(ActionContext *context, double value) override
@@ -1025,11 +1000,6 @@ public:
     {
         return context->GetSurface()->GetGlobal();
     }
-
-    void RequestUpdate(ActionContext *context) override
-    {
-        context->UpdateWidgetValue(GetCurrentNormalizedValue(context));
-    }
     
     void Do(ActionContext *context, double value) override
     {
@@ -1047,11 +1017,6 @@ public:
     virtual double GetCurrentNormalizedValue(ActionContext *context) override
     {
         return context->GetSurface()->GetMarker();
-    }
-
-    void RequestUpdate(ActionContext *context) override
-    {
-        context->UpdateWidgetValue(GetCurrentNormalizedValue(context));
     }
     
     void Do(ActionContext *context, double value) override
@@ -1071,11 +1036,6 @@ public:
     {
         return context->GetSurface()->GetNudge();
     }
-
-    void RequestUpdate(ActionContext *context) override
-    {
-        context->UpdateWidgetValue(GetCurrentNormalizedValue(context));
-    }
     
     void Do(ActionContext *context, double value) override
     {
@@ -1094,11 +1054,6 @@ public:
     {
         return context->GetSurface()->GetZoom();
     }
-
-    void RequestUpdate(ActionContext *context) override
-    {
-        context->UpdateWidgetValue(GetCurrentNormalizedValue(context));
-    }
     
     void Do(ActionContext *context, double value) override
     {
@@ -1116,11 +1071,6 @@ public:
     virtual double GetCurrentNormalizedValue(ActionContext *context) override
     {
         return context->GetSurface()->GetScrub();
-    }
-
-    void RequestUpdate(ActionContext *context) override
-    {
-        context->UpdateWidgetValue(GetCurrentNormalizedValue(context));
     }
     
     void Do(ActionContext *context, double value) override
