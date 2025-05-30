@@ -68,6 +68,17 @@ enum DebugLevel {
     DEBUG_LEVEL_DEBUG   = 4
 };
 
+static const char* DebugLevelToString(int level) {
+    switch (level) {
+        case DEBUG_LEVEL_ERROR:   return "ERROR";
+        case DEBUG_LEVEL_WARNING: return "WARNING";
+        case DEBUG_LEVEL_NOTICE:  return "NOTICE";
+        case DEBUG_LEVEL_INFO:    return "INFO";
+        case DEBUG_LEVEL_DEBUG:   return "DEBUG";
+        default:                  return "UNKNOWN";
+    }
+}
+
 static void LogMessage(const char* msg) {
     ofstream logFile(string(GetResourcePath()) + "/CSI/CSI.log", ios::app);
     if (logFile.is_open()) {

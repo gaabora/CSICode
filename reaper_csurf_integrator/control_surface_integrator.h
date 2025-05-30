@@ -174,6 +174,7 @@ enum PropertyType {
   D(Background) \
   D(Foreground) \
   D(Feedback) \
+  D(Blink) \
   D(HoldDelay) \
   D(HoldRepeatInterval) \
   D(RunCount) \
@@ -538,9 +539,12 @@ X(GlobalModeDisplay, "GlobalModeDisplay") \
 X(ClearModifier, "ClearModifier") \
 X(ClearModifiers, "ClearModifiers") \
 /* Global settings */ \
+X(SetBlinkTime, "SetBlinkTime") \
 X(SetDoublePressTime, "SetDoublePressTime") \
 X(SetHoldTime, "SetHoldTime") \
 X(SetLatchTime, "SetLatchTime") \
+X(SetDebugLevel, "SetDebugLevel") \
+X(CycleDebugLevel, "CycleDebugLevel") \
 X(SetOSDTime, "SetOSDTime")
 /* Invert, Hold, DoublePress - are pseudo modifiers */
 
@@ -595,6 +599,7 @@ public:
     virtual bool IsVolumeRelated() { return false; }
     virtual bool IsPanRelated() { return false; }
     virtual bool IsFxRelated() { return false; }
+    virtual bool IsSettingsRelated() { return false; }
 
     virtual void Touch(ActionContext *context, double value) {}
     virtual void RequestUpdate(ActionContext *context) {}
@@ -825,7 +830,12 @@ private:
     bool supportsColor_ = false;
     vector<rgba_color> colorValues_;
     int currentColorIndex_ = 0;
-    
+
+    bool blinkSet_ = false;
+    bool blinkActive_ = true;
+    int blinkIntervalMs_ = 0;
+    DWORD lastBlinkTs_ = 0;
+
     bool supportsTrackColor_ = false;
         
     bool provideFeedback_= true;
@@ -842,10 +852,20 @@ private:
     void GetColorValues(vector<rgba_color> &colorValues, const vector<string> &colors);
     void ProcessActionTitle(string fallbackName);
     void LogAction(double value);
+    void LogMessage(const std::string& msg, DebugLevel debugLevel = DEBUG_LEVEL_WARNING);
     void ProcessOSD(double value, bool fromFeedback);
     bool OsdIgnoresButtonRelease();
     
-// protected:
+    bool UpdateBlinkState() {
+        DWORD now = GetTickCount();
+        int blinkIntervalMs = GetBlinkInterval();
+        if (now > lastBlinkTs_ + blinkIntervalMs) {
+            blinkActive_ = !blinkActive_;
+            lastBlinkTs_ = now;
+        }
+        return blinkActive_;
+    }
+
     MediaTrack* track_;
     string trackName_;
     string fxParamDescription_;
@@ -853,7 +873,7 @@ private:
     double lastValue_ = 0.0;
 
 public:
-    static int constexpr HOLD_DELAY_INHERIT_VALUE = -1;
+    static int constexpr INHERIT_VALUE = -1;
     static double constexpr BUTTON_RELEASE_MESSAGE_VALUE = 0.0;
     ActionContext(CSurfIntegrator *const csi, Action *action, Widget *widget, Zone *zone, int paramIndex, const vector<string> &params);
 
@@ -890,8 +910,13 @@ public:
     
     void SetIsValueInverted() { isValueInverted_ = true; }
     void SetIsFeedbackInverted() { isFeedbackInverted_ = true; }
+
+    void SetBlinkInterval(int value) { blinkSet_ = true; blinkIntervalMs_ = value; }
+    int GetBlinkInterval();
+
     void SetDoublePress() { isDoublePress_ = true; }
     bool IsDoublePress() { return isDoublePress_; }
+
     void SetHoldDelay(int value) { holdDelayMs_ = value; }
     int GetHoldDelay() { return holdDelayMs_; }
 
@@ -1043,6 +1068,8 @@ public:
     void SetFreeFormText(const char* text) { m_freeFormText = (text ? text : ""); }
 
     const char* GetActionTitle();
+
+    int ClampValueWithWarning(int value, int min, int max);
 
     void SetLastValue(double value) {
         lastValue_ = value;
@@ -2598,6 +2625,7 @@ protected:
     int const numChannels_;
     int const channelOffset_;
     
+    int blinkTimeMs_ = 1000;
     int holdTimeMs_ = 1000;
     int osdTimeMs_ = 3000;
 
@@ -2747,6 +2775,9 @@ public:
     
     void SetDoublePressTime(int doublePressTime) { doublePressTime_ = doublePressTime; }
     int GetDoublePressTime() { return doublePressTime_; }
+    
+    void SetBlinkTime(int value) { blinkTimeMs_ = value; }
+    int GetBlinkTime() { return blinkTimeMs_; }
 
     void SetOSDTime(int value) { osdTimeMs_ = value; }
     int GetOSDTime() { return osdTimeMs_; }

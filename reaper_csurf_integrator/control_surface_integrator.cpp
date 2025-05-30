@@ -21,11 +21,7 @@ extern void WidgetMoved(ZoneManager *zoneManager, Widget *widget, int modifier);
 
 int g_minNumParamSteps = 1;
 int g_maxNumParamSteps = 30;
-#ifdef _DEBUG
-int g_debugLevel = DEBUG_LEVEL_DEBUG;
-#else
 int g_debugLevel = DEBUG_LEVEL_ERROR;
-#endif
 bool g_surfaceRawInDisplay;
 bool g_surfaceInDisplay;
 bool g_surfaceOutDisplay;
@@ -1349,11 +1345,22 @@ ActionContext::ActionContext(CSurfIntegrator *const csi, Action *action, Widget 
     const char* runCount = widgetProperties_.get_prop(PropertyType_RunCount);
     if (runCount)
         runCount_ = atoi(runCount);
-    if (runCount_ < 1) runCount_ = 1;
+    if (runCount_ < 1) {
+        runCount_ = 1;
+        this->LogMessage(string("invalid value for RunCount '") + runCount + "'", DEBUG_LEVEL_WARNING);
+    }
 
-    for (int i = 0; i < (int)(paramsAndProperties).size(); ++i)
-        if (paramsAndProperties[i] == "NoFeedback")
+    const char* blinkTime = widgetProperties_.get_prop(PropertyType_Blink);
+    if (blinkTime)
+        SetBlinkInterval(atoi(blinkTime));
+
+    for (int i = 0; i < (int)(paramsAndProperties).size(); ++i) {
+        if (paramsAndProperties[i] == "NoFeedback") {
             provideFeedback_ = false;
+        } else if (paramsAndProperties[i] == "Blink") {
+            SetBlinkInterval(INHERIT_VALUE);
+        }
+    }
 
     string actionName = "";
     
@@ -1405,8 +1412,10 @@ ActionContext::ActionContext(CSurfIntegrator *const csi, Action *action, Widget 
             commandId_ =  atol(params[1].c_str());
         } else {
             commandId_ = NamedCommandLookup(params[1].c_str());
-            if (commandId_ == 0) // can't find it
-                commandId_ = 65535; // no-op
+            if (commandId_ == 0) {
+                commandId_ = 65535;
+                this->LogMessage(string("no actions found for '") + this->GetStringParam() + "'", DEBUG_LEVEL_ERROR);
+            }
         }
 
         commandText_ = DAW::GetCommandName(commandId_);
@@ -1419,17 +1428,9 @@ ActionContext::ActionContext(CSurfIntegrator *const csi, Action *action, Widget 
         }
 
         int feedbackState = GetToggleCommandState(commandId_);
-        if (feedbackState == -1) {
+        if (feedbackState == -1 && provideFeedback_) {
             provideFeedback_ = false;
-            if (g_debugLevel >= DEBUG_LEVEL_NOTICE) LogToConsole("[NOTICE] @%s/{%s}: [%s] %s(%s) # action '%s' (%d) does not provide feedback\n"
-                ,this->GetSurface()->GetName()
-                ,this->GetZone()->GetName()
-                ,this->GetWidget()->GetName()
-                ,this->GetAction()->GetName()
-                ,this->GetStringParam()
-                ,DAW::GetCommandName(commandId_)
-                ,commandId_
-            );
+            this->LogMessage(string("action '") + DAW::GetCommandName(commandId_) + "' does not provide feedback", DEBUG_LEVEL_NOTICE);
         }
     }
         
@@ -1544,13 +1545,11 @@ void ActionContext::ClearWidget()
 
 void ActionContext::UpdateColorValue(double value)
 {
-    if (supportsColor_)
-    {
+    if (supportsColor_) {
         currentColorIndex_ = value == 0 ? 0 : 1;
         if (colorValues_.size() > currentColorIndex_)
             widget_->UpdateColorValue(colorValues_[currentColorIndex_]);
     }
-    if (osdData_.IsAwaitFeedback()) ProcessOSD(value, true);
 }
 
 void ActionContext::UpdateWidgetValue(double value)
@@ -1558,11 +1557,20 @@ void ActionContext::UpdateWidgetValue(double value)
     if (steppedValues_.size() > 0)
         SetSteppedValueIndex(value);
 
-    value = isFeedbackInverted_ == false ? value : 1.0 - value;
-
+    if (isFeedbackInverted_) {
+        value = 1.0 - value;
+    } else if (blinkSet_) {
+        bool shouldBlink = (value != ActionContext::BUTTON_RELEASE_MESSAGE_VALUE);
+        if (shouldBlink && UpdateBlinkState()) {
+            value = 1.0 - value;
+        }
+    }
     widget_->UpdateValue(widgetProperties_, value);
 
     UpdateColorValue(value);
+    
+    if (osdData_.IsAwaitFeedback())
+        ProcessOSD(value, true);
 
     if (supportsTrackColor_)
         UpdateTrackColor();
@@ -1615,8 +1623,13 @@ void ActionContext::LogAction(double value)
     if (holdDelayMs_ > 0) oss << " HoldDelay=" << holdDelayMs_;
     if (holdRepeatIntervalMs_ > 0) oss << " HoldRepeatInterval=" << holdRepeatIntervalMs_;
     if (runCount_ > 1) oss << " RunCount=" << runCount_;
+    if (blinkSet_) {
+        oss << " Blink";
+        if (blinkIntervalMs_ > 0)
+            oss << "=" << blinkIntervalMs_;
+    }
 
-    LogToConsole("[INFO] @%s/%s: [%s] '%s' > %s (%s) val:%0.2f ctx:%s\n"
+    LogToConsole("[INFO] @%s/{%s}: [%s] '%s' > %s (%s) val:%0.2f ctx:%s\n"
         ,this->GetSurface()->GetName()
         ,this->GetZone()->GetName()
         ,this->GetWidget()->GetName()
@@ -1626,6 +1639,32 @@ void ActionContext::LogAction(double value)
         ,value
         ,this->GetName()
     );
+}
+
+void ActionContext::LogMessage(const std::string& msg, DebugLevel debugLevel) {
+    if (g_debugLevel >= debugLevel) {
+        LogToConsole("[%s] @%s/{%s}: [%s] %s(%s) # %s\n"
+            ,DebugLevelToString(debugLevel)
+            ,this->GetSurface()->GetName()
+            ,this->GetZone()->GetName()
+            ,this->GetWidget()->GetName()
+            ,this->GetAction()->GetName()
+            ,this->GetStringParam()
+            ,msg.c_str()
+        );
+    }
+}
+
+int ActionContext::ClampValueWithWarning(int value, int min, int max) {
+    int clamped = std::max(min, std::min(value, max));
+    if (clamped != value) {
+        this->LogMessage("invalid value = " + to_string(value) + " (allowed: " + to_string(min) + "–" + to_string(max) + ")", DEBUG_LEVEL_WARNING);
+    }
+    return clamped;
+}
+
+int ActionContext::GetBlinkInterval() {
+    return blinkIntervalMs_ == INHERIT_VALUE ? this->GetSurface()->GetBlinkTime() : blinkIntervalMs_;
 }
 
 // runs once button pressed/released
@@ -1763,23 +1802,6 @@ void ActionContext::ProcessOSD(double value, bool fromFeedback)
     }
     if (osdData_.timeoutMs == 0) osdData_.timeoutMs = GetSurface()->GetOSDTime();
 
-    bool awaitFeedback = osdData_.IsAwaitFeedback();
-    if (provideFeedback_) {
-        if (awaitFeedback) {
-            if (fromFeedback) {
-                osdData_.SetAwaitFeedback(false);
-            } else {
-                return;
-            }
-        } else {
-            return osdData_.SetAwaitFeedback(!fromFeedback);
-        }
-    } else {
-        osdData_.SetAwaitFeedback(false);
-    }
-
-    const string actionName = string(action_->GetName());
-
     if ((action_->IsVolumeRelated() || action_->IsPanRelated()) && !(action_->IsDisplayRelated() || action_->IsMeterRelated())) {
         if (MediaTrack *track = this->GetTrack()) {
             ostringstream oss;
@@ -1793,7 +1815,7 @@ void ActionContext::ProcessOSD(double value, bool fromFeedback)
             
             osdData_.message = oss.str();
         } else {
-            osdData_.message = actionName + ": No track selected";
+            osdData_.message = string(action_->GetName()) + ": No track selected";
         }
         osdData_.SetAwaitFeedback(false);
         return GetCSI()->EnqueueOSD(osdData_);
@@ -1804,6 +1826,29 @@ void ActionContext::ProcessOSD(double value, bool fromFeedback)
         osdData_.message += (osdData_.message.empty()) ? "No FX selected" : ": " + GetTrackFxParamFormattedValue();
         osdData_.SetAwaitFeedback(false);
         return GetCSI()->EnqueueOSD(osdData_);
+    }
+
+    const ActionType actionType = action_->GetType();
+
+    if (actionType == ActionType::CycleDebugLevel) {
+        osdData_.message = string(action_->GetName()) + ": " + DebugLevelToString(g_debugLevel);
+        osdData_.SetAwaitFeedback(false);
+        return GetCSI()->EnqueueOSD(osdData_);
+    }
+
+    bool awaitFeedback = osdData_.IsAwaitFeedback();
+    if (provideFeedback_) {
+        if (awaitFeedback) {
+            if (fromFeedback) {
+                osdData_.SetAwaitFeedback(false);
+            } else {
+                return;
+            }
+        } else {
+            return osdData_.SetAwaitFeedback(!fromFeedback);
+        }
+    } else {
+        osdData_.SetAwaitFeedback(false);
     }
 
     GetCSI()->EnqueueOSD(osdData_);
@@ -2335,7 +2380,7 @@ void Zone::UpdateCurrentActionContextModifier(Widget *widget)
 ActionContext *Zone::AddActionContext(Widget *widget, int modifier, Zone *zone, const char *actionName, vector<string> &params)
 {
     const auto& action = csi_->GetAction(actionName);
-    if (!IsSameString(action->GetName(), actionName) && IsSameString(action->GetName(), "InvalidAction")) LogToConsole("[ERROR] @%s/{%s} [%s] InvalidAction: '%s'.\n"
+    if (!IsSameString(action->GetName(), actionName) && IsSameString(action->GetName(), "InvalidAction")) LogToConsole("[ERROR] @%s/{%s} [%s] InvalidAction: %s\n"
         ,widget->GetSurface()->GetName()
         ,zone->GetName()
         ,widget->GetName()
@@ -2578,7 +2623,7 @@ void ZoneManager::Initialize()
         for (const auto& entry : zoneInfo_) {
             CSIZoneInfo zoneInfo = entry.second;
             if (zoneInfo.isLoaded && !zoneInfo.isReferenced)
-                if (g_debugLevel >= DEBUG_LEVEL_WARNING) LogToConsole("[WARNING] Zone '%s' was loaded but never referenced! (%s)\n", entry.first.c_str(), GetRelativePath(zoneInfo.filePath.c_str()));
+                if (g_debugLevel >= DEBUG_LEVEL_WARNING) LogToConsole("[WARNING] Zone '%s' was loaded but never referenced! %s\n", entry.first.c_str(), GetRelativePath(zoneInfo.filePath.c_str()));
             if (!zoneInfo.isLoaded && zoneInfo.isReferenced)
                 LogToConsole("[ERROR] Zone '%s' was referenced but not loaded! (%s)\n", entry.first.c_str(), GetRelativePath(zoneInfo.filePath.c_str()));
         }
@@ -2728,7 +2773,7 @@ void ZoneManager::LoadZones(vector<unique_ptr<Zone>>& zones, vector<string>& zon
 
         const auto& zoneInfoPair = zoneInfo_.find(zoneName);
         if (zoneInfoPair == zoneInfo_.end()) {
-            missingZoneNames += " " + zoneName;
+            missingZoneNames += " " + line;
             continue;
         }
 
@@ -2784,7 +2829,7 @@ void ZoneManager::LoadZoneFile(Zone *zone, const char *filePath, const char *wid
     {
         ifstream file(filePath);
         
-        if (g_debugLevel >= DEBUG_LEVEL_DEBUG) LogToConsole("[DEBUG] {%s} # LoadZoneFile: %s\n", zone->GetName(), GetRelativePath(filePath));
+        if (g_debugLevel >= DEBUG_LEVEL_DEBUG) LogToConsole("[DEBUG] @%s/{%s} # LoadZoneFile: %s\n", surface_->GetName(), zone->GetName(), GetRelativePath(filePath));
         
         for (string line; getline(file, line);) {
             TrimLine(line);
@@ -2895,7 +2940,7 @@ void ZoneManager::LoadZoneFile(Zone *zone, const char *filePath, const char *wid
                     context->SetIsFeedbackInverted();
                 
                 if (hasHoldModifier && context->GetHoldDelay() == 0)
-                    context->SetHoldDelay(ActionContext::HOLD_DELAY_INHERIT_VALUE);
+                    context->SetHoldDelay(ActionContext::INHERIT_VALUE);
                 
                 if (HasDoublePressPseudoModifier)
                 {

@@ -569,52 +569,114 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class SetLatchTime  : public Action
+class RangeValidatedSettingsAction : public SettingsAction
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+protected:
+    int min_ = 0;
+    int max_ = std::numeric_limits<int>::max();
+    virtual void ApplyValue(ActionContext* context, int value) = 0;
+public:
+    ActionType GetType() const override { return ActionType::Abstract; }
+    virtual bool IsSettingsRelated() { return true; }
+    void Do(ActionContext* context, double value) override {
+        if (value == ActionContext::BUTTON_RELEASE_MESSAGE_VALUE) return;
+        int rawValue = context->GetIntParam();
+        int clampedValue = context->ClampValueWithWarning(rawValue, min_, max_);
+        ApplyValue(context, clampedValue);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class SetLatchTime : public RangeValidatedSettingsAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
     ActionType GetType() const override { return ActionType::SetLatchTime; }
-
-    void Do(ActionContext *context, double value) override
-    {
-        if (value == ActionContext::BUTTON_RELEASE_MESSAGE_VALUE) return;
-        
-        context->GetSurface()->SetLatchTime(context->GetIntParam());
+    SetLatchTime() { min_ = 50; max_ = 5000; }
+    void ApplyValue(ActionContext* context, int value) override {
+        context->GetSurface()->SetLatchTime(value);
     }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class SetHoldTime  : public Action
+class SetBlinkTime : public RangeValidatedSettingsAction
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    ActionType GetType() const override { return ActionType::SetBlinkTime; }
+    SetBlinkTime() { min_ = 50; max_ = 2000; }
+    void ApplyValue(ActionContext* context, int value) override {
+        context->GetSurface()->SetBlinkTime(value);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class SetHoldTime : public RangeValidatedSettingsAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
     ActionType GetType() const override { return ActionType::SetHoldTime; }
-
-    void Do(ActionContext *context, double value) override
-    {
-        if (value == ActionContext::BUTTON_RELEASE_MESSAGE_VALUE) return;
-        
-        context->GetSurface()->SetHoldTime(context->GetIntParam());
+    SetHoldTime() { min_ = 50; max_ = 10000; }
+    void ApplyValue(ActionContext* context, int value) override {
+        context->GetSurface()->SetHoldTime(value);
     }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class SetDoublePressTime  : public Action
+class SetDoublePressTime : public RangeValidatedSettingsAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
     ActionType GetType() const override { return ActionType::SetDoublePressTime; }
-
-    void Do(ActionContext *context, double value) override
-    {
-        if (value == ActionContext::BUTTON_RELEASE_MESSAGE_VALUE) return;
-        
-        context->GetSurface()->SetDoublePressTime(context->GetIntParam());
+    SetDoublePressTime() { min_ = 100; max_ = 2000; }
+    void ApplyValue(ActionContext* context, int value) override {
+        context->GetSurface()->SetDoublePressTime(value);
     }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class EnableOSD  : public Action
+class SetOSDTime : public RangeValidatedSettingsAction
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    ActionType GetType() const override { return ActionType::SetOSDTime; }
+    SetOSDTime() { min_ = 100; max_ = 30000; }
+    void ApplyValue(ActionContext* context, int value) override {
+        context->GetSurface()->SetOSDTime(value);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class SetDebugLevel : public RangeValidatedSettingsAction
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    ActionType GetType() const override { return ActionType::SetDebugLevel; }
+    SetDebugLevel() { min_ = 0; max_ = 4; }
+    void ApplyValue(ActionContext* context, int value) override {
+        g_debugLevel = value;
+    }
+};
+
+class CycleDebugLevel : public SettingsAction
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    ActionType GetType() const override { return ActionType::CycleDebugLevel; }
+    
+    void Do(ActionContext *context, double value) override
+    {
+        if (value == ActionContext::BUTTON_RELEASE_MESSAGE_VALUE) return;
+
+        constexpr int maxLevel = DEBUG_LEVEL_DEBUG;
+        g_debugLevel = (g_debugLevel + 1) % (maxLevel + 1);
+
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class EnableOSD  : public SettingsAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
@@ -625,21 +687,6 @@ public:
         if (value == ActionContext::BUTTON_RELEASE_MESSAGE_VALUE) return;
         
         context->GetSurface()->SetOsdEnabled(!IsSameString(context->GetStringParam(), "No"));
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class SetOSDTime  : public Action
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    ActionType GetType() const override { return ActionType::SetOSDTime; }
-
-    void Do(ActionContext *context, double value) override
-    {
-        if (value == ActionContext::BUTTON_RELEASE_MESSAGE_VALUE) return;
-        
-        context->GetSurface()->SetOSDTime(context->GetIntParam());
     }
 };
 
