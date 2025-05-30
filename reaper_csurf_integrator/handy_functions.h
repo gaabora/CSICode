@@ -203,4 +203,14 @@ static std::string JoinStringVector(const std::vector<std::string>& strings, con
     return oss.str();
 }
 
+template <size_t N>
+static int CycleNextValue(const int (&arr)[N], int currentValue) {
+    for (size_t i = 0; i < N; ++i) {
+        if (arr[i] == currentValue) {
+            return arr[(i + 1) % N];
+        }
+    }
+    return arr[0];
+}
+
 #endif /* handy_functions_h */

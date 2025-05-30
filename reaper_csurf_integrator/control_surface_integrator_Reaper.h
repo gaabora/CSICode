@@ -446,6 +446,16 @@ public:
         return std::round(value * multiplier) / multiplier;
     }
 
+    static void CycleTrackAutoMode(MediaTrack* track) {
+        if (!track) return;
+        static const int cycleModes[] = { AUTOMODE_TRIM, AUTOMODE_READ, AUTOMODE_TOUCH, AUTOMODE_LATCH };
+
+        int currentMode = (int)GetMediaTrackInfo_Value(track, "I_AUTOMODE");
+        int nextMode = CycleNextValue(cycleModes, currentMode);
+
+        GetSetMediaTrackInfo(track, "I_AUTOMODE", &nextMode);
+    }
+
     static bool IsTrackBypassed(MediaTrack* track) {
         if (!track)
             return false;

@@ -2987,20 +2987,8 @@ public:
     {
         if (value == ActionContext::BUTTON_RELEASE_MESSAGE_VALUE) return;
         
-        if (MediaTrack *track = context->GetTrack())
-        {
-            int autoModeIndex_ = (int)GetMediaTrackInfo_Value(track, "I_AUTOMODE");
-            
-            if (autoModeIndex_ == 2) // skip over write mode when cycling
-                autoModeIndex_ += 2;
-            else
-                autoModeIndex_++;
-            
-            if (autoModeIndex_ > 5)
-                autoModeIndex_ = 0;
-
-            GetSetMediaTrackInfo(track, "I_AUTOMODE", &autoModeIndex_);
-
+        if (MediaTrack *track = context->GetTrack()) {
+            DAW::CycleTrackAutoMode(track);
         }
     }
 };
