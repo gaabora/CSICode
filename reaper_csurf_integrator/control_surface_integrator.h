@@ -212,6 +212,7 @@ enum PropertyType {
   D(ZoneFolder) \
   D(FXZoneFolder) \
   D(NavType) \
+  D(MeterMode) \
 
   PropertyType_Unknown = 0, // in this case, string is type=value pair
 #define DEFPT(x) PropertyType_##x ,
@@ -846,6 +847,8 @@ private:
     bool supportsTrackColor_ = false;
 
     bool provideFeedback_= true;
+
+    char meterMode_[64] = "";
 
     string m_freeFormText;
 
