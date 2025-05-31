@@ -77,6 +77,13 @@
 #include "udp.hh"
 #endif
 
+#ifdef _WIN32
+#define STRCASECMP _stricmp
+#else
+#define STRCASECMP strcasecmp
+#endif
+
+
 #define NUM_ELEM(array) (int(sizeof(array)/sizeof(array[0])))
 
 extern void TrimLine(string &line);
