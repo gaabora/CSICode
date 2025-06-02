@@ -1483,18 +1483,21 @@ public:
         //---------------------------------------------------//
         else if (STRICASECMP(meterMode, "SSLNucleus2") == 0)
         {
-            if      (dbValue >= -40 && dbValue < -30) midiValue = 0x01; // -40 DB LED
-            else if (dbValue >= -30 && dbValue < -20) midiValue = 0x03; // -30 DB LED
+            if      (dbValue >= -40 && dbValue < -30) midiValue = 0x03; // -40 DB LED
+            else if (dbValue >= -30 && dbValue < -20) midiValue = 0x04; // -30 DB LED
             else if (dbValue >= -20 && dbValue < -14) midiValue = 0x05; // -20 DB LED
-            else if (dbValue >= -14 && dbValue < -10) midiValue = 0x07; // -14 DB LED
-            else if (dbValue >= -10 && dbValue < -8 ) midiValue = 0x09; // -10 DB LED
-            else if (dbValue >= -8  && dbValue < -6 ) midiValue = 0x0a; // -8  DB LED
-            else if (dbValue >= -6  && dbValue < -4 ) midiValue = 0x0b; // -6  DB LED
-            else if (dbValue >= -4  && dbValue <  2 ) midiValue = 0x0c; // -4  DB LED
-            else if (dbValue >= -2  && dbValue <  0 ) midiValue = 0x0d; // -2  DB LED
-            else if (dbValue >=  0                  ) midiValue = 0x0e; //  0  DB LED
+            else if (dbValue >= -14 && dbValue < -10) midiValue = 0x06; // -14 DB LED
+            else if (dbValue >= -10 && dbValue < -8 ) midiValue = 0x07; // -10 DB LED
+            else if (dbValue >= -8  && dbValue < -6 ) midiValue = 0x08; // -8  DB LED
+            else if (dbValue >= -6  && dbValue < -4 ) midiValue = 0x09; // -6  DB LED
+            else if (dbValue >= -4  && dbValue <  2 ) midiValue = 0x0a; // -4  DB LED
+            else if (dbValue >= -2  && dbValue <  0 ) midiValue = 0x0b; // -2  DB LED
+            else if (dbValue >=  0                  ) midiValue = 0x0c; //  0  DB LED
         }
 
+        //---------------------------------------------------//
+        // IconV1M                                           //
+        //---------------------------------------------------//
         else if (STRICASECMP(meterMode, "IconV1M") == 0)
         {
             if      (dbValue >= -60.1 && dbValue < -48.1)  midiValue = 0x01; // LED 1 Green  (–60 dB)
@@ -1505,10 +1508,10 @@ public:
             else if (dbValue >= -24.1 && dbValue < -18.1)  midiValue = 0x06; // LED 6 Green  (–24 dB)
             else if (dbValue >= -18.1 && dbValue < -12.1)  midiValue = 0x07; // LED 7 Green  (–18 dB)
             else if (dbValue >= -12.1 && dbValue < -9.1 )  midiValue = 0x08; // LED 8 Orange (–12 dB)
-            else if (dbValue >= -9.1 &&  dbValue < -6.1 )  midiValue = 0x09; // LED 9 Orange (–9 dB)
-            else if (dbValue >= -6.1 &&  dbValue < -3.1 )  midiValue = 0x0A; // LED 10 Orange (–6 dB)
-            else if (dbValue >= -3.1 &&  dbValue < 0.1  )  midiValue = 0x0B; // LED 11 Orange (–3 dB)
-            else if (dbValue >= 0.1)                       midiValue = 0x0C; // LED 12 Red    (> 0 dB)
+            else if (dbValue >= -9.1  && dbValue < -6.1 )  midiValue = 0x09; // LED 9 Orange (–9 dB)
+            else if (dbValue >= -6.1  && dbValue < -3.1 )  midiValue = 0x0A; // LED 10 Orange (–6 dB)
+            else if (dbValue >= -3.1  && dbValue <  0.1 )  midiValue = 0x0B; // LED 11 Orange (–3 dB)
+            else if (dbValue >=  0.1)                      midiValue = 0x0C; // LED 12 Red    (> 0 dB)
         }
 
         //---------------------------------------------------//
