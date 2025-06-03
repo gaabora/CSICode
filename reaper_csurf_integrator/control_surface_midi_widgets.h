@@ -1511,7 +1511,7 @@ public:
             else if (dbValue >= -9.1  && dbValue < -6.1 )  midiValue = 0x09; // LED 9 Orange (–9 dB)
             else if (dbValue >= -6.1  && dbValue < -3.1 )  midiValue = 0x0A; // LED 10 Orange (–6 dB)
             else if (dbValue >= -3.1  && dbValue <  0.1 )  midiValue = 0x0B; // LED 11 Orange (–3 dB)
-            else if (dbValue >=  0.1)                      midiValue = 0x0C; // LED 12 Red    (> 0 dB)
+            else if (dbValue >=  0.1)                      midiValue = 0x0E; // LED 12 Red    (> 0 dB)
         }
 
         //---------------------------------------------------//
