@@ -1480,16 +1480,16 @@ public:
         //---------------------------------------------------//
         else if (STRICASECMP(meterMode, "SSLNucleus2") == 0)
         {
-            if      (dbValue >= -40 && dbValue < -30) midiValue = 0x03; // -40 DB LED
-            else if (dbValue >= -30 && dbValue < -20) midiValue = 0x04; // -30 DB LED
-            else if (dbValue >= -20 && dbValue < -14) midiValue = 0x05; // -20 DB LED
-            else if (dbValue >= -14 && dbValue < -10) midiValue = 0x06; // -14 DB LED
-            else if (dbValue >= -10 && dbValue < -8 ) midiValue = 0x07; // -10 DB LED
-            else if (dbValue >= -8  && dbValue < -6 ) midiValue = 0x08; // -8  DB LED
-            else if (dbValue >= -6  && dbValue < -4 ) midiValue = 0x09; // -6  DB LED
-            else if (dbValue >= -4  && dbValue <  2 ) midiValue = 0x0a; // -4  DB LED
-            else if (dbValue >= -2  && dbValue <  0 ) midiValue = 0x0b; // -2  DB LED
-            else if (dbValue >=  0                  ) midiValue = 0x0c; //  0  DB LED
+            if      (dbValue >= -40.5 && dbValue < -30.5) midiValue = 0x03; // -40 DB LED
+            else if (dbValue >= -30.5 && dbValue < -20.5) midiValue = 0x04; // -30 DB LED
+            else if (dbValue >= -20.5 && dbValue < -14.5) midiValue = 0x05; // -20 DB LED
+            else if (dbValue >= -14.5 && dbValue < -10.5) midiValue = 0x06; // -14 DB LED
+            else if (dbValue >= -10.5 && dbValue < -8.5 ) midiValue = 0x07; // -10 DB LED
+            else if (dbValue >= -8.5  && dbValue < -6.5 ) midiValue = 0x08; // -8  DB LED
+            else if (dbValue >= -6.5  && dbValue < -4.5 ) midiValue = 0x09; // -6  DB LED
+            else if (dbValue >= -4.5  && dbValue < -2.5 ) midiValue = 0x0a; // -4  DB LED
+            else if (dbValue >= -2.5  && dbValue <  0   ) midiValue = 0x0b; // -2  DB LED
+            else if (dbValue >=  0                      ) midiValue = 0x0c; //  0  DB LED
         }
 
         //---------------------------------------------------//
