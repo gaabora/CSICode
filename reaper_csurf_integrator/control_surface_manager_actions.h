@@ -577,8 +577,6 @@ protected:
     int max_ = std::numeric_limits<int>::max();
     virtual void ApplyValue(ActionContext* context, int value) = 0;
 public:
-    ActionType GetType() const override { return ActionType::Abstract; }
-    virtual bool IsSettingsRelated() { return true; }
     void Do(ActionContext* context, double value) override {
         if (value == ActionContext::BUTTON_RELEASE_MESSAGE_VALUE) return;
         int rawValue = context->GetIntParam();
