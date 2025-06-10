@@ -60,6 +60,13 @@ static double panToNormalized(double val)
     return 0.5 * (val + 1.0);
 }
 
+enum MultiState {
+    Undefined = -1,
+    False = 0,
+    True = 1,
+    Mixed = 2,
+};
+
 enum DebugLevel {
     DEBUG_LEVEL_ERROR   = 0,
     DEBUG_LEVEL_WARNING = 1,

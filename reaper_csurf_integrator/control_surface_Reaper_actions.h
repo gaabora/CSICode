@@ -60,7 +60,7 @@ public:
     {
         if (MediaTrack *track = context->GetTrack())
         {
-            if (DAW::IsTrackBypassed(track))
+            if (DAW::GetTrackBypass(track))
                 context->UpdateWidgetValue(0.0);
             else if (TrackFX_GetCount(track) > context->GetSlotIndex())
             {
@@ -96,7 +96,7 @@ public:
     {
         if (MediaTrack *track = context->GetTrack())
         {
-            if (DAW::IsTrackBypassed(track))
+            if (DAW::GetTrackBypass(track))
                 context->UpdateWidgetValue("Bypassed");
             else if (TrackFX_GetCount(track) > context->GetSlotIndex())
             {
@@ -755,33 +755,18 @@ public:
 class TrackRecordArm : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
+protected:
+    bool IncludeMasterTrack() const override { return false; }
 public:
     ActionType GetType() const override { return ActionType::TrackRecordArm; }
 
-    virtual double GetCurrentNormalizedValue(ActionContext *context) override
-    {
-        if (MediaTrack *track = context->GetTrack())
-            return GetMediaTrackInfo_Value(track, "I_RECARM");
-        else
-            return 0.0;
+    virtual double GetCurrentNormalizedValue(ActionContext* context) override {
+        return GetTrackBoolStateNormalized(context, DAW::GetTrackRecordArm);
     }
 
-    virtual void RequestUpdate(ActionContext *context) override
-    {
-        if (context->GetTrack())
-            context->UpdateWidgetValue(GetCurrentNormalizedValue(context));
-        else
-            context->ClearWidget();
-    }
-    
-    virtual void Do(ActionContext *context, double value) override
-    {
+    virtual void Do(ActionContext* context, double value) override {
         if (value == ActionContext::BUTTON_RELEASE_MESSAGE_VALUE) return;
-        
-        if (MediaTrack *track = context->GetTrack())
-        {
-            CSurf_SetSurfaceRecArm(track, CSurf_OnRecArmChange(track, ! GetMediaTrackInfo_Value(track, "I_RECARM")), NULL);
-        }
+        ToggleTrackState(context, DAW::GetTrackRecordArm, DAW::SetTrackRecordArm);
     }
 };
 
@@ -815,36 +800,30 @@ class TrackMute : public TrackAction
 public:
     ActionType GetType() const override { return ActionType::TrackMute; }
 
-    virtual double GetCurrentNormalizedValue(ActionContext *context) override
-    {
-        if (MediaTrack *track = context->GetTrack())
-        {
-            bool mute = false;
-            GetTrackUIMute(track, &mute);
-            return mute;
-        }
-        else
-            return 0.0;
+    virtual double GetCurrentNormalizedValue(ActionContext* context) override {
+        return GetTrackBoolStateNormalized(context, DAW::GetTrackMute);
     }
 
-    virtual void RequestUpdate(ActionContext *context) override
-    {
-        if (context->GetTrack())
-            context->UpdateWidgetValue(GetCurrentNormalizedValue(context));
-        else
-            context->ClearWidget();
-    }
-    
-    virtual void Do(ActionContext *context, double value) override
-    {
+    virtual void Do(ActionContext* context, double value) override {
         if (value == ActionContext::BUTTON_RELEASE_MESSAGE_VALUE) return;
-        
-        if (MediaTrack *track = context->GetTrack())
-        {
-            bool mute = false;
-            GetTrackUIMute(track, &mute);
-            CSurf_SetSurfaceMute(track, CSurf_OnMuteChange(track, ! mute), NULL);
-        }
+        ToggleTrackState(context, DAW::GetTrackMute, DAW::SetTrackMute);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackEffectsBypass : public TrackAction
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    ActionType GetType() const override { return ActionType::TrackEffectsBypass; }
+    
+    virtual double GetCurrentNormalizedValue(ActionContext* context) override {
+        return GetTrackBoolStateNormalized(context, DAW::GetTrackEffectsBypass);
+    }
+
+    virtual void Do(ActionContext* context, double value) override {
+        if (value == ActionContext::BUTTON_RELEASE_MESSAGE_VALUE) return;
+        ToggleTrackState(context, DAW::GetTrackEffectsBypass, DAW::SetTrackEffectsBypass);
     }
 };
 
@@ -855,82 +834,35 @@ class TrackSolo : public TrackAction
 public:
     ActionType GetType() const override { return ActionType::TrackSolo; }
     
-    virtual double GetCurrentNormalizedValue(ActionContext *context) override
-    {
-        if (MediaTrack *track = context->GetTrack())
-            return GetMediaTrackInfo_Value(track, "I_SOLO") > 0 ? 1 : 0;
-        else
-            return 0.0;
+    virtual double GetCurrentNormalizedValue(ActionContext* context) override {
+        return GetTrackBoolStateNormalized(context, DAW::GetTrackSolo);
     }
-    
-    virtual void RequestUpdate(ActionContext *context) override
-    {
-        if (context->GetTrack())
-            context->UpdateWidgetValue(GetCurrentNormalizedValue(context));
-        else
-            context->ClearWidget();
-    }
-    
-    virtual void Do(ActionContext *context, double value) override
-    {
+
+    virtual void Do(ActionContext* context, double value) override {
         if (value == ActionContext::BUTTON_RELEASE_MESSAGE_VALUE) return;
-        
-        if (MediaTrack *track = context->GetTrack())
-        {
-            if (track != GetMasterTrack(NULL))
-                CSurf_SetSurfaceSolo(track, CSurf_OnSoloChange(track, ! GetMediaTrackInfo_Value(track, "I_SOLO")), NULL);
-            else
-            {
-                int muteSoloFlags = GetMasterMuteSoloFlags();
-                if (muteSoloFlags & 2)
-                    muteSoloFlags &= !2;
-                else
-                    muteSoloFlags |= 2;
-                
-                CSurf_SetSurfaceSolo(track, CSurf_OnSoloChange(track, muteSoloFlags), NULL);
-            }
-        }
+        ToggleTrackState(context, DAW::GetTrackSolo, DAW::SetTrackSolo);
     }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackInvertPolarity : public TrackAction
+class TrackInvertPolarity : public TrackAction //TODO: rename TrackInvertPhase
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
     ActionType GetType() const override { return ActionType::TrackInvertPolarity; }
     
-    virtual double GetCurrentNormalizedValue(ActionContext *context) override
-    {
-        if (MediaTrack *track = context->GetTrack())
-            return GetMediaTrackInfo_Value(track, "B_PHASE");
-        else
-            return 0.0;
+    virtual double GetCurrentNormalizedValue(ActionContext* context) override {
+        return GetTrackBoolStateNormalized(context, DAW::GetTrackInvertPhase);
     }
-    
-    virtual void RequestUpdate(ActionContext *context) override
-    {
-        if (context->GetTrack())
-            context->UpdateWidgetValue(GetCurrentNormalizedValue(context));
-        else
-            context->ClearWidget();
-    }
-    
-    virtual void Do(ActionContext *context, double value) override
-    {
+
+    virtual void Do(ActionContext* context, double value) override {
         if (value == ActionContext::BUTTON_RELEASE_MESSAGE_VALUE) return;
-        
-        if (MediaTrack *track = context->GetTrack())
-        {
-            bool reversed = ! GetMediaTrackInfo_Value(track, "B_PHASE");
-            
-            GetSetMediaTrackInfo(track, "B_PHASE", &reversed);
-        }
+        ToggleTrackState(context, DAW::GetTrackInvertPhase, DAW::SetTrackInvertPhase);
     }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackSelect : public Action // TrackAction?
+class TrackSelect : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
@@ -2932,40 +2864,25 @@ class TrackAutoMode : public TrackAction
 public:
     ActionType GetType() const override { return ActionType::TrackAutoMode; }
 
-    virtual double GetCurrentNormalizedValue(ActionContext *context) override
-    {
-        double retVal = 0.0;
-        
-        const vector<MediaTrack *> &selectedTracks = context->GetPage()->GetSelectedTracks(true);
-        for (auto selectedTrack : selectedTracks)
-        {
+    virtual double GetCurrentNormalizedValue(ActionContext* context) override {
+        for (MediaTrack* selectedTrack : context->GetSelectedTracks(true)) {
             if (context->GetIntParam() == GetMediaTrackInfo_Value(selectedTrack, "I_AUTOMODE"))
-            {
-                retVal = 1.0;
-                break;
-            }
+                return 1.0;
         }
-
-        return retVal;
+        return 0.0;
     }
 
-    virtual void RequestUpdate(ActionContext *context) override
-    {
-        context->UpdateWidgetValue(GetCurrentNormalizedValue(context));
-    }
-    
-    virtual void Do(ActionContext *context, double value) override
+    virtual void Do(ActionContext* context, double value) override
     {
         if (value == ActionContext::BUTTON_RELEASE_MESSAGE_VALUE) return;
         
         int mode = context->GetIntParam();
-        
-        if (IsSameString(context->GetZone()->GetNavigator()->GetName(), "MasterTrackNavigator")) { //FIXME: replace string- comparison with bool flag early in context construction
-            GetSetMediaTrackInfo(GetMasterTrack(NULL), "I_AUTOMODE", &mode);
+        if (context->GetZone()->GetNavigator()->GetType() == NavigatorType::MasterTrackNavigator) {
+            SetMediaTrackInfo_Value(GetMasterTrack(NULL), "I_AUTOMODE", mode);
         } else {
-            const vector<MediaTrack *> &selectedTracks = context->GetPage()->GetSelectedTracks(true);
-            for (auto selectedTrack : selectedTracks)
-                GetSetMediaTrackInfo(selectedTrack, "I_AUTOMODE", &mode);
+            const vector<MediaTrack*> &selectedTracks = context->GetSelectedTracks(true);
+            for (MediaTrack* selectedTrack : selectedTracks)
+                SetMediaTrackInfo_Value(selectedTrack, "I_AUTOMODE", mode);
         }
     }
 };

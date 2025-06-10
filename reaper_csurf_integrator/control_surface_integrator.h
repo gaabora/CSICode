@@ -383,7 +383,7 @@ X(TrackPanR, "TrackPanR") \
 X(TrackSelect, "TrackSelect") \
 X(TrackUniqueSelect, "TrackUniqueSelect") \
 X(TrackRangeSelect, "TrackRangeSelect") \
-X(TrackBypassFX, "TrackBypassFX") \
+X(TrackEffectsBypass, "TrackEffectsBypass") \
 X(TrackSolo, "TrackSolo") \
 X(TrackMute, "TrackMute") \
 X(TrackRecordArm, "TrackRecordArm") \
@@ -900,6 +900,7 @@ public:
     const char *GetFXParamDisplayName() { return fxParamDisplayName_.c_str(); }
     
     MediaTrack *GetTrack();
+    vector<MediaTrack *> GetSelectedTracks(bool includeMaster = false);
     
     void DoRangeBoundAction(double value);
     void DoSteppedValueAction(double value);
@@ -3490,6 +3491,7 @@ protected:
     int selectedTracksOffset_ = 0;
     vector<MediaTrack *> tracks_;
     vector<MediaTrack *> selectedTracks_;
+    vector<MediaTrack *> selectedTracksInclMaster_;
 
     bool isFolderViewActive_ = false;
     int currentFolderTrackID_ = 0; // 0 is for root folder
@@ -3752,18 +3754,8 @@ public:
             return "";
     }
     
-    const vector<MediaTrack *> &GetSelectedTracks(bool includeMaster = false)
-    {
-        selectedTracks_.clear();
-
-        for (int i = (includeMaster ? 0 : 1); i <= GetNumTracks(); i++) {
-            MediaTrack* track = CSurf_TrackFromID(i, false);
-            if (*(int*)GetSetMediaTrackInfo(track, "I_SELECTED", NULL)) selectedTracks_.push_back(track);
-        }
-        
-        return selectedTracks_;
-    }
-
+    const vector<MediaTrack *> &GetSelectedTracks(bool includeMaster) { return includeMaster ? selectedTracksInclMaster_ : selectedTracks_; }
+    
     void SetTrackOffset(int trackOffset)
     {
         if (isScrollSynchEnabled_)
@@ -4078,10 +4070,10 @@ public:
     }
     
     MediaTrack *GetSelectedTrack(bool includeMaster = false) {
-        if (CountSelectedTracks2(NULL, includeMaster) != 1)
-            return NULL;
+        if (includeMaster)
+            return (selectedTracksInclMaster_.size() > 0) ? selectedTracksInclMaster_[0] : nullptr;
         else
-            return DAW::GetSelectedTrack(0, includeMaster);
+            return (selectedTracks_.size() > 0) ? selectedTracks_[0] : nullptr;
     }
     
 //  Page only uses the following:
@@ -4122,7 +4114,7 @@ public:
             if (track == trackNavigator->GetTrack())
                 return GetIsNavigatorTouched(trackNavigator.get(), touchedControl);
  
-        if (MediaTrack *selectedTrack = GetSelectedTrack())
+        if (MediaTrack *selectedTrack = GetSelectedTrack(true))
              if (track == selectedTrack)
                 return GetIsNavigatorTouched(GetSelectedTrackNavigator(), touchedControl);
         

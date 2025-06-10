@@ -176,10 +176,8 @@ public:
 
     static int constexpr QUERY_LAST_TOUCHED_PARAMETER = 0;
     static int constexpr QUERY_CURRENTLY_FOCUSED_FX = 1;
-    
+
     static void SendCommandMessage(WPARAM wparam) { ::SendMessage(g_hwnd, WM_COMMAND, wparam, 0); }
-    
-    static MediaTrack *GetSelectedTrack(int seltrackidx, bool includeMaster = false) { return ::GetSelectedTrack2(NULL, seltrackidx, includeMaster); }
     
     static bool ValidateTrackPtr(MediaTrack *track) { return ::ValidatePtr(track, "MediaTrack*"); }
     
@@ -456,10 +454,197 @@ public:
         GetSetMediaTrackInfo(track, "I_AUTOMODE", &nextMode);
     }
 
-    static bool IsTrackBypassed(MediaTrack* track) {
+    static bool GetTrackSolo(MediaTrack* track) {
+        auto ass = GetMediaTrackInfo_Value(track, "I_SOLO");
+        if (track == GetMasterTrack(NULL)) {
+            int muteSoloFlags = GetMasterMuteSoloFlags();
+            return (muteSoloFlags & 2);
+        } else {
+            return GetMediaTrackInfo_Value(track, "I_SOLO") > 0;
+        }
+    }
+    static void SetTrackSolo(MediaTrack* track, bool newState) {
         if (!track)
-            return false;
-        return (GetMediaTrackInfo_Value(track, "I_FXEN") == 0);
+            return;
+        if (track == GetMasterTrack(NULL)) {
+            int muteSoloFlags = GetMasterMuteSoloFlags();
+            if (muteSoloFlags & 2) {
+                muteSoloFlags &= !2;
+            } else {
+                muteSoloFlags |= 2;
+            }
+            CSurf_SetSurfaceSolo(track, CSurf_OnSoloChange(track, muteSoloFlags), NULL);
+        } else {
+            CSurf_SetSurfaceSolo(track, CSurf_OnSoloChange(track, newState), NULL);
+        }
+    }
+
+    static bool GetTrackMute(MediaTrack* track) {
+        bool mute = false;
+        GetTrackUIMute(track, &mute);
+        return mute;
+    }
+    static void SetTrackMute(MediaTrack* track, bool newState) {
+        if (track)
+            CSurf_SetSurfaceMute(track, CSurf_OnMuteChange(track, newState), NULL);
+    }
+
+    static bool GetTrackRecordArm(MediaTrack* track) {
+        return GetMediaTrackInfo_Value(track, "I_RECARM") == 0.0 ? false : true;
+    }
+    static void SetTrackRecordArm(MediaTrack* track, bool newState) {
+        if (track)
+            CSurf_SetSurfaceRecArm(track, CSurf_OnRecArmChange(track, newState), NULL);
+    }
+
+    static bool GetTrackInvertPhase(MediaTrack* track) {
+        return GetMediaTrackInfo_Value(track, "B_PHASE") == 0.0 ? false : true;
+    }
+    static void SetTrackInvertPhase(MediaTrack* track, bool newState) {
+        if (track)
+            SetMediaTrackInfo_Value(track, "B_PHASE", newState ? 1.0 : 0.0);
+    }
+    
+    static bool GetTrackBypass(MediaTrack* track) {
+        return GetMediaTrackInfo_Value(track, "I_FXEN") == 0;
+    }
+    static void SetTrackBypass(MediaTrack* track, bool newState) {
+        if (track)
+            SetMediaTrackInfo_Value(track, "I_FXEN", newState ? 0.0 : 1.0);
+    }
+
+    static bool GetTrackEffectsBypass(MediaTrack* track) {
+        if (DAW::GetTrackBypass(track))
+            return true;
+        //TODO: containers + parallel fx support
+
+        int fxCount = TrackFX_GetCount(track);
+        if (fxCount == 0)
+            return false; //TODO: return MultiState::Undefined;
+
+        int instrumentIdx = TrackFX_GetInstrument(track);
+        int startIdx = instrumentIdx < 0 ? 0 : instrumentIdx + 1;
+        bool anyBypassed = false;
+
+        if (instrumentIdx >= 0) {
+            if (!TrackFX_GetEnabled(track, instrumentIdx)) {
+                for (int fxIdx = startIdx; fxIdx < fxCount; ++fxIdx) {
+                    if (TrackFX_GetOffline(track, fxIdx))
+                        continue;
+                    if (TrackFX_GetEnabled(track, fxIdx) && IsFxInstrument(track, fxIdx)) {
+                        instrumentIdx = fxIdx;
+                        startIdx = instrumentIdx + 1;
+                        break;
+                    }
+                }
+            }
+            bool allInstrumentsBypassed = !TrackFX_GetEnabled(track, instrumentIdx);
+            if (allInstrumentsBypassed)
+                return true;
+
+            for (int fxIdx = startIdx; fxIdx < fxCount; ++fxIdx) {
+                if (TrackFX_GetOffline(track, fxIdx))
+                    continue;
+                if (TrackFX_GetEnabled(track, fxIdx))
+                    return false;
+                else if (!IsFxInstrument(track, fxIdx))
+                    anyBypassed = true;
+            }
+            //TODO: if (no enabled non-instrument) return MultiState::Undefined;
+        } else {
+            for (int fxIdx = startIdx; fxIdx < fxCount; ++fxIdx) {
+                if (TrackFX_GetOffline(track, fxIdx))
+                    continue;
+                if (TrackFX_GetEnabled(track, fxIdx))
+                    return false;
+                else
+                    anyBypassed = true;
+            }
+        }
+        return anyBypassed;
+    }
+    static void SetTrackEffectsBypass(MediaTrack* track, bool newState) {
+        if (!track) return;
+
+        int fxCount = TrackFX_GetCount(track);
+        if (fxCount == 0) {
+            DAW::SetTrackBypass(track, newState);
+            return;
+        }
+
+        
+        int instrumentIdx = TrackFX_GetInstrument(track);
+        int startIdx = instrumentIdx < 0 ? 0 : instrumentIdx + 1;
+        bool wasTrackBypassed = DAW::GetTrackBypass(track);
+        
+        Undo_BeginBlock();
+        if (instrumentIdx >= 0) {
+            if (wasTrackBypassed)
+                DAW::SetTrackBypass(track, !wasTrackBypassed);
+            if (!TrackFX_GetEnabled(track, instrumentIdx)) {
+                for (int fxIdx = startIdx; fxIdx < fxCount; ++fxIdx) {
+                    if (TrackFX_GetOffline(track, fxIdx))
+                        continue;
+                    if (TrackFX_GetEnabled(track, fxIdx) && IsFxInstrument(track, fxIdx)) {
+                        instrumentIdx = fxIdx;
+                        startIdx = instrumentIdx + 1;
+                        break;
+                    }
+                }
+            }
+            bool allInstrumentsBypassed = !TrackFX_GetEnabled(track, instrumentIdx);
+            if (allInstrumentsBypassed && !newState)
+                TrackFX_SetEnabled(track, instrumentIdx, !newState);
+
+            for (int fxIdx = startIdx; fxIdx < fxCount; ++fxIdx) {
+                if (TrackFX_GetOffline(track, fxIdx))
+                    continue;
+                if (IsFxInstrument(track, fxIdx))
+                    continue;
+                TrackFX_SetEnabled(track, fxIdx, !newState);
+            }
+        } else {
+            DAW::SetTrackBypass(track, !wasTrackBypassed);
+
+            if (!newState && wasTrackBypassed) {
+                bool anyEnabled = false;
+
+                for (int fxIdx = startIdx; fxIdx < fxCount; ++fxIdx) {
+                    if (TrackFX_GetOffline(track, fxIdx))
+                        continue;
+                    if (TrackFX_GetEnabled(track, fxIdx)) {
+                        anyEnabled = true;
+                        break;
+                    }
+                }
+                if (!anyEnabled) {
+                    for (int fxIdx = startIdx; fxIdx < fxCount; ++fxIdx) {
+                        if (TrackFX_GetOffline(track, fxIdx))
+                            continue;
+                        TrackFX_SetEnabled(track, fxIdx, true);
+                    }
+                }
+            }
+        }
+        Undo_EndBlock("Toggle tracks effects bypass", 0);
+    }
+
+    static string GetTrackFxName(MediaTrack* track, int fxIdx) {
+        char fxName[256];
+        TrackFX_GetFXName(track, fxIdx, fxName, sizeof(fxName));
+        return string(fxName);
+    }
+
+    static bool IsFxInstrument(MediaTrack* track, int fxIdx) {
+        char fxType[128] = {};
+        if (TrackFX_GetNamedConfigParm(track, fxIdx, "fx_type", fxType, sizeof(fxType))) {
+            return strncmp(fxType, "VSTi", 4) == 0
+                || strncmp(fxType, "VST3i", 5) == 0
+                || strncmp(fxType, "AUi", 3) == 0
+                || strncmp(fxType, "CLAPi", 5) == 0
+                || (strncmp(fxType, "JS", 2) == 0 && strstr(fxType, ":i") != nullptr);
+        }
+        return false;
     }
 };
 

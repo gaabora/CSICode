@@ -3,6 +3,7 @@
 //  reaper_csurf_integrator
 //
 //
+#include <functional>
 
 #ifndef control_surface_action_contexts_h
 #define control_surface_action_contexts_h
@@ -159,8 +160,33 @@ public:
 class TrackAction : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
+protected:
+    virtual bool IncludeMasterTrack() const { return true; }
+protected:
+    double GetTrackBoolStateNormalized(ActionContext* context, function<bool(MediaTrack*)> getStateFn) const {
+        const vector<MediaTrack*>& selectedTracks = context->GetSelectedTracks(IncludeMasterTrack());
+        if (selectedTracks.empty())
+            return 0.0;
+        return getStateFn(selectedTracks[0]) ? 1.0 : 0.0;
+    }
+    bool ToggleTrackState(ActionContext* context, const function<bool(MediaTrack*)>& getStateFn, const function<void(MediaTrack*, bool)>& setStateFn) {
+        const vector<MediaTrack*>& selectedTracks = context->GetSelectedTracks(IncludeMasterTrack());
+        if (selectedTracks.empty())
+            return false;
+        bool oldState = getStateFn(selectedTracks[0]);
+        for (MediaTrack* track : selectedTracks)
+            setStateFn(track, !oldState);
+        return true;
+    }
 public:
     virtual bool IsTrackRelated() { return true; }
+    virtual double GetCurrentNormalizedValue(ActionContext* context) { return 0.0; }
+    virtual void RequestUpdate(ActionContext *context) {
+        if (context->GetSelectedTracks().empty())
+            context->ClearWidget();
+        else
+            context->UpdateWidgetValue(GetCurrentNormalizedValue(context));
+    }
 };
 
 class TrackSendAction : public TrackAction
@@ -182,6 +208,14 @@ class TrackDisplayAction : public TrackAction
 {
 public:
     virtual bool IsDisplayRelated() { return true; }
+
+    virtual void RequestUpdate(ActionContext *context) override
+    {
+        if (context->GetTrack())
+            context->UpdateWidgetValue(GetCurrentNormalizedValue(context));
+        else
+            context->ClearWidget();
+    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -1521,6 +1521,15 @@ MediaTrack *ActionContext::GetTrack()
     return zone_->GetNavigator()->GetTrack();
 }
 
+vector<MediaTrack*> ActionContext::GetSelectedTracks(bool includeMaster) {
+    if (this->GetZone()->GetNavigator()->GetType() == NavigatorType::SelectedTrackNavigator) {
+        return this->GetPage()->GetSelectedTracks(includeMaster);
+    } else {
+        MediaTrack* track = this->GetTrack();
+        return track ? vector<MediaTrack*>{ track } : vector<MediaTrack*>{};
+    }
+}
+
 int ActionContext::GetSlotIndex()
 {
     return zone_->GetSlotIndex();
@@ -3069,7 +3078,7 @@ void ZoneManager::GoSelectedTrackFX()
 {
     selectedTrackFXZones_.clear();
     
-    if (MediaTrack *selectedTrack = surface_->GetPage()->GetSelectedTrack())
+    if (MediaTrack *selectedTrack = surface_->GetPage()->GetSelectedTrack(true))
     {
         for (int i = 0; i < TrackFX_GetCount(selectedTrack); ++i)
         {
@@ -3539,16 +3548,22 @@ void TrackNavigationManager::RebuildTracks()
 
 void TrackNavigationManager::RebuildSelectedTracks()
 {
-    if (currentTrackVCAFolderMode_ != TrackVCAFolderMode::SelectedTracks)
+    if (currentTrackVCAFolderMode_ == TrackVCAFolderMode::VCA || currentTrackVCAFolderMode_ == TrackVCAFolderMode::Folder)
         return;
 
     int oldTracksSize = (int) selectedTracks_.size();
     
+    selectedTracksInclMaster_.clear();
     selectedTracks_.clear();
-    
-    for (int i = 0; i < CountSelectedTracks2(NULL, false); ++i)
-        selectedTracks_.push_back(DAW::GetSelectedTrack(i));
+    for (int i = 0; i <= GetNumTracks(); i++) {
+        MediaTrack* track = GetTrackFromId(i);
+        if (*(int*)GetSetMediaTrackInfo(track, "I_SELECTED", NULL)) {
+            selectedTracksInclMaster_.push_back(track);
+            if (i > 0) selectedTracks_.push_back(track);
+        }
+    }
 
+    //FIXME compare all changes
     if (selectedTracks_.size() < oldTracksSize)
     {
         for (int i = oldTracksSize; i > selectedTracks_.size(); i--)
