@@ -1353,39 +1353,36 @@ public:
         const PropertyList properties;
         ForceValue(properties, 0.0);
     }
-    
-    virtual void SetValue(const PropertyList &properties, double value) override
+
+    int GetMidiMeterValue(double value)
     {
-        //Master Channel:
-        //Master Level 1 : 0xd1, 0x0L
-        //L = 0x0 – 0xD = Meter level 0% thru 100% (does not affect peak indicator)
-        
-        //Master Level 2 : 0xd1, 0x1L
-        //L = 0x0 – 0xD = Meter level 0% thru 100% (does not affect peak indicator)
-        
-        int midiValue = int(value  *0x0f);
-        
-        if (midiValue > 0x0d)
-            midiValue = 0x0d;
-        
-        SendMidiMessage(0xd1, (param_ << 4) | midiValue, 0);
+        int      midiValue = 0;
+        double   dbValue   = VAL2DB(normalizedToVol(value));
+        if      (dbValue >= -60.1 && dbValue < -48.1)  midiValue = 0x01; // LED  1 Green  (–60 dB)
+        else if (dbValue >= -48.1 && dbValue < -42.1)  midiValue = 0x02; // LED  2 Green  (–48 dB)
+        else if (dbValue >= -42.1 && dbValue < -36.1)  midiValue = 0x03; // LED  3 Green  (–42 dB)
+        else if (dbValue >= -36.1 && dbValue < -30.1)  midiValue = 0x04; // LED  4 Green  (–36 dB)
+        else if (dbValue >= -30.1 && dbValue < -24.1)  midiValue = 0x05; // LED  5 Green  (–30 dB)
+        else if (dbValue >= -24.1 && dbValue < -18.1)  midiValue = 0x06; // LED  6 Green  (–24 dB)
+        else if (dbValue >= -18.1 && dbValue < -12.1)  midiValue = 0x07; // LED  7 Green  (–18 dB)
+        else if (dbValue >= -12.1 && dbValue < -9.1 )  midiValue = 0x08; // LED  8 Orange (–12 dB)
+        else if (dbValue >= -9.1  && dbValue < -6.1 )  midiValue = 0x09; // LED  9 Orange (–9  dB)
+        else if (dbValue >= -6.1  && dbValue < -3.1 )  midiValue = 0x0A; // LED 10 Orange (–6  dB)
+        else if (dbValue >= -3.1  && dbValue <  0.1 )  midiValue = 0x0B; // LED 11 Orange (–3  dB)
+        else if (dbValue >=  0.1                    )  midiValue = 0x0E; // LED 12 Red    (> 0 dB)
+        return midiValue;
+    }
+    
+    virtual void SetValue  (const PropertyList &properties, double value) override
+    {
+        if (g_debugLevel >= DEBUG_LEVEL_DEBUG)
+            LogToConsole("[DEBUG] QConProXMasterVUMeter_Midi_FeedbackProcessor: 0xd1, 0x%02x\n", (param_ << 4) | GetMidiMeterValue(value));
+        SendMidiMessage    (0xd1, (param_ << 4) | GetMidiMeterValue(value), 0);
     }
 
     virtual void ForceValue(const PropertyList &properties, double value) override
     {
-        //Master Channel:
-        //Master Level 1 : 0xd1, 0x0L
-        //L = 0x0 – 0xD = Meter level 0% thru 100% (does not affect peak indicator)
-        
-        //Master Level 2 : 0xd1, 0x1L
-        //L = 0x0 – 0xD = Meter level 0% thru 100% (does not affect peak indicator)
-        
-        int midiValue = int(value  *0x0f);
-        
-        if (midiValue > 0x0d)
-            midiValue = 0x0d;
-        
-        ForceMidiMessage(0xd1, (param_ << 4) | midiValue, 0);
+        ForceMidiMessage   (0xd1, (param_ << 4) | GetMidiMeterValue(value), 0);
     }
 };
 
